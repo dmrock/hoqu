@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono, Press_Start_2P } from "next/font/google";
+import { Inter, JetBrains_Mono, Press_Start_2P, Geist } from "next/font/google";
 import "./globals.css";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const inter = Inter({
   subsets: ["latin"],
@@ -34,7 +37,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${jetbrainsMono.variable} ${pressStart2P.variable}`}
+      className={cn(inter.variable, jetbrainsMono.variable, pressStart2P.variable, "font-sans", geist.variable)}
     >
       <body className="min-h-screen antialiased">{children}</body>
     </html>
