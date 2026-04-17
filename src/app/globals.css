@@ -1,26 +1,42 @@
 @import "tailwindcss";
 
+@theme {
+  /* Color tokens — dark theme only */
+  --color-background: #0a0a0f;
+  --color-surface: #14141f;
+  --color-surface-hover: #1e1e2e;
+  --color-border: #2a2a3a;
+  --color-primary: #7c5cff;
+  --color-primary-hover: #9d82ff;
+  --color-accent: #00e5a0;
+  --color-warning: #ffa726;
+  --color-error: #ff5252;
+  --color-foreground: #e8e8f0;
+  --color-muted-foreground: #8888a0;
+  --color-guild-gold: #ffd700;
+  --color-officer-silver: #c0c0c0;
+
+  /* Font stacks — CSS vars come from next/font in layout.tsx */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+  --font-pixel: var(--font-press-start-2p), ui-monospace, monospace;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: dark;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  min-height: 100vh;
+}
+
+.pixelated {
+  image-rendering: pixelated;
 }
