@@ -13,7 +13,7 @@ base with pixel-art accents (badges, XP bars, icons, micro-animations). English 
 - **Language**: TypeScript (strict mode)
 - **Styling**: Tailwind CSS v4 (dark theme only)
 - **UI Base**: shadcn/ui
-- **Animations**: Framer Motion
+- **Animations**: Motion (npm package `motion`, imported from `motion/react` — successor to Framer Motion)
 - **Database**: PostgreSQL via Neon (`@neondatabase/serverless`)
 - **ORM**: Drizzle ORM
 - **Auth**: Auth.js v5 (NextAuth) — Email+password + Google, GitHub, Discord OAuth
@@ -264,7 +264,7 @@ Load via `next/font`.
 - Buttons primary: `bg-primary hover:bg-primary-hover`, pixel-style border
 - Inputs: `bg-surface`, `border-border`, `focus:ring-primary`
 - Pixel elements: use SVG or small PNG sprites, `image-rendering: pixelated`
-- XP bar: segmented fill, animated with Framer Motion
+- XP bar: segmented fill, animated with Motion
 - Rating stars: 10 pixel-art stars, fill sequentially with sparkle animation
 - Achievement badges: pixel-art icons, grayscale when locked, colorful when unlocked
 - Guild role badges: gold (Master), silver (Officer), none (Member)
@@ -275,7 +275,7 @@ Load via `next/font`.
 - Content: max-w-7xl, centered, responsive grid
 - Mobile: sidebar becomes full-width drawer
 
-### Animations (Framer Motion)
+### Animations (Motion — `import { motion } from "motion/react"`)
 - Page transitions: `x: -20, opacity: 0` → `x: 0, opacity: 1` (200ms ease-out)
 - Cards: `whileHover={{ y: -4, boxShadow: "..." }}`
 - Item add: scale pop (0.8 → 1.0) + optional confetti
