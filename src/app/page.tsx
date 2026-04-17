@@ -1,3 +1,5 @@
+import { Button } from "@/components/ui/button";
+
 export default function Home() {
   return (
     <main className="flex min-h-screen items-center justify-center p-8">
@@ -8,6 +10,18 @@ export default function Home() {
             Track your hobbies. Earn achievements. Level up with friends.
           </p>
         </header>
+
+        <section className="space-y-4 rounded-xl border border-border bg-surface p-6">
+          <h2 className="font-pixel text-xs text-accent">SHADCN BUTTONS</h2>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="default">Default</Button>
+            <Button variant="secondary">Secondary</Button>
+            <Button variant="outline">Outline</Button>
+            <Button variant="ghost">Ghost</Button>
+            <Button variant="destructive">Destructive</Button>
+            <Button variant="link">Link</Button>
+          </div>
+        </section>
 
         <section className="space-y-4 rounded-xl border border-border bg-surface p-6">
           <h2 className="font-pixel text-xs text-accent">THEME TOKENS</h2>
