@@ -5,7 +5,10 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "format:unsafe": "biome check --write --unsafe ."
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
