@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1776501153321,
+      "tag": "0000_fearless_ender_wiggin",
+      "breakpoints": true
+    }
+  ]
+}
