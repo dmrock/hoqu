@@ -1,8 +1,10 @@
-export default function BooksPage() {
-  return (
-    <div className="space-y-2">
-      <h1 className="font-pixel text-2xl">Books</h1>
-      <p className="text-muted-foreground">Coming soon.</p>
-    </div>
-  );
+import { HobbyPage } from "@/components/items/hobby-page";
+
+export default async function BooksPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const sp = await searchParams;
+  return <HobbyPage hobbySlug="books" title="Books" searchParams={sp} />;
 }
