@@ -8,6 +8,27 @@
       "when": 1776501153321,
       "tag": "0000_fearless_ender_wiggin",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1776507359487,
+      "tag": "0001_aspiring_mikhail_rasputin",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1776606891062,
+      "tag": "0002_steady_hawkeye",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1776607941229,
+      "tag": "0003_bizarre_silver_samurai",
+      "breakpoints": true
     }
   ]
 }

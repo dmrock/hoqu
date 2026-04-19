@@ -45,18 +45,17 @@ export const achievementCategoryEnum = pgEnum("achievement_category", [
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
   email: text("email").notNull().unique(),
+  emailVerified: timestamp("email_verified", { withTimezone: true, mode: "date" }),
   name: text("name"),
-  username: text("username").notNull().unique(),
-  nickname: text("nickname"),
+  username: text("username").unique(),
   passwordHash: text("password_hash"),
-  avatarUrl: text("avatar_url"),
+  image: text("avatar_url"),
   totalPoints: integer("total_points").notNull().default(0),
   moviesCompleted: integer("movies_completed").notNull().default(0),
   gamesCompleted: integer("games_completed").notNull().default(0),
   booksCompleted: integer("books_completed").notNull().default(0),
   itemsRated: integer("items_rated").notNull().default(0),
   profileVisibility: profileVisibilityEnum("profile_visibility").notNull().default("public"),
-  discordUsername: text("discord_username"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
@@ -163,4 +162,34 @@ export const userAchievements = pgTable(
     unlockedAt: timestamp("unlocked_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [primaryKey({ columns: [t.userId, t.achievementId] })],
+);
+
+export const accounts = pgTable(
+  "accounts",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    type: text("type").notNull(),
+    provider: text("provider").notNull(),
+    providerAccountId: text("provider_account_id").notNull(),
+    refresh_token: text("refresh_token"),
+    access_token: text("access_token"),
+    expires_at: integer("expires_at"),
+    token_type: text("token_type"),
+    scope: text("scope"),
+    id_token: text("id_token"),
+    session_state: text("session_state"),
+  },
+  (t) => [primaryKey({ columns: [t.provider, t.providerAccountId] })],
+);
+
+export const verificationTokens = pgTable(
+  "verification_tokens",
+  {
+    identifier: text("identifier").notNull(),
+    token: text("token").notNull(),
+    expires: timestamp("expires", { withTimezone: true, mode: "date" }).notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.identifier, t.token] })],
 );

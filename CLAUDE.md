@@ -16,7 +16,7 @@ base with pixel-art accents (badges, XP bars, icons, micro-animations). English 
 - **Animations**: Motion (npm package `motion`, imported from `motion/react` — successor to Framer Motion)
 - **Database**: PostgreSQL via Neon (`@neondatabase/serverless`)
 - **ORM**: Drizzle ORM
-- **Auth**: Auth.js v5 (NextAuth) — Email+password + Google, GitHub, Discord OAuth
+- **Auth**: Auth.js v5 (NextAuth) — Email+password + Google OAuth
 - **Validation**: Zod
 - **Rate Limiting**: Upstash Redis (`@upstash/ratelimit`)
 - **External APIs**: TMDB (movies), RAWG (games), Open Library (books)
@@ -64,11 +64,13 @@ Use Drizzle ORM to define schema in `src/lib/db/schema.ts`.
 
 ### Tables:
 
-**users**: id (uuid), email, name, username (unique), nickname (optional — fun display name for
-profile & leaderboards), passwordHash?, avatarUrl, totalPoints (int — count of completed items),
+**users**: id (uuid), email, name (display name — auto-derived from email local-part or OAuth,
+editable), username (unique, URL-safe handle — auto-derived from email local-part on signup with
+numeric suffix on collision, editable in settings), passwordHash?, avatarUrl,
+totalPoints (int — count of completed items),
 moviesCompleted (int, default 0), gamesCompleted (int, default 0), booksCompleted (int, default 0),
 itemsRated (int, default 0),
-profileVisibility (enum: public/friends_only/guild_only/private), discordUsername?,
+profileVisibility (enum: public/friends_only/guild_only/private),
 createdAt, updatedAt.
 
 Note on denormalized counters: `totalPoints`, `moviesCompleted`, `gamesCompleted`,
@@ -324,7 +326,7 @@ src/
 ### Phase 1 (MVP — build this first):
 1. Project setup (Next.js, Tailwind, Drizzle, Neon, Auth.js)
 2. Database schema + migrations + seed (hobbies + achievements)
-3. Auth (register, login, OAuth, username/nickname setup)
+3. Auth (register, login, OAuth — name/username auto-derived on signup, editable in settings)
 4. Sidebar layout + routing
 5. External API search proxies
 6. Item CRUD (add via search, rate, note, status with dropped, delete)
@@ -332,7 +334,7 @@ src/
 8. Anti-spam rate limiting
 9. Achievement system + unlock animations
 10. Dashboard with stats + achievement showcase
-11. Settings page (profile, privacy, Discord username)
+11. Settings page (profile, privacy, name/username editing)
 12. Polish: animations, pixel components, responsive
 
 ### Phase 2 (Social — build after Phase 1 is complete):
@@ -358,14 +360,9 @@ src/
 
 ```
 DATABASE_URL=              # Neon Postgres connection string
-NEXTAUTH_SECRET=           # Random secret for Auth.js
-NEXTAUTH_URL=              # http://localhost:3000 (dev)
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-GITHUB_CLIENT_ID=
-GITHUB_CLIENT_SECRET=
-DISCORD_CLIENT_ID=
-DISCORD_CLIENT_SECRET=
+AUTH_SECRET=               # Random secret for Auth.js (`openssl rand -base64 32`)
+AUTH_GOOGLE_ID=            # From Google Cloud Console OAuth client
+AUTH_GOOGLE_SECRET=
 TMDB_API_KEY=              # From themoviedb.org
 RAWG_API_KEY=              # From rawg.io
 UPSTASH_REDIS_REST_URL=    # From upstash.com
