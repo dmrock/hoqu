@@ -1,7 +1,8 @@
-import { Sparkles } from "lucide-react";
+import { RotateCw } from "lucide-react";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
-import type { ItemStatus } from "@/lib/points";
+import type { HobbySlug, ItemStatus } from "@/lib/points";
+import { cn } from "@/lib/utils";
 import type { ItemRow } from "@/types/item";
 import { ItemRowActions } from "./item-row-actions";
 
@@ -19,6 +20,12 @@ const STATUS_VARIANT: Record<ItemStatus, "default" | "secondary" | "outline" | "
   dropped: "ghost",
 };
 
+const EXTERNAL_RATING_LABEL: Record<HobbySlug, string> = {
+  movies: "TMDB",
+  games: "Metacritic",
+  books: "",
+};
+
 function Poster({ src, alt, size }: { src: string | null; alt: string; size: number }) {
   return (
     <div
@@ -30,31 +37,57 @@ function Poster({ src, alt, size }: { src: string | null; alt: string; size: num
   );
 }
 
-function Rating({ value, muted }: { value: number | null; muted?: boolean }) {
-  if (value == null) return <span className="text-muted-foreground">—</span>;
-  const formatted = Number.isInteger(value) ? value : value.toFixed(1);
+function formatRating(value: number): string {
+  return Number.isInteger(value) ? String(value) : value.toFixed(1);
+}
+
+function TitleBlock({ item, hobbySlug }: { item: ItemRow; hobbySlug: HobbySlug }) {
+  const ratingLabel = EXTERNAL_RATING_LABEL[hobbySlug];
   return (
-    <span className={`font-mono ${muted ? "text-muted-foreground" : "text-accent"}`}>
-      ★ {formatted}
-    </span>
+    <div className="min-w-0">
+      <p className="truncate font-medium" title={item.title}>
+        {item.title}
+      </p>
+      <div className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
+        {item.year ? (
+          <span>
+            {item.year}
+            {item.externalRating != null ? "," : ""}
+          </span>
+        ) : null}
+        {item.externalRating != null ? (
+          <span className="font-mono">
+            {ratingLabel ? `${ratingLabel} ` : ""}★ {formatRating(item.externalRating)}
+          </span>
+        ) : null}
+      </div>
+      <p
+        className={cn(
+          "mt-1 truncate font-mono text-xs",
+          item.note ? "text-warning/80" : "invisible",
+        )}
+        title={item.note ?? undefined}
+      >
+        {item.note ?? "—"}
+      </p>
+    </div>
   );
 }
 
-export function ItemsList({ items }: { items: ItemRow[] }) {
+export function ItemsList({ items, hobbySlug }: { items: ItemRow[]; hobbySlug: HobbySlug }) {
   return (
     <>
       <div className="hidden overflow-x-auto rounded-xl border border-border md:block">
-        <table className="w-full text-sm">
+        <table className="w-full table-fixed text-sm">
           <thead className="bg-muted/40 text-left text-xs text-muted-foreground uppercase">
             <tr>
               <th className="w-16 px-3 py-2"></th>
               <th className="px-3 py-2">Title</th>
-              <th className="w-20 px-3 py-2">Year</th>
               <th className="w-24 px-3 py-2">Your rate</th>
-              <th className="w-24 px-3 py-2">External</th>
+              <th className="w-24 px-3 py-2">Added</th>
               <th className="w-32 px-3 py-2">Status</th>
-              <th className="w-20 px-3 py-2">Revisit</th>
-              <th className="w-10 px-3 py-2"></th>
+              <th className="w-20 px-3 py-2">Again?</th>
+              <th className="w-24 px-3 py-2"></th>
             </tr>
           </thead>
           <tbody>
@@ -64,34 +97,30 @@ export function ItemsList({ items }: { items: ItemRow[] }) {
                   <Poster src={item.imageUrl} alt={item.title} size={40} />
                 </td>
                 <td className="px-3 py-2">
-                  <p className="font-medium" title={item.title}>
-                    {item.title}
-                  </p>
-                  {item.note ? (
-                    <p className="truncate text-xs text-muted-foreground" title={item.note}>
-                      {item.note}
-                    </p>
-                  ) : null}
-                </td>
-                <td className="px-3 py-2 text-muted-foreground">{item.year ?? "—"}</td>
-                <td className="px-3 py-2">
-                  <Rating value={item.userRating} />
+                  <TitleBlock item={item} hobbySlug={hobbySlug} />
                 </td>
                 <td className="px-3 py-2">
-                  <Rating value={item.externalRating} muted />
+                  {item.userRating != null ? (
+                    <span className="font-mono text-accent">★ {item.userRating}</span>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
                 </td>
+                <td className="px-3 py-2 text-muted-foreground">{item.addedYear}</td>
                 <td className="px-3 py-2">
                   <Badge variant={STATUS_VARIANT[item.status]}>{STATUS_LABEL[item.status]}</Badge>
                 </td>
                 <td className="px-3 py-2">
                   {item.wouldRevisit ? (
-                    <Sparkles className="size-4 text-accent" aria-label="Would revisit" />
+                    <RotateCw className="size-4 text-accent" aria-label="Again" />
                   ) : (
                     <span className="text-muted-foreground">—</span>
                   )}
                 </td>
-                <td className="px-3 py-2 text-right">
-                  <ItemRowActions item={item} />
+                <td className="px-3 py-2">
+                  <div className="flex justify-end">
+                    <ItemRowActions item={item} />
+                  </div>
                 </td>
               </tr>
             ))}
@@ -105,23 +134,13 @@ export function ItemsList({ items }: { items: ItemRow[] }) {
             <Poster src={item.imageUrl} alt={item.title} size={56} />
             <div className="min-w-0 flex-1 space-y-1">
               <div className="flex items-start justify-between gap-2">
-                <p className="truncate font-medium" title={item.title}>
-                  {item.title}
-                </p>
+                <TitleBlock item={item} hobbySlug={hobbySlug} />
                 <ItemRowActions item={item} />
               </div>
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                {item.year ? <span>{item.year}</span> : null}
-                {item.userRating ? (
+                <span>Added {item.addedYear}</span>
+                {item.userRating != null ? (
                   <span className="font-mono text-accent">★ {item.userRating}</span>
-                ) : null}
-                {item.externalRating ? (
-                  <span className="font-mono">
-                    ★{" "}
-                    {Number.isInteger(item.externalRating)
-                      ? item.externalRating
-                      : item.externalRating.toFixed(1)}
-                  </span>
                 ) : null}
               </div>
               <div className="flex items-center gap-2">
@@ -130,8 +149,8 @@ export function ItemsList({ items }: { items: ItemRow[] }) {
                 </Badge>
                 {item.wouldRevisit ? (
                   <Badge variant="outline" className="gap-1 text-xs">
-                    <Sparkles className="size-3" />
-                    Revisit
+                    <RotateCw className="size-3" />
+                    Again?
                   </Badge>
                 ) : null}
               </div>

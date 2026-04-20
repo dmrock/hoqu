@@ -59,7 +59,3 @@ export function parseItemsFilter(searchParams: {
     sort: sortSchema.parse(typeof sortParam === "string" ? sortParam : "updated-desc"),
   };
 }
-
-export function isStatusFilterActive(status: ItemStatus[]): boolean {
-  return status.length > 0 && status.length < ALL_STATUSES.length;
-}

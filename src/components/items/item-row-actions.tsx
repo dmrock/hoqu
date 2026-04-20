@@ -1,6 +1,6 @@
 "use client";
 
-import { MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { useState, useTransition } from "react";
 import { deleteItem, updateItem } from "@/app/(main)/items/actions";
 import { Button } from "@/components/ui/button";
@@ -12,12 +12,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -86,26 +80,25 @@ export function ItemRowActions({ item }: { item: ItemRow }) {
 
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon-sm" aria-label="Item menu">
-            <MoreVertical />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onSelect={() => setMode("edit")}>
-            <Pencil />
-            Edit
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onSelect={() => setMode("delete")}
-            className="text-destructive focus:text-destructive"
-          >
-            <Trash2 />
-            Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <div className="flex items-center gap-1">
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label="Edit item"
+          onClick={() => setMode("edit")}
+        >
+          <Pencil />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label="Delete item"
+          className="text-destructive hover:text-destructive"
+          onClick={() => setMode("delete")}
+        >
+          <Trash2 />
+        </Button>
+      </div>
 
       <Dialog open={mode !== "none"} onOpenChange={(o) => !o && close()}>
         <DialogContent className="max-w-md">
@@ -164,7 +157,7 @@ export function ItemRowActions({ item }: { item: ItemRow }) {
                   checked={wouldRevisit}
                   onChange={(e) => setWouldRevisit(e.target.checked)}
                 />
-                Would revisit
+                Again?
               </label>
               {error ? <p className="text-sm text-destructive">{error}</p> : null}
               <DialogFooter>

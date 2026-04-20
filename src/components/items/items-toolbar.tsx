@@ -1,12 +1,11 @@
 "use client";
 
-import { ArrowDownUp, ListFilter, Sparkles } from "lucide-react";
+import { ArrowDownUp, RotateCw } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useMemo, useTransition } from "react";
+import { useCallback, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
@@ -14,14 +13,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  type ItemsFilter,
-  isStatusFilterActive,
-  SORT_OPTIONS,
-  type SortValue,
-  STATUS_OPTIONS,
-} from "@/lib/items-filter";
+import { type ItemsFilter, SORT_OPTIONS, type SortValue, STATUS_OPTIONS } from "@/lib/items-filter";
 import type { ItemStatus } from "@/lib/points";
+import { cn } from "@/lib/utils";
 
 export function ItemsToolbar({ filter }: { filter: ItemsFilter }) {
   const router = useRouter();
@@ -41,25 +35,12 @@ export function ItemsToolbar({ filter }: { filter: ItemsFilter }) {
     [pathname, router, searchParams],
   );
 
-  const statusActive = isStatusFilterActive(filter.status);
-  const statusSet = useMemo(() => new Set(filter.status), [filter.status]);
+  const activeStatus: ItemStatus | "all" = filter.status.length === 1 ? filter.status[0] : "all";
 
-  function toggleStatus(value: ItemStatus, checked: boolean) {
-    const next = new Set(statusSet);
-    if (checked) next.add(value);
-    else next.delete(value);
-
+  function selectStatus(value: ItemStatus | "all") {
     updateParams((params) => {
-      if (next.size === 0 || next.size === STATUS_OPTIONS.length) {
-        params.delete("status");
-      } else {
-        params.set(
-          "status",
-          STATUS_OPTIONS.filter((s) => next.has(s.value))
-            .map((s) => s.value)
-            .join(","),
-        );
-      }
+      if (value === "all") params.delete("status");
+      else params.set("status", value);
     });
   }
 
@@ -79,71 +60,78 @@ export function ItemsToolbar({ filter }: { filter: ItemsFilter }) {
 
   const sortLabel = SORT_OPTIONS.find((o) => o.value === filter.sort)?.label ?? "Sort";
 
+  const tabs: { value: ItemStatus | "all"; label: string }[] = [
+    { value: "all", label: "All" },
+    ...STATUS_OPTIONS,
+  ];
+
   return (
-    <div className="flex flex-wrap items-center gap-2" data-pending={pending || undefined}>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant={statusActive ? "default" : "outline"}
-            size="sm"
-            aria-label="Filter by status"
-          >
-            <ListFilter />
-            Status
-            {statusActive ? (
-              <span className="font-mono text-xs">({filter.status.length})</span>
-            ) : null}
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="min-w-44">
-          <DropdownMenuLabel>Show statuses</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {STATUS_OPTIONS.map((s) => (
-            <DropdownMenuCheckboxItem
-              key={s.value}
-              checked={statusSet.has(s.value)}
-              onCheckedChange={(c) => toggleStatus(s.value, c === true)}
-              onSelect={(e) => e.preventDefault()}
-            >
-              {s.label}
-            </DropdownMenuCheckboxItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      <Button
-        type="button"
-        variant={filter.revisitOnly ? "default" : "outline"}
-        size="sm"
-        aria-pressed={filter.revisitOnly}
-        onClick={toggleRevisit}
+    <div
+      className="flex flex-wrap items-center gap-x-4 gap-y-2"
+      data-pending={pending || undefined}
+    >
+      <div
+        role="tablist"
+        aria-label="Filter by status"
+        className="inline-flex h-7 items-center overflow-hidden rounded-md border border-border bg-muted/40"
       >
-        <Sparkles />
-        Would revisit
-      </Button>
+        {tabs.map((t) => {
+          const active = activeStatus === t.value;
+          return (
+            <button
+              key={t.value}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => selectStatus(t.value)}
+              className={cn(
+                "h-full px-3 text-[0.8rem] transition-colors",
+                active
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
+              )}
+            >
+              {t.label}
+            </button>
+          );
+        })}
+      </div>
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm" aria-label="Sort items">
-            <ArrowDownUp />
-            {sortLabel}
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="min-w-48">
-          <DropdownMenuLabel>Sort by</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuRadioGroup
-            value={filter.sort}
-            onValueChange={(v) => setSort(v as SortValue)}
-          >
-            {SORT_OPTIONS.map((o) => (
-              <DropdownMenuRadioItem key={o.value} value={o.value}>
-                {o.label}
-              </DropdownMenuRadioItem>
-            ))}
-          </DropdownMenuRadioGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          type="button"
+          variant={filter.revisitOnly ? "default" : "outline"}
+          size="sm"
+          aria-pressed={filter.revisitOnly}
+          onClick={toggleRevisit}
+        >
+          <RotateCw />
+          Again?
+        </Button>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" aria-label="Sort items">
+              <ArrowDownUp />
+              {sortLabel}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="min-w-48">
+            <DropdownMenuLabel>Sort by</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuRadioGroup
+              value={filter.sort}
+              onValueChange={(v) => setSort(v as SortValue)}
+            >
+              {SORT_OPTIONS.map((o) => (
+                <DropdownMenuRadioItem key={o.value} value={o.value}>
+                  {o.label}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </div>
   );
 }

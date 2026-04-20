@@ -6,6 +6,7 @@ export type ItemRow = {
   title: string;
   imageUrl: string | null;
   year: number | null;
+  addedYear: number;
   externalRating: number | null;
   userRating: number | null;
   note: string | null;

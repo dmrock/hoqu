@@ -226,7 +226,7 @@ export function AddItemDialog({ hobbySlug, existingExternalIds }: Props) {
                 checked={wouldRevisit}
                 onChange={(e) => setWouldRevisit(e.target.checked)}
               />
-              Would revisit
+              Again?
             </label>
             {submitError ? <p className="text-sm text-destructive">{submitError}</p> : null}
             <DialogFooter>

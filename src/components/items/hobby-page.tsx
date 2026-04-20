@@ -72,6 +72,7 @@ export async function HobbyPage({
       title: items.title,
       imageUrl: items.imageUrl,
       year: items.year,
+      createdAt: items.createdAt,
       externalRating: items.externalRating,
       userRating: items.userRating,
       note: items.note,
@@ -82,8 +83,9 @@ export async function HobbyPage({
     .where(and(...conditions))
     .orderBy(...orderFor(filter.sort));
 
-  const userItems: ItemRow[] = rows.map((r) => ({
+  const userItems: ItemRow[] = rows.map(({ createdAt, ...r }) => ({
     ...r,
+    addedYear: new Date(createdAt).getFullYear(),
     status: r.status as ItemStatus,
   }));
 
@@ -107,7 +109,7 @@ export async function HobbyPage({
       ) : userItems.length === 0 ? (
         <p className="text-muted-foreground">No {title.toLowerCase()} match the current filters.</p>
       ) : (
-        <ItemsList items={userItems} />
+        <ItemsList items={userItems} hobbySlug={hobbySlug} />
       )}
     </div>
   );
