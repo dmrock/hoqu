@@ -38,6 +38,7 @@ export const friendshipStatusEnum = pgEnum("friendship_status", [
 export const achievementCategoryEnum = pgEnum("achievement_category", [
   "general",
   "movies",
+  "tv",
   "games",
   "books",
   "social",
@@ -143,7 +144,12 @@ export const friendships = pgTable("friendships", {
 
 export type AchievementRequirement =
   | { type: "items_completed"; count: number; hobby?: string }
-  | { type: "all_hobbies"; min_per_hobby: number }
+  | {
+      type: "all_hobbies";
+      min_per_hobby: number;
+      hobbies?: string[];
+      mode?: "completed" | "logged";
+    }
   | { type: "items_rated"; count: number };
 
 export const achievements = pgTable("achievements", {

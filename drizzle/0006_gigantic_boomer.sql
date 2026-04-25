@@ -1,0 +1,1 @@
+ALTER TYPE "public"."achievement_category" ADD VALUE 'tv' BEFORE 'games';

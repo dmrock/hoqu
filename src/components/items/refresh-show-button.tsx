@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
 import { refreshShow } from "@/app/(main)/items/actions";
 import { Button } from "@/components/ui/button";
+import { notifyUnlocks } from "@/lib/notify-unlocks";
 import { cn } from "@/lib/utils";
 
 export function RefreshShowButton({ itemId }: { itemId: string }) {
@@ -22,6 +23,7 @@ export function RefreshShowButton({ itemId }: { itemId: string }) {
         setError(res.error);
         return;
       }
+      notifyUnlocks(res.unlocks);
       if (res.migrated) {
         const params = new URLSearchParams(searchParams.toString());
         const current = (params.get("expanded") ?? "").split(",").filter(Boolean);

@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { and, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { type AchievementUnlock, checkAchievements } from "@/lib/achievements";
 import { getTvShow, type TvSeason } from "@/lib/api/tmdb";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -43,8 +44,12 @@ const refreshShowSchema = z.object({ itemId: z.uuid() });
 
 export type AddItemInput = z.input<typeof addItemSchema>;
 export type UpdateItemInput = z.input<typeof updateItemSchema>;
-export type ActionResult = { ok: true } | { ok: false; error: string };
-export type RefreshShowResult = { ok: true; migrated: boolean } | { ok: false; error: string };
+export type ActionResult =
+  | { ok: true; unlocks: AchievementUnlock[] }
+  | { ok: false; error: string };
+export type RefreshShowResult =
+  | { ok: true; migrated: boolean; unlocks: AchievementUnlock[] }
+  | { ok: false; error: string };
 
 const ZERO_DELTA: CounterDelta = {
   totalPoints: 0,
@@ -188,8 +193,9 @@ export async function addItem(input: AddItemInput): Promise<ActionResult> {
       db.update(users).set(counterUpdateSet(delta)).where(eq(users.id, userId)),
     ]);
 
+    const unlocks = await checkAchievements(userId);
     revalidatePath(`/${data.hobbySlug}`);
-    return { ok: true };
+    return { ok: true, unlocks };
   }
 
   const showId = randomUUID();
@@ -244,8 +250,9 @@ export async function addItem(input: AddItemInput): Promise<ActionResult> {
     db.update(users).set(counterUpdateSet(delta)).where(eq(users.id, userId)),
   ]);
 
+  const unlocks = await checkAchievements(userId);
   revalidatePath(`/${data.hobbySlug}`);
-  return { ok: true };
+  return { ok: true, unlocks };
 }
 
 export async function updateItem(input: UpdateItemInput): Promise<ActionResult> {
@@ -311,8 +318,9 @@ export async function updateItem(input: UpdateItemInput): Promise<ActionResult> 
     db.update(users).set(counterUpdateSet(delta)).where(eq(users.id, userId)),
   ]);
 
+  const unlocks = await checkAchievements(userId);
   revalidatePath(`/${parsedHobby.data}`);
-  return { ok: true };
+  return { ok: true, unlocks };
 }
 
 export async function deleteItem(input: { itemId: string }): Promise<ActionResult> {
@@ -372,8 +380,9 @@ export async function deleteItem(input: { itemId: string }): Promise<ActionResul
     db.update(users).set(counterUpdateSet(delta)).where(eq(users.id, userId)),
   ]);
 
+  const unlocks = await checkAchievements(userId);
   revalidatePath(`/${parsedHobby.data}`);
-  return { ok: true };
+  return { ok: true, unlocks };
 }
 
 export async function refreshShow(input: { itemId: string }): Promise<RefreshShowResult> {
@@ -419,7 +428,7 @@ export async function refreshShow(input: { itemId: string }): Promise<RefreshSho
     items,
     and(eq(items.userId, userId), eq(items.parentItemId, itemId)),
   );
-  if (childCount > 0) return { ok: true, migrated: false };
+  if (childCount > 0) return { ok: true, migrated: false, unlocks: [] };
 
   let details: Awaited<ReturnType<typeof getTvShow>>;
   try {
@@ -434,7 +443,7 @@ export async function refreshShow(input: { itemId: string }): Promise<RefreshSho
     if (fresh !== existing.seasonCount) {
       await db.update(items).set({ seasonCount: fresh }).where(eq(items.id, itemId));
     }
-    return { ok: true, migrated: false };
+    return { ok: true, migrated: false, unlocks: [] };
   }
 
   const sortedSeasons = [...details.seasons].sort((a, b) => a.seasonNumber - b.seasonNumber);
@@ -471,6 +480,7 @@ export async function refreshShow(input: { itemId: string }): Promise<RefreshSho
       .where(eq(items.id, itemId)),
   ]);
 
+  const unlocks = await checkAchievements(userId);
   revalidatePath("/tv");
-  return { ok: true, migrated: true };
+  return { ok: true, migrated: true, unlocks };
 }

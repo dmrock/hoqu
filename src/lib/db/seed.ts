@@ -1,4 +1,5 @@
 import { config } from "dotenv";
+import { sql } from "drizzle-orm";
 import type { AchievementRequirement } from "./schema";
 
 config({ path: ".env.local" });
@@ -15,7 +16,7 @@ type SeedAchievement = {
   name: string;
   description: string;
   icon: string;
-  category: "general" | "movies" | "games" | "books" | "social";
+  category: "general" | "movies" | "tv" | "games" | "books" | "social";
   requirement: AchievementRequirement;
   sortOrder: number;
 };
@@ -40,13 +41,22 @@ const ACHIEVEMENTS: SeedAchievement[] = [
     sortOrder: 20,
   },
   {
+    slug: "shows_5",
+    name: "Bingewatcher",
+    description: "Complete 5 TV seasons",
+    icon: "tv-badge",
+    category: "tv",
+    requirement: { type: "items_completed", count: 5, hobby: "tv" },
+    sortOrder: 21,
+  },
+  {
     slug: "gamer_5",
     name: "Gamer",
     description: "Complete 5 games",
     icon: "gamepad-badge",
     category: "games",
     requirement: { type: "items_completed", count: 5, hobby: "games" },
-    sortOrder: 21,
+    sortOrder: 22,
   },
   {
     slug: "bookworm_5",
@@ -55,7 +65,7 @@ const ACHIEVEMENTS: SeedAchievement[] = [
     icon: "book-badge",
     category: "books",
     requirement: { type: "items_completed", count: 5, hobby: "books" },
-    sortOrder: 22,
+    sortOrder: 23,
   },
   {
     slug: "movie_buff_25",
@@ -67,13 +77,22 @@ const ACHIEVEMENTS: SeedAchievement[] = [
     sortOrder: 30,
   },
   {
+    slug: "shows_25",
+    name: "Couch Commander",
+    description: "Complete 25 TV seasons",
+    icon: "remote",
+    category: "tv",
+    requirement: { type: "items_completed", count: 25, hobby: "tv" },
+    sortOrder: 31,
+  },
+  {
     slug: "gamer_25",
     name: "Hardcore Gamer",
     description: "Complete 25 games",
     icon: "controller-gold",
     category: "games",
     requirement: { type: "items_completed", count: 25, hobby: "games" },
-    sortOrder: 31,
+    sortOrder: 32,
   },
   {
     slug: "bookworm_25",
@@ -82,12 +101,12 @@ const ACHIEVEMENTS: SeedAchievement[] = [
     icon: "scroll",
     category: "books",
     requirement: { type: "items_completed", count: 25, hobby: "books" },
-    sortOrder: 32,
+    sortOrder: 33,
   },
   {
     slug: "well_rounded",
     name: "Well Rounded",
-    description: "Complete 5+ in each hobby",
+    description: "Complete 5+ in every hobby",
     icon: "compass",
     category: "general",
     requirement: { type: "all_hobbies", min_per_hobby: 5 },
@@ -96,10 +115,10 @@ const ACHIEVEMENTS: SeedAchievement[] = [
   {
     slug: "explorer",
     name: "Explorer",
-    description: "Log at least 1 item in all 3 hobbies",
+    description: "Log at least 1 item in every hobby",
     icon: "map",
     category: "general",
-    requirement: { type: "all_hobbies", min_per_hobby: 1 },
+    requirement: { type: "all_hobbies", min_per_hobby: 1, mode: "logged" },
     sortOrder: 41,
   },
   {
@@ -136,13 +155,33 @@ async function main() {
   const { achievements, hobbies } = await import("./schema");
 
   console.log("Seeding hobbies…");
-  await db.insert(hobbies).values(HOBBIES).onConflictDoNothing({ target: hobbies.slug });
+  await db
+    .insert(hobbies)
+    .values(HOBBIES)
+    .onConflictDoUpdate({
+      target: hobbies.slug,
+      set: {
+        name: sql`excluded.name`,
+        icon: sql`excluded.icon`,
+        pointsPerItem: sql`excluded.points_per_item`,
+      },
+    });
 
   console.log("Seeding achievements…");
   await db
     .insert(achievements)
     .values(ACHIEVEMENTS)
-    .onConflictDoNothing({ target: achievements.slug });
+    .onConflictDoUpdate({
+      target: achievements.slug,
+      set: {
+        name: sql`excluded.name`,
+        description: sql`excluded.description`,
+        icon: sql`excluded.icon`,
+        category: sql`excluded.category`,
+        requirement: sql`excluded.requirement`,
+        sortOrder: sql`excluded.sort_order`,
+      },
+    });
 
   console.log("Done.");
 }

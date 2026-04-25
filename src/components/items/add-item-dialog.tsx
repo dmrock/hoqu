@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import type { SearchResponse, SearchResult } from "@/lib/api/search";
+import { notifyUnlocks } from "@/lib/notify-unlocks";
 import type { HobbySlug, ItemStatus } from "@/lib/points";
 
 type Props = {
@@ -138,6 +139,7 @@ export function AddItemDialog({ hobbySlug, existingExternalIds }: Props) {
         wouldRevisit,
       });
       if (res.ok) {
+        notifyUnlocks(res.unlocks);
         handleOpenChange(false);
       } else {
         setSubmitError(res.error);

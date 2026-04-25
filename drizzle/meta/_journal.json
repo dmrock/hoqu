@@ -43,6 +43,13 @@
       "when": 1777102395022,
       "tag": "0005_peaceful_skreet",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1777125495261,
+      "tag": "0006_gigantic_boomer",
+      "breakpoints": true
     }
   ]
 }

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { UnlockToaster } from "@/components/achievements/unlock-toaster";
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
 import { auth } from "@/lib/auth";
@@ -19,6 +20,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
         />
         <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 md:px-6">{children}</main>
       </div>
+      <UnlockToaster />
     </div>
   );
 }

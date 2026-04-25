@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { notifyUnlocks } from "@/lib/notify-unlocks";
 import type { ItemStatus } from "@/lib/points";
 import type { ItemRow } from "@/types/item";
 
@@ -72,8 +73,10 @@ export function ItemRowActions({
         note: note.trim() ? note.trim() : null,
         wouldRevisit,
       });
-      if (res.ok) close();
-      else setError(res.error);
+      if (res.ok) {
+        notifyUnlocks(res.unlocks);
+        close();
+      } else setError(res.error);
     });
   }
 
@@ -81,8 +84,10 @@ export function ItemRowActions({
     setError(null);
     startTransition(async () => {
       const res = await deleteItem({ itemId: item.id });
-      if (res.ok) close();
-      else setError(res.error);
+      if (res.ok) {
+        notifyUnlocks(res.unlocks);
+        close();
+      } else setError(res.error);
     });
   }
 
