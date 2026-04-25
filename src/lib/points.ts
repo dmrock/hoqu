@@ -1,11 +1,12 @@
 export type ItemStatus = "completed" | "in_progress" | "planned" | "dropped";
-export type HobbySlug = "movies" | "games" | "books";
+export type HobbySlug = "movies" | "tv" | "games" | "books";
 
 export type CounterDelta = {
   totalPoints: number;
   moviesCompleted: number;
   gamesCompleted: number;
   booksCompleted: number;
+  showsCompleted: number;
   itemsRated: number;
 };
 
@@ -29,6 +30,7 @@ export function computeCounterDelta(args: {
     moviesCompleted: args.hobbySlug === "movies" ? completedDelta : 0,
     gamesCompleted: args.hobbySlug === "games" ? completedDelta : 0,
     booksCompleted: args.hobbySlug === "books" ? completedDelta : 0,
+    showsCompleted: args.hobbySlug === "tv" ? completedDelta : 0,
     itemsRated: ratedDelta,
   };
 }

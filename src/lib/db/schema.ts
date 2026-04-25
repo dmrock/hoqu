@@ -1,4 +1,5 @@
 import {
+  type AnyPgColumn,
   boolean,
   integer,
   jsonb,
@@ -54,6 +55,7 @@ export const users = pgTable("users", {
   moviesCompleted: integer("movies_completed").notNull().default(0),
   gamesCompleted: integer("games_completed").notNull().default(0),
   booksCompleted: integer("books_completed").notNull().default(0),
+  showsCompleted: integer("shows_completed").notNull().default(0),
   itemsRated: integer("items_rated").notNull().default(0),
   profileVisibility: profileVisibilityEnum("profile_visibility").notNull().default("public"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -78,6 +80,11 @@ export const items = pgTable(
     hobbyId: uuid("hobby_id")
       .notNull()
       .references(() => hobbies.id),
+    parentItemId: uuid("parent_item_id").references((): AnyPgColumn => items.id, {
+      onDelete: "cascade",
+    }),
+    seasonNumber: integer("season_number"),
+    seasonCount: integer("season_count"),
     externalId: text("external_id").notNull(),
     title: text("title").notNull(),
     imageUrl: text("image_url"),
@@ -86,7 +93,7 @@ export const items = pgTable(
     userRating: integer("user_rating"),
     note: text("note"),
     wouldRevisit: boolean("would_revisit").notNull().default(false),
-    status: itemStatusEnum("status").notNull(),
+    status: itemStatusEnum("status"),
     completedAt: timestamp("completed_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

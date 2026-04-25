@@ -1,5 +1,7 @@
 import type { ItemStatus } from "@/lib/points";
 
+export type ItemKind = "flat" | "show_parent" | "season";
+
 export type ItemRow = {
   id: string;
   externalId: string;
@@ -11,5 +13,10 @@ export type ItemRow = {
   userRating: number | null;
   note: string | null;
   wouldRevisit: boolean;
-  status: ItemStatus;
+  status: ItemStatus | null;
+  parentItemId: string | null;
+  seasonNumber: number | null;
+  seasonCount: number | null;
+  kind: ItemKind;
+  children?: ItemRow[];
 };

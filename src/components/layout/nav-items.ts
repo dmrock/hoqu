@@ -7,6 +7,7 @@ import {
   Settings,
   Shield,
   Trophy,
+  Tv,
   Users,
 } from "lucide-react";
 
@@ -19,6 +20,7 @@ export type NavItem = {
 export const navItems: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/movies", label: "Movies", icon: Clapperboard },
+  { href: "/tv", label: "TV Shows", icon: Tv },
   { href: "/games", label: "Games", icon: Gamepad2 },
   { href: "/books", label: "Books", icon: BookOpen },
   { href: "/achievements", label: "Achievements", icon: Trophy },

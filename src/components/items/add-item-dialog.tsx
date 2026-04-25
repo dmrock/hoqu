@@ -42,6 +42,7 @@ const STATUSES: { value: ItemStatus; label: string }[] = [
 
 const HOBBY_SINGULAR: Record<HobbySlug, string> = {
   movies: "movie",
+  tv: "TV show",
   games: "game",
   books: "book",
 };

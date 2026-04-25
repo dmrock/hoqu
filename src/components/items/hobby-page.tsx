@@ -1,11 +1,11 @@
-import { and, asc, desc, eq, inArray, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, isNull, or, type SQL } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { hobbies, items } from "@/lib/db/schema";
 import { type ItemsFilter, parseItemsFilter } from "@/lib/items-filter";
 import type { HobbySlug, ItemStatus } from "@/lib/points";
-import type { ItemRow } from "@/types/item";
+import type { ItemKind, ItemRow } from "@/types/item";
 import { AddItemDialog } from "./add-item-dialog";
 import { ItemsList } from "./items-list";
 import { ItemsToolbar } from "./items-toolbar";
@@ -27,6 +27,18 @@ function orderFor(sort: ItemsFilter["sort"]) {
   }
 }
 
+function deriveKind(row: { parentItemId: string | null; seasonCount: number | null }): ItemKind {
+  if (row.parentItemId !== null) return "season";
+  if ((row.seasonCount ?? 0) >= 2) return "show_parent";
+  return "flat";
+}
+
+function parseExpanded(searchParams: SearchParamsInput): Set<string> {
+  const raw = searchParams.expanded;
+  const value = typeof raw === "string" ? raw : Array.isArray(raw) ? raw.join(",") : "";
+  return new Set(value.split(",").filter(Boolean));
+}
+
 export async function HobbyPage({
   hobbySlug,
   title,
@@ -40,6 +52,7 @@ export async function HobbyPage({
   if (!session?.user?.id) redirect("/login");
 
   const filter = parseItemsFilter(searchParams);
+  const expanded = parseExpanded(searchParams);
 
   const [hobby] = await db
     .select({ id: hobbies.id })
@@ -58,14 +71,22 @@ export async function HobbyPage({
     );
   }
 
-  const conditions: SQL[] = [
+  const topConditions: SQL[] = [
     eq(items.userId, session.user.id),
     eq(items.hobbyId, hobby.id),
-    inArray(items.status, filter.status),
+    isNull(items.parentItemId),
   ];
-  if (filter.revisitOnly) conditions.push(eq(items.wouldRevisit, true));
 
-  const rows = await db
+  const passShowParent = gte(items.seasonCount, 2);
+  const statusOr = or(inArray(items.status, filter.status), passShowParent);
+  if (statusOr) topConditions.push(statusOr);
+
+  if (filter.revisitOnly) {
+    const revisitOr = or(eq(items.wouldRevisit, true), passShowParent);
+    if (revisitOr) topConditions.push(revisitOr);
+  }
+
+  const topRows = await db
     .select({
       id: items.id,
       externalId: items.externalId,
@@ -78,21 +99,82 @@ export async function HobbyPage({
       note: items.note,
       wouldRevisit: items.wouldRevisit,
       status: items.status,
+      parentItemId: items.parentItemId,
+      seasonNumber: items.seasonNumber,
+      seasonCount: items.seasonCount,
     })
     .from(items)
-    .where(and(...conditions))
+    .where(and(...topConditions))
     .orderBy(...orderFor(filter.sort));
 
-  const userItems: ItemRow[] = rows.map(({ createdAt, ...r }) => ({
-    ...r,
-    addedYear: new Date(createdAt).getFullYear(),
-    status: r.status as ItemStatus,
-  }));
+  const parentIds = topRows.filter((r) => deriveKind(r) === "show_parent").map((r) => r.id);
+
+  let childRows: typeof topRows = [];
+  if (parentIds.length > 0) {
+    const childConditions: SQL[] = [
+      eq(items.userId, session.user.id),
+      inArray(items.parentItemId, parentIds),
+      inArray(items.status, filter.status),
+    ];
+    if (filter.revisitOnly) childConditions.push(eq(items.wouldRevisit, true));
+
+    childRows = await db
+      .select({
+        id: items.id,
+        externalId: items.externalId,
+        title: items.title,
+        imageUrl: items.imageUrl,
+        year: items.year,
+        createdAt: items.createdAt,
+        externalRating: items.externalRating,
+        userRating: items.userRating,
+        note: items.note,
+        wouldRevisit: items.wouldRevisit,
+        status: items.status,
+        parentItemId: items.parentItemId,
+        seasonNumber: items.seasonNumber,
+        seasonCount: items.seasonCount,
+      })
+      .from(items)
+      .where(and(...childConditions))
+      .orderBy(asc(items.seasonNumber));
+  }
+
+  const toItemRow = (r: (typeof topRows)[number]): ItemRow => {
+    const { createdAt, ...rest } = r;
+    return {
+      ...rest,
+      addedYear: new Date(createdAt).getFullYear(),
+      status: rest.status as ItemStatus | null,
+      kind: deriveKind(rest),
+    };
+  };
+
+  const childrenByParent = new Map<string, ItemRow[]>();
+  for (const r of childRows) {
+    const list = childrenByParent.get(r.parentItemId ?? "") ?? [];
+    list.push(toItemRow(r));
+    childrenByParent.set(r.parentItemId ?? "", list);
+  }
+
+  const userItems: ItemRow[] = topRows.map((r) => {
+    const row = toItemRow(r);
+    if (row.kind === "show_parent") {
+      row.children = childrenByParent.get(row.id) ?? [];
+    }
+    return row;
+  });
 
   const ownedIdsRows = await db
     .select({ externalId: items.externalId })
     .from(items)
-    .where(and(eq(items.userId, session.user.id), eq(items.hobbyId, hobby.id)));
+    .where(
+      and(
+        eq(items.userId, session.user.id),
+        eq(items.hobbyId, hobby.id),
+        isNull(items.parentItemId),
+      ),
+    );
   const existingExternalIds = ownedIdsRows.map((r) => r.externalId);
 
   return (
@@ -109,7 +191,7 @@ export async function HobbyPage({
       ) : userItems.length === 0 ? (
         <p className="text-muted-foreground">No {title.toLowerCase()} match the current filters.</p>
       ) : (
-        <ItemsList items={userItems} hobbySlug={hobbySlug} />
+        <ItemsList items={userItems} hobbySlug={hobbySlug} expanded={expanded} />
       )}
     </div>
   );

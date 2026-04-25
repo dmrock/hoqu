@@ -33,9 +33,17 @@ const STATUSES: { value: ItemStatus; label: string }[] = [
   { value: "dropped", label: "Dropped" },
 ];
 
-export function ItemRowActions({ item }: { item: ItemRow }) {
+export function ItemRowActions({
+  item,
+  showEdit = true,
+  deleteDescription,
+}: {
+  item: ItemRow;
+  showEdit?: boolean;
+  deleteDescription?: string;
+}) {
   const [mode, setMode] = useState<Mode>("none");
-  const [status, setStatus] = useState<ItemStatus>(item.status);
+  const [status, setStatus] = useState<ItemStatus>(item.status ?? "planned");
   const [userRating, setUserRating] = useState<string>(
     item.userRating ? String(item.userRating) : "none",
   );
@@ -47,7 +55,7 @@ export function ItemRowActions({ item }: { item: ItemRow }) {
   function close() {
     setMode("none");
     setError(null);
-    setStatus(item.status);
+    setStatus(item.status ?? "planned");
     setUserRating(item.userRating ? String(item.userRating) : "none");
     setNote(item.note ?? "");
     setWouldRevisit(item.wouldRevisit);
@@ -81,14 +89,16 @@ export function ItemRowActions({ item }: { item: ItemRow }) {
   return (
     <>
       <div className="flex items-center gap-1">
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          aria-label="Edit item"
-          onClick={() => setMode("edit")}
-        >
-          <Pencil />
-        </Button>
+        {showEdit ? (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Edit item"
+            onClick={() => setMode("edit")}
+          >
+            <Pencil />
+          </Button>
+        ) : null}
         <Button
           variant="ghost"
           size="icon-sm"
@@ -174,7 +184,8 @@ export function ItemRowActions({ item }: { item: ItemRow }) {
               <DialogHeader>
                 <DialogTitle>Delete item?</DialogTitle>
                 <DialogDescription>
-                  Remove "{item.title}" from your collection. This cannot be undone.
+                  {deleteDescription ??
+                    `Remove "${item.title}" from your collection. This cannot be undone.`}
                 </DialogDescription>
               </DialogHeader>
               {error ? <p className="text-sm text-destructive">{error}</p> : null}
