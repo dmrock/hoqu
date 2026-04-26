@@ -5,18 +5,18 @@ import {
   Crown,
   Film,
   Flame,
+  Footprints,
   Gamepad2,
   type LucideIcon,
   Map as MapIcon,
   ScrollText,
-  Sparkles,
   Star,
   Trophy,
   Tv,
 } from "lucide-react";
 
 const ICON_MAP: Record<string, LucideIcon> = {
-  sparkle: Sparkles,
+  footprints: Footprints,
   "film-badge": Film,
   "tv-badge": Tv,
   "gamepad-badge": Gamepad2,

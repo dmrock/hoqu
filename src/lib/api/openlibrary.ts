@@ -16,6 +16,17 @@ type OpenLibraryResponse = {
   docs: OpenLibraryDoc[];
 };
 
+function toBookResult(d: OpenLibraryDoc): SearchResult | null {
+  if (!d.title) return null;
+  return {
+    externalId: d.key,
+    title: d.title,
+    year: d.first_publish_year ?? null,
+    imageUrl: d.cover_i ? `${COVER_URL}/${d.cover_i}-M.jpg` : null,
+    externalRating: null,
+  };
+}
+
 export async function searchBooks(query: string): Promise<SearchResult[]> {
   const url = new URL(OPEN_LIBRARY_URL);
   url.searchParams.set("q", query);
@@ -30,14 +41,5 @@ export async function searchBooks(query: string): Promise<SearchResult[]> {
   }
 
   const json = (await res.json()) as OpenLibraryResponse;
-
-  return json.docs
-    .filter((d): d is OpenLibraryDoc & { title: string } => Boolean(d.title))
-    .map((d) => ({
-      externalId: d.key,
-      title: d.title,
-      year: d.first_publish_year ?? null,
-      imageUrl: d.cover_i ? `${COVER_URL}/${d.cover_i}-M.jpg` : null,
-      externalRating: null,
-    }));
+  return json.docs.map(toBookResult).filter((r): r is SearchResult => r !== null);
 }

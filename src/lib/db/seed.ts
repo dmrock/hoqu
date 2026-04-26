@@ -26,7 +26,7 @@ const ACHIEVEMENTS: SeedAchievement[] = [
     slug: "first_step",
     name: "First Step",
     description: "Complete your first item",
-    icon: "sparkle",
+    icon: "footprints",
     category: "general",
     requirement: { type: "items_completed", count: 1 },
     sortOrder: 10,
