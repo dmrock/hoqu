@@ -76,6 +76,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
           <EditProfileForm
             initialName={profile.name ?? ""}
             initialUsername={profile.username ?? ""}
+            initialVisibility={visibility}
           />
         </section>
       ) : null}

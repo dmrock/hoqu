@@ -21,15 +21,18 @@ const nameSchema = z
   .min(1, "Display name can't be empty")
   .max(50, "Display name must be at most 50 characters");
 
+const visibilitySchema = z.enum(["public", "friends_only", "guild_only", "private"]);
+
 const updateProfileSchema = z.object({
   name: nameSchema,
   username: usernameSchema,
+  profileVisibility: visibilitySchema,
 });
 
 export type UpdateProfileInput = z.input<typeof updateProfileSchema>;
 export type UpdateProfileResult =
   | { ok: true; username: string }
-  | { ok: false; error: string; field?: "name" | "username" };
+  | { ok: false; error: string; field?: "name" | "username" | "profileVisibility" };
 
 export async function updateProfile(input: UpdateProfileInput): Promise<UpdateProfileResult> {
   const session = await auth();
@@ -42,7 +45,10 @@ export async function updateProfile(input: UpdateProfileInput): Promise<UpdatePr
     return {
       ok: false,
       error: issue?.message ?? "Invalid input",
-      field: field === "name" || field === "username" ? field : undefined,
+      field:
+        field === "name" || field === "username" || field === "profileVisibility"
+          ? field
+          : undefined,
     };
   }
 
@@ -60,7 +66,12 @@ export async function updateProfile(input: UpdateProfileInput): Promise<UpdatePr
 
   await db
     .update(users)
-    .set({ name: data.name, username: data.username, updatedAt: new Date() })
+    .set({
+      name: data.name,
+      username: data.username,
+      profileVisibility: data.profileVisibility,
+      updatedAt: new Date(),
+    })
     .where(eq(users.id, userId));
 
   revalidatePath(`/profile/${data.username}`);
