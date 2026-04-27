@@ -4,7 +4,6 @@ import {
   Gamepad2,
   LayoutDashboard,
   type LucideIcon,
-  Settings,
   Shield,
   Trophy,
   Tv,
@@ -26,5 +25,4 @@ export const navItems: NavItem[] = [
   { href: "/achievements", label: "Achievements", icon: Trophy },
   { href: "/guilds", label: "Guilds", icon: Shield },
   { href: "/friends", label: "Friends", icon: Users },
-  { href: "/settings", label: "Settings", icon: Settings },
 ];

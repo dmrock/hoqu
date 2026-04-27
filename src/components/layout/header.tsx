@@ -11,7 +11,7 @@ type HeaderProps = {
 
 export function Header({ email, name, image, username }: HeaderProps) {
   return (
-    <header className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur supports-backdrop-filter:bg-background/60">
       <MobileDrawer />
 
       <div className="flex flex-1 items-center">
