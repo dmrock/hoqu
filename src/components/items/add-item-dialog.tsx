@@ -62,6 +62,7 @@ export function AddItemDialog({ hobbySlug, existingExternalIds }: Props) {
   const [wouldRevisit, setWouldRevisit] = useState(false);
   const [submitting, startTransition] = useTransition();
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [slotsLeft, setSlotsLeft] = useState<number | null>(null);
 
   const ownedSet = useMemo(() => new Set(existingExternalIds), [existingExternalIds]);
 
@@ -140,6 +141,7 @@ export function AddItemDialog({ hobbySlug, existingExternalIds }: Props) {
       });
       if (res.ok) {
         notifyUnlocks(res.unlocks);
+        setSlotsLeft(res.slotsLeft);
         handleOpenChange(false);
       } else {
         setSubmitError(res.error);
@@ -156,6 +158,13 @@ export function AddItemDialog({ hobbySlug, existingExternalIds }: Props) {
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-lg">
+        {slotsLeft !== null && slotsLeft <= 20 ? (
+          <p className="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-warning">
+            {slotsLeft === 0
+              ? "You've hit the add limit — take a breather."
+              : `You're on a roll! ${slotsLeft} slot${slotsLeft === 1 ? "" : "s"} left before a pause.`}
+          </p>
+        ) : null}
         {selected ? (
           <form onSubmit={handleSubmit} className="space-y-4">
             <DialogHeader>

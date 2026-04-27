@@ -1,8 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { cachedSearch } from "./cache";
 import { type SearchResponse, type SearchResult, searchQuerySchema } from "./search";
 
-export function createSearchHandler(fetcher: (query: string) => Promise<SearchResult[]>) {
+export function createSearchHandler(
+  hobby: string,
+  fetcher: (query: string) => Promise<SearchResult[]>,
+) {
   return async function handler(req: NextRequest): Promise<NextResponse<SearchResponse>> {
     const session = await auth();
     if (!session?.user?.id) {
@@ -17,7 +21,7 @@ export function createSearchHandler(fetcher: (query: string) => Promise<SearchRe
     }
 
     try {
-      const data = await fetcher(parsed.data.q);
+      const data = await cachedSearch(hobby, parsed.data.q, () => fetcher(parsed.data.q));
       return NextResponse.json({ data, error: null });
     } catch (err) {
       console.error("search handler failed", err);

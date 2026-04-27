@@ -10,6 +10,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { hobbies, items, users } from "@/lib/db/schema";
 import { type CounterDelta, computeCounterDelta, type ItemStatus } from "@/lib/points";
+import { checkAddItemLimit } from "@/lib/rate-limit";
 
 const TMDB_IMAGE_URL = "https://image.tmdb.org/t/p/w342";
 
@@ -47,6 +48,9 @@ export type UpdateItemInput = z.input<typeof updateItemSchema>;
 export type ActionResult =
   | { ok: true; unlocks: AchievementUnlock[] }
   | { ok: false; error: string };
+export type AddItemResult =
+  | { ok: true; unlocks: AchievementUnlock[]; slotsLeft: number }
+  | { ok: false; error: string; rateLimited?: boolean };
 export type RefreshShowResult =
   | { ok: true; migrated: boolean; unlocks: AchievementUnlock[] }
   | { ok: false; error: string };
@@ -120,7 +124,7 @@ function seasonRow(args: {
   };
 }
 
-export async function addItem(input: AddItemInput): Promise<ActionResult> {
+export async function addItem(input: AddItemInput): Promise<AddItemResult> {
   const session = await auth();
   if (!session?.user?.id) return { ok: false, error: "Unauthorized" };
 
@@ -129,6 +133,17 @@ export async function addItem(input: AddItemInput): Promise<ActionResult> {
 
   const userId = session.user.id;
   const data = parsed.data;
+
+  const limit = await checkAddItemLimit(userId);
+  if (!limit.ok) {
+    const minutes = limit.resetAt
+      ? Math.max(1, Math.ceil((limit.resetAt - Date.now()) / 60_000))
+      : null;
+    const error = minutes
+      ? `Take a breather — you've hit the add limit. Back in ~${minutes} min.`
+      : "Take a breather — you've hit the add limit.";
+    return { ok: false, error, rateLimited: true };
+  }
 
   const [hobby] = await db
     .select({ id: hobbies.id })
@@ -195,7 +210,11 @@ export async function addItem(input: AddItemInput): Promise<ActionResult> {
 
     const unlocks = await checkAchievements(userId);
     revalidatePath(`/${data.hobbySlug}`);
-    return { ok: true, unlocks };
+    return {
+      ok: true,
+      unlocks,
+      slotsLeft: Math.min(limit.hourlyRemaining, limit.dailyRemaining),
+    };
   }
 
   const showId = randomUUID();
@@ -252,7 +271,11 @@ export async function addItem(input: AddItemInput): Promise<ActionResult> {
 
   const unlocks = await checkAchievements(userId);
   revalidatePath(`/${data.hobbySlug}`);
-  return { ok: true, unlocks };
+  return {
+    ok: true,
+    unlocks,
+    slotsLeft: Math.min(limit.hourlyRemaining, limit.dailyRemaining),
+  };
 }
 
 export async function updateItem(input: UpdateItemInput): Promise<ActionResult> {
