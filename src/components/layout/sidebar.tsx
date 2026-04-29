@@ -6,9 +6,17 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { navItems } from "./nav-items";
+import { navGroups } from "./nav-items";
+import { SidebarUserMenu } from "./sidebar-user-menu";
 
-export function Sidebar() {
+type SidebarProps = {
+  email: string;
+  name: string | null;
+  image: string | null;
+  username: string | null;
+};
+
+export function Sidebar({ email, name, image, username }: SidebarProps) {
   const [expanded, setExpanded] = useState(true);
   const pathname = usePathname();
 
@@ -41,31 +49,50 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 overflow-y-auto p-2">
-        <ul className="flex flex-col gap-1">
-          {navItems.map((item) => {
-            const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
-            const Icon = item.icon;
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  title={expanded ? undefined : item.label}
-                  className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
-                    active
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                      : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                    !expanded && "justify-center px-0",
-                  )}
-                >
-                  <Icon className="size-5 shrink-0" />
-                  {expanded && <span>{item.label}</span>}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+        {navGroups.map((group, groupIndex) => (
+          <ul
+            // biome-ignore lint/suspicious/noArrayIndexKey: nav groups are static and ordered
+            key={groupIndex}
+            className={cn(
+              "flex flex-col gap-1",
+              groupIndex > 0 && "mt-2 border-t border-sidebar-border pt-2",
+            )}
+          >
+            {group.map((item) => {
+              const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+              const Icon = item.icon;
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    title={expanded ? undefined : item.label}
+                    className={cn(
+                      "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+                      active
+                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                        : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                      !expanded && "justify-center px-0",
+                    )}
+                  >
+                    <Icon className="size-5 shrink-0" />
+                    {expanded && <span>{item.label}</span>}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        ))}
       </nav>
+
+      <div className="border-t border-sidebar-border p-2">
+        <SidebarUserMenu
+          email={email}
+          name={name}
+          image={image}
+          username={username}
+          expanded={expanded}
+        />
+      </div>
     </aside>
   );
 }

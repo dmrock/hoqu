@@ -1,6 +1,5 @@
 import { Search } from "lucide-react";
 import { MobileDrawer } from "./mobile-drawer";
-import { UserMenu } from "./user-menu";
 
 type HeaderProps = {
   email: string;
@@ -12,7 +11,7 @@ type HeaderProps = {
 export function Header({ email, name, image, username }: HeaderProps) {
   return (
     <header className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur supports-backdrop-filter:bg-background/60">
-      <MobileDrawer />
+      <MobileDrawer email={email} name={name} image={image} username={username} />
 
       <div className="flex flex-1 items-center">
         <div className="relative w-full max-w-md">
@@ -25,8 +24,6 @@ export function Header({ email, name, image, username }: HeaderProps) {
           />
         </div>
       </div>
-
-      <UserMenu email={email} name={name} image={image} username={username} />
     </header>
   );
 }

@@ -20,16 +20,18 @@ export default async function MainLayout({ children }: { children: React.ReactNo
     .where(eq(users.id, session.user.id))
     .limit(1);
 
+  const userProps = {
+    email: session.user.email,
+    name: profile?.name ?? session.user.name ?? null,
+    image: profile?.image ?? session.user.image ?? null,
+    username: profile?.username ?? null,
+  };
+
   return (
     <div className="flex min-h-svh">
-      <Sidebar />
+      <Sidebar {...userProps} />
       <div className="flex min-w-0 flex-1 flex-col">
-        <Header
-          email={session.user.email}
-          name={profile?.name ?? session.user.name ?? null}
-          image={profile?.image ?? session.user.image ?? null}
-          username={profile?.username ?? null}
-        />
+        <Header {...userProps} />
         <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 md:px-6">{children}</main>
       </div>
       <UnlockToaster />

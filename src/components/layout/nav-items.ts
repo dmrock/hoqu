@@ -5,7 +5,6 @@ import {
   LayoutDashboard,
   type LucideIcon,
   Shield,
-  Trophy,
   Tv,
   Users,
 } from "lucide-react";
@@ -16,13 +15,20 @@ export type NavItem = {
   icon: LucideIcon;
 };
 
-export const navItems: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/movies", label: "Movies", icon: Clapperboard },
-  { href: "/tv", label: "TV Shows", icon: Tv },
-  { href: "/games", label: "Games", icon: Gamepad2 },
-  { href: "/books", label: "Books", icon: BookOpen },
-  { href: "/achievements", label: "Achievements", icon: Trophy },
-  { href: "/guilds", label: "Guilds", icon: Shield },
-  { href: "/friends", label: "Friends", icon: Users },
+/**
+ * Sidebar navigation grouped by purpose. Each inner array is a visual group
+ * separated from the next by a horizontal divider in the sidebar / drawer.
+ */
+export const navGroups: NavItem[][] = [
+  [{ href: "/dashboard", label: "Dashboard", icon: LayoutDashboard }],
+  [
+    { href: "/movies", label: "Movies", icon: Clapperboard },
+    { href: "/tv", label: "TV Shows", icon: Tv },
+    { href: "/games", label: "Games", icon: Gamepad2 },
+    { href: "/books", label: "Books", icon: BookOpen },
+  ],
+  [
+    { href: "/friends", label: "Friends", icon: Users },
+    { href: "/guilds", label: "Guilds", icon: Shield },
+  ],
 ];
