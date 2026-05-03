@@ -50,6 +50,13 @@
       "when": 1777125495261,
       "tag": "0006_gigantic_boomer",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1777795391269,
+      "tag": "0007_little_terrax",
+      "breakpoints": true
     }
   ]
 }

@@ -95,6 +95,13 @@ export const items = pgTable(
     note: text("note"),
     wouldRevisit: boolean("would_revisit").notNull().default(false),
     status: itemStatusEnum("status"),
+    /**
+     * Snapshot of the points contribution this row is currently making to the
+     * user's total. Set to `hobby.pointsPerItem` at the moment status becomes
+     * `completed`; reset to 0 when the row leaves the completed state. Lets
+     * historical totals survive a future change to `hobby.pointsPerItem`.
+     */
+    pointsAwarded: integer("points_awarded").notNull().default(0),
     completedAt: timestamp("completed_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

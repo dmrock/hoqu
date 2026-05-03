@@ -9,7 +9,12 @@ import { getTvShow, type TvSeason } from "@/lib/api/tmdb";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { hobbies, items, users } from "@/lib/db/schema";
-import { type CounterDelta, computeCounterDelta, type ItemStatus } from "@/lib/points";
+import {
+  type CounterDelta,
+  computeCounterDelta,
+  type ItemStatus,
+  snapshotPoints,
+} from "@/lib/points";
 import { checkAddItemLimit } from "@/lib/rate-limit";
 
 const TMDB_IMAGE_URL = "https://image.tmdb.org/t/p/w342";
@@ -98,6 +103,7 @@ function seasonRow(args: {
   userRating: number | null;
   note: string | null;
   wouldRevisit: boolean;
+  pointsAwarded: number;
 }) {
   const seasonImage = args.season.posterPath
     ? `${TMDB_IMAGE_URL}${args.season.posterPath}`
@@ -120,6 +126,7 @@ function seasonRow(args: {
     note: args.note,
     wouldRevisit: args.wouldRevisit,
     status: args.status,
+    pointsAwarded: args.pointsAwarded,
     completedAt,
   };
 }
@@ -146,7 +153,7 @@ export async function addItem(input: AddItemInput): Promise<AddItemResult> {
   }
 
   const [hobby] = await db
-    .select({ id: hobbies.id })
+    .select({ id: hobbies.id, pointsPerItem: hobbies.pointsPerItem })
     .from(hobbies)
     .where(eq(hobbies.slug, data.hobbySlug))
     .limit(1);
@@ -181,11 +188,17 @@ export async function addItem(input: AddItemInput): Promise<AddItemResult> {
   const isMultiSeason = data.hobbySlug === "tv" && seasonCount >= 2 && seasons.length >= 2;
 
   if (!isMultiSeason) {
+    const newPointsAwarded = snapshotPoints({
+      status: data.status,
+      pointsPerItem: hobby.pointsPerItem,
+    });
     const delta = computeCounterDelta({
       oldStatus: null,
       newStatus: data.status,
       oldRating: null,
       newRating: data.userRating,
+      oldPointsAwarded: 0,
+      newPointsAwarded,
       hobbySlug: data.hobbySlug,
     });
 
@@ -202,6 +215,7 @@ export async function addItem(input: AddItemInput): Promise<AddItemResult> {
         note: data.note,
         wouldRevisit: data.wouldRevisit,
         status: data.status,
+        pointsAwarded: newPointsAwarded,
         seasonCount: data.hobbySlug === "tv" ? seasonCount : null,
         completedAt: data.status === "completed" ? new Date() : null,
       }),
@@ -217,6 +231,8 @@ export async function addItem(input: AddItemInput): Promise<AddItemResult> {
     };
   }
 
+  // Multi-season TV: parent row is non-counting; S1 inherits the user's input,
+  // S2..SN start as planned. Only S1's snapshot contributes to total points.
   const showId = randomUUID();
   const showRow = {
     id: showId,
@@ -234,12 +250,14 @@ export async function addItem(input: AddItemInput): Promise<AddItemResult> {
     note: null,
     wouldRevisit: false,
     status: null,
+    pointsAwarded: 0,
     completedAt: null,
   };
 
   const sortedSeasons = [...seasons].sort((a, b) => a.seasonNumber - b.seasonNumber);
   const childRows = sortedSeasons.map((season) => {
     const isFirst = season.seasonNumber === sortedSeasons[0].seasonNumber;
+    const status = isFirst ? data.status : ("planned" as ItemStatus);
     return seasonRow({
       id: randomUUID(),
       userId,
@@ -248,18 +266,25 @@ export async function addItem(input: AddItemInput): Promise<AddItemResult> {
       showExternalId: data.externalId,
       showImageUrl: data.imageUrl,
       season,
-      status: isFirst ? data.status : "planned",
+      status,
       userRating: isFirst ? data.userRating : null,
       note: isFirst ? data.note : null,
       wouldRevisit: isFirst ? data.wouldRevisit : false,
+      pointsAwarded: snapshotPoints({ status, pointsPerItem: hobby.pointsPerItem }),
     });
   });
 
+  const s1NewPoints = snapshotPoints({
+    status: data.status,
+    pointsPerItem: hobby.pointsPerItem,
+  });
   const delta = computeCounterDelta({
     oldStatus: null,
     newStatus: data.status,
     oldRating: null,
     newRating: data.userRating,
+    oldPointsAwarded: 0,
+    newPointsAwarded: s1NewPoints,
     hobbySlug: "tv",
   });
 
@@ -296,6 +321,7 @@ export async function updateItem(input: UpdateItemInput): Promise<ActionResult> 
       completedAt: items.completedAt,
       parentItemId: items.parentItemId,
       seasonCount: items.seasonCount,
+      pointsAwarded: items.pointsAwarded,
     })
     .from(items)
     .where(and(eq(items.id, data.itemId), eq(items.userId, userId)))
@@ -307,7 +333,7 @@ export async function updateItem(input: UpdateItemInput): Promise<ActionResult> 
   }
 
   const [hobby] = await db
-    .select({ slug: hobbies.slug })
+    .select({ slug: hobbies.slug, pointsPerItem: hobbies.pointsPerItem })
     .from(hobbies)
     .where(eq(hobbies.id, existing.hobbyId))
     .limit(1);
@@ -316,11 +342,18 @@ export async function updateItem(input: UpdateItemInput): Promise<ActionResult> 
   const parsedHobby = hobbySlugSchema.safeParse(hobby.slug);
   if (!parsedHobby.success) return { ok: false, error: "Unknown hobby" };
 
+  const newPointsAwarded = snapshotPoints({
+    status: data.status,
+    pointsPerItem: hobby.pointsPerItem,
+  });
+
   const delta = computeCounterDelta({
     oldStatus: existing.status,
     newStatus: data.status,
     oldRating: existing.userRating,
     newRating: data.userRating,
+    oldPointsAwarded: existing.pointsAwarded,
+    newPointsAwarded,
     hobbySlug: parsedHobby.data,
   });
 
@@ -335,6 +368,7 @@ export async function updateItem(input: UpdateItemInput): Promise<ActionResult> 
         note: data.note,
         wouldRevisit: data.wouldRevisit,
         completedAt,
+        pointsAwarded: newPointsAwarded,
         updatedAt: new Date(),
       })
       .where(eq(items.id, data.itemId)),
@@ -362,6 +396,7 @@ export async function deleteItem(input: { itemId: string }): Promise<ActionResul
       userRating: items.userRating,
       hobbyId: items.hobbyId,
       parentItemId: items.parentItemId,
+      pointsAwarded: items.pointsAwarded,
     })
     .from(items)
     .where(and(eq(items.id, itemId), eq(items.userId, userId)))
@@ -379,11 +414,22 @@ export async function deleteItem(input: { itemId: string }): Promise<ActionResul
   if (!parsedHobby.success) return { ok: false, error: "Unknown hobby" };
 
   const children = await db
-    .select({ status: items.status, userRating: items.userRating })
+    .select({
+      status: items.status,
+      userRating: items.userRating,
+      pointsAwarded: items.pointsAwarded,
+    })
     .from(items)
     .where(and(eq(items.userId, userId), eq(items.parentItemId, itemId)));
 
-  const rowsToRemove = [{ status: existing.status, userRating: existing.userRating }, ...children];
+  const rowsToRemove = [
+    {
+      status: existing.status,
+      userRating: existing.userRating,
+      pointsAwarded: existing.pointsAwarded,
+    },
+    ...children,
+  ];
   let delta = ZERO_DELTA;
   for (const row of rowsToRemove) {
     delta = addDelta(
@@ -393,6 +439,8 @@ export async function deleteItem(input: { itemId: string }): Promise<ActionResul
         newStatus: null,
         oldRating: row.userRating,
         newRating: null,
+        oldPointsAwarded: row.pointsAwarded,
+        newPointsAwarded: 0,
         hobbySlug: parsedHobby.data,
       }),
     );
@@ -431,6 +479,7 @@ export async function refreshShow(input: { itemId: string }): Promise<RefreshSho
       completedAt: items.completedAt,
       parentItemId: items.parentItemId,
       seasonCount: items.seasonCount,
+      pointsAwarded: items.pointsAwarded,
     })
     .from(items)
     .where(and(eq(items.id, itemId), eq(items.userId, userId)))
@@ -469,10 +518,16 @@ export async function refreshShow(input: { itemId: string }): Promise<RefreshSho
     return { ok: true, migrated: false, unlocks: [] };
   }
 
+  // Migrating flat -> multi-season. S1 inherits the show's exact state INCLUDING
+  // its pointsAwarded snapshot, preserving the original completion's value even
+  // if hobby.pointsPerItem has been recalibrated since. Net counter delta = 0:
+  // show -X (becomes parent), S1 +X (assumes show's old snapshot).
   const sortedSeasons = [...details.seasons].sort((a, b) => a.seasonNumber - b.seasonNumber);
   const firstSeasonNumber = sortedSeasons[0].seasonNumber;
-  const childRows = sortedSeasons.map((season) =>
-    seasonRow({
+  const childRows = sortedSeasons.map((season) => {
+    const isFirst = season.seasonNumber === firstSeasonNumber;
+    const status = isFirst ? existing.status : ("planned" as ItemStatus);
+    return seasonRow({
       id: randomUUID(),
       userId,
       hobbyId: existing.hobbyId,
@@ -480,12 +535,13 @@ export async function refreshShow(input: { itemId: string }): Promise<RefreshSho
       showExternalId: existing.externalId,
       showImageUrl: existing.imageUrl,
       season,
-      status: season.seasonNumber === firstSeasonNumber ? existing.status : "planned",
-      userRating: season.seasonNumber === firstSeasonNumber ? existing.userRating : null,
-      note: season.seasonNumber === firstSeasonNumber ? existing.note : null,
-      wouldRevisit: season.seasonNumber === firstSeasonNumber ? existing.wouldRevisit : false,
-    }),
-  );
+      status,
+      userRating: isFirst ? existing.userRating : null,
+      note: isFirst ? existing.note : null,
+      wouldRevisit: isFirst ? existing.wouldRevisit : false,
+      pointsAwarded: isFirst ? existing.pointsAwarded : 0,
+    });
+  });
 
   await db.batch([
     db.insert(items).values(childRows),
@@ -497,6 +553,7 @@ export async function refreshShow(input: { itemId: string }): Promise<RefreshSho
         note: null,
         wouldRevisit: false,
         completedAt: null,
+        pointsAwarded: 0,
         seasonCount: fresh,
         updatedAt: new Date(),
       })

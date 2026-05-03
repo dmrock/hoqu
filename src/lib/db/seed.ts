@@ -6,9 +6,9 @@ config({ path: ".env.local" });
 
 const HOBBIES = [
   { slug: "movies", name: "Movies", icon: "film", pointsPerItem: 1 },
-  { slug: "tv", name: "TV Shows", icon: "tv", pointsPerItem: 1 },
-  { slug: "games", name: "Games", icon: "gamepad", pointsPerItem: 1 },
-  { slug: "books", name: "Books", icon: "book", pointsPerItem: 1 },
+  { slug: "tv", name: "TV Shows", icon: "tv", pointsPerItem: 5 },
+  { slug: "games", name: "Games", icon: "gamepad", pointsPerItem: 10 },
+  { slug: "books", name: "Books", icon: "book", pointsPerItem: 6 },
 ];
 
 type SeedAchievement = {
