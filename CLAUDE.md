@@ -2,369 +2,303 @@
 
 ## Project Description
 
-HOQU (hoqu.dev) is a hobby tracking web app where users log movies, games, and books they've
-consumed. Each completed item earns 1 point. Users unlock pixel-art achievements, join guilds,
-and compete with friends. The UI is dark-only with a "modern pixel" aesthetic: clean modern
-base with pixel-art accents (badges, XP bars, icons, micro-animations). English only.
+HOQU (hoqu.dev) is a hobby tracking web app where users log movies, TV shows, games, and books
+they've consumed. Each completed item awards points (weighted per hobby — see below). Users unlock
+achievements, join guilds, friend each other, and compare progress on guild- and friends-only
+leaderboards. Dark-only UI with a "modern pixel" aesthetic — clean modern base with pixel-art
+accents (badges, XP bars, icons, micro-animations). English only.
+
+**Status:** Phase 1 (MVP) and Phase 2 (social) are shipped. Outstanding: polish (animations, pixel
+sprites, responsive sweep) is intentionally deferred — see `MEMORY.md`.
 
 ## Tech Stack (do not change without explicit approval)
 
 - **Framework**: Next.js 16 (App Router, Turbopack default)
 - **Language**: TypeScript (strict mode)
 - **Styling**: Tailwind CSS v4 (dark theme only)
-- **UI Base**: shadcn/ui
-- **Animations**: Motion (npm package `motion`, imported from `motion/react` — successor to Framer Motion)
+- **UI Base**: shadcn/ui (CLI-only — never installed as a runtime dep, use `pnpm dlx shadcn@latest add <name>`)
+- **Animations**: Motion (npm package `motion`, imported from `motion/react`)
 - **Database**: PostgreSQL via Neon (`@neondatabase/serverless`)
 - **ORM**: Drizzle ORM
 - **Auth**: Auth.js v5 (NextAuth) — Email+password + Google OAuth
 - **Validation**: Zod
-- **Rate Limiting**: Upstash Redis (`@upstash/ratelimit`)
-- **External APIs**: TMDB (movies), RAWG (games), Open Library (books)
-- **Linting & Formatting**: Biome (replaces ESLint + Prettier)
+- **Cache + rate limiting**: Upstash Redis (`@upstash/redis`, `@upstash/ratelimit`)
+- **External APIs**: TMDB (movies + TV), RAWG (games), Open Library (books)
+- **Linting & Formatting**: Biome (no ESLint, no Prettier)
 - **Deployment**: Vercel
 
 ## Architecture Rules
 
-1. Use App Router (not Pages Router). All routes in `src/app/`.
-2. Server Components by default. Add `"use client"` only when needed (interactivity, hooks).
-3. Server Actions for mutations where possible; API routes for search proxies and webhooks.
-4. All DB queries go through Drizzle ORM. Never use raw SQL strings.
-5. Validate all inputs with Zod schemas. Share schemas between client and server.
-6. Use `next/image` for all images. External domains must be in `next.config.ts`.
-7. Responsive design: mobile-first. Sidebar collapses to drawer on mobile.
-8. All text in English only. No i18n needed.
-9. Dark theme only — no light mode toggle needed.
+1. App Router only. All routes in `src/app/`.
+2. Server Components by default. Add `"use client"` only when needed.
+3. Server Actions for mutations; API routes only for search proxies and auth.
+4. All DB queries go through Drizzle ORM. Never use raw SQL strings (parameter binding via
+   `sql\`\`` template is fine when needed).
+5. Validate all inputs with Zod schemas.
+6. Use `next/image` for content images. External hosts must be added to `next.config.ts`
+   `remotePatterns`. For tiny avatar URLs from arbitrary OAuth providers, the Radix
+   `<AvatarImage>` (plain `<img>` underneath) is fine without whitelisting.
+7. Mobile-first responsive. Sidebar collapses to drawer below `md`.
+8. English only — no i18n.
+9. Dark theme only — no light mode toggle.
 10. **Next.js 16 specifics:**
-    - Turbopack is the default bundler — do NOT add `--turbopack` flags, it's automatic.
-    - Use `proxy.ts` (not `middleware.ts`) for request interception and auth route protection.
-      Export a `proxy` function (not `middleware`).
-    - Use `'use cache'` directive for explicit caching of components/functions where appropriate
-      (guild pages, leaderboards, search results).
-    - React 19.2 features available: View Transitions, useEffectEvent.
+    - Turbopack is default — never add `--turbopack` flags.
+    - Use `proxy.ts` (not `middleware.ts`) for request interception. Export a `proxy` function.
+    - `'use cache'` directive available for explicit RSC caching.
+    - React 19.2 features available (View Transitions, useEffectEvent).
+11. **Server-only modules**: any file that imports `db` or otherwise relies on `process.env.*`
+    secrets must start with `import "server-only"` if a client component might import from it.
+    Pure types/constants live in a sibling file with no DB imports — see
+    `src/lib/leaderboards.ts` (pure) vs `src/lib/leaderboard-queries.ts` (DB).
 
 ## Workflow Rules
 
-**I handle all setup and installation myself.** Claude Code must NOT run install commands,
-create accounts, generate API keys, or configure external services automatically. Instead:
+**The user handles all setup and installation themselves.** I (Claude) must NOT run install
+commands, create accounts, generate API keys, or configure external services automatically.
 
-1. When a step involves setup/installation/configuration of any tool, service, or dependency —
-   provide a detailed step-by-step instruction that I can follow manually.
-2. Before writing instructions, check the official documentation (using web search if available)
-   to ensure the instructions reflect the latest versions, APIs, and best practices.
-3. Include exact commands I should run, exact URLs I should visit, and exact config values
-   I should set — but let ME execute them.
-4. If a tool's setup process has changed recently, flag it explicitly
-   (e.g., "Note: Auth.js v5 changed the config format from v4 — use the new `auth.ts` approach").
-5. After I confirm a step is done, proceed to the next one.
+1. When a step needs setup/install/config of any tool, service, or dependency — give the user a
+   step-by-step instruction to follow manually.
+2. Before writing instructions, verify against current docs (web search if needed).
+3. Include exact commands, exact URLs, exact config values; the user runs them.
+4. Flag any version-specific quirks explicitly.
+5. After the user confirms a step is done, proceed.
 
-This applies to: npm/pnpm installs, database setup, OAuth app creation, environment variables,
-third-party API registration, Vercel deployment config, and any other external setup.
+This applies to: npm/pnpm installs, database setup, OAuth app creation, env vars, third-party API
+registration, Vercel deployment config.
 
-Use Drizzle ORM to define schema in `src/lib/db/schema.ts`.
+`pnpm db:migrate`, `pnpm db:seed`, and one-off scripts in `src/lib/db/*.ts` I CAN run when the
+user has already configured the environment — these aren't external setup, they apply existing
+migrations to the existing database.
 
-### Tables:
+## Database Schema
 
-**users**: id (uuid), email, name (display name — auto-derived from email local-part or OAuth,
-editable), username (unique, URL-safe handle — auto-derived from email local-part on signup with
-numeric suffix on collision, editable in settings), passwordHash?, avatarUrl,
-totalPoints (int — count of completed items),
-moviesCompleted (int, default 0), gamesCompleted (int, default 0), booksCompleted (int, default 0),
-itemsRated (int, default 0),
-profileVisibility (enum: public/friends_only/guild_only/private),
-createdAt, updatedAt.
+Source of truth: `src/lib/db/schema.ts`. The shapes below are summaries.
 
-Note on denormalized counters: `totalPoints`, `moviesCompleted`, `gamesCompleted`,
-`booksCompleted`, and `itemsRated` are denormalized for performance. They MUST be updated
-atomically whenever an item's status or rating changes. These counters power leaderboards
-and achievement checks without expensive COUNT queries. The source of truth is always
-the `items` table — if counters drift, recalculate from items.
+- **users** — auth fields (email, name, username, image, passwordHash) plus denormalized
+  per-user counters: `totalPoints`, `moviesCompleted`, `gamesCompleted`, `booksCompleted`,
+  `showsCompleted` (TV), `itemsRated`. `profileVisibility` enum
+  (public/friends_only/guild_only/private).
+- **hobbies** — `slug` (unique), `name`, `icon`, `pointsPerItem`. Seeded with movies (1), tv (5
+  per season), games (10), books (6).
+- **items** — owned by user × hobby × `externalId` (unique together). Carries the user's
+  status, rating, note, "again?" flag, plus a `pointsAwarded` snapshot (see Points System).
+  TV multi-season shows use a self-referential `parentItemId` to link seasons under a parent
+  show row; `seasonNumber` and `seasonCount` describe the structure. Status is nullable on
+  show-parent rows.
+- **friendships** — `requesterId`, `addresseeId`, `status` (pending/accepted/declined). We
+  delete on decline/cancel/remove rather than write `declined`; the column exists for future
+  semantics.
+- **guilds** — `name` (unique), `description`, `inviteCode` (unique 8-char, ambiguous chars
+  stripped), `discordInviteUrl`, `maxMembers` (default 50). **guild_members** with role
+  (master/officer/member).
+- **achievements** — definition rows with `requirement: jsonb`. **user_achievements** records
+  unlocks. Categories: general / movies / tv / games / books / social.
 
-**hobbies**: id (uuid), slug (unique), name, icon, pointsPerItem (default 1).
-Seed with: movies, games, books.
-
-**items**: id (uuid), userId (FK), hobbyId (FK), externalId, title, imageUrl, year?,
-externalRating?, userRating (1-10)?, note (500 chars)?, wouldRevisit (bool),
-status (enum: completed/in_progress/planned/dropped), completedAt?, createdAt, updatedAt.
-Unique constraint on (userId, hobbyId, externalId).
-
-**guilds**: id (uuid), name (unique), description (300 chars)?, iconUrl?, inviteCode (unique, 8 chars),
-discordInviteUrl?, maxMembers (default 50), createdAt, updatedAt.
-
-**guild_members**: composite PK (guildId, userId), role (enum: master/officer/member), joinedAt.
-
-**friendships**: id (uuid), requesterId (FK), addresseeId (FK), status (enum: pending/accepted/declined), createdAt, updatedAt.
-
-**achievements**: id (uuid), slug (unique), name, description, icon, category (enum: general/movies/games/books/social), requirement (jsonb), sortOrder (int).
-
-**user_achievements**: composite PK (userId, achievementId), unlockedAt.
-
-### Seed Data
-
-Seed `hobbies` table with movies, games, books.
-Seed `achievements` table with starter achievements (see Achievements section).
+Seed: `pnpm db:seed` upserts hobbies and starter achievements. Edit `src/lib/db/seed.ts` to
+extend.
 
 ## Points & Counter System
 
-- **1 point per completed item** — only items with `status = "completed"` count
-- When item status changes: update `totalPoints` AND the relevant hobby counter
-  (`moviesCompleted`, `gamesCompleted`, or `booksCompleted`) using atomic increment/decrement
-- When item rating changes: update `itemsRated` (increment if rating added, decrement if removed)
-- When item is deleted: update all affected counters
-- All counter updates should happen in a single transaction with the item update
-- No points for in_progress, planned, or dropped
-- Display an honor system message in UI: "We trust our adventurers to log their quests honestly"
-- **Recalculation endpoint**: build an admin/debug endpoint that recalculates all counters
-  from the items table (source of truth) in case of drift
+- **Weighted points per hobby** — movies 1, tv 5 (per season), games 10, books 6. Stored in
+  `hobbies.points_per_item`.
+- **Snapshot on the row** — when an item becomes `completed`, we write the current
+  `hobby.points_per_item` into `items.points_awarded`. When it leaves `completed`, we reset
+  the snapshot to 0. Total points = SUM(snapshots), so historical totals survive any future
+  recalibration of `points_per_item`.
+- **`computeCounterDelta`** in `src/lib/points.ts` takes both `oldPointsAwarded` and
+  `newPointsAwarded` and returns the diff. Per-hobby completion counters
+  (`moviesCompleted`, `showsCompleted`, etc.) stay raw counts.
+- **Atomicity** — every item write must update the user's counters in the same `db.batch([])`
+  call. Neon HTTP doesn't support interactive transactions; batches are atomic enough.
+- **Recalc script** — `src/lib/db/recalc-points.ts` rewrites all `items.points_awarded` from
+  current `hobbies.points_per_item` and recomputes `users.total_points`. Run it after
+  changing weights or whenever counters drift.
+- **Honor system** — UI message: "We trust our adventurers to log their quests honestly".
 
-## Anti-Spam Protection
+## Anti-Spam (Upstash Redis)
 
-Use Upstash Redis for rate limiting (`@upstash/ratelimit`):
-- **Hourly limit**: 50 items added per hour (generous for initial bulk import)
-- **Daily limit**: 200 items added per day
-- Friendly UI warning when approaching limit (e.g., "You're on a roll! {remaining} slots left today")
-- No hard block for new users doing initial bulk import — show encouragement
-- Server-side validation: items must originate from external API search (no freeform title entry)
-- Duplicate prevention: unique constraint (userId, hobbyId, externalId)
+`src/lib/rate-limit.ts` — sliding windows on `addItem`:
 
-## Achievements System
+- **50 / hour** and **200 / day** per user (parallel checks).
+- Friendly UI warning at <20 slots remaining ("You're on a roll! X slots left before a pause").
+- Hard block when exhausted with a "back in ~X min" message.
+- **Fails open** — Redis unreachable returns `{ ok: true }` with full quota; anti-spam, not
+  security.
 
-Achievement definitions are stored in the `achievements` DB table with a JSONB `requirement` field.
-This allows adding new achievements without schema migrations.
+## Search Cache (Upstash Redis)
 
-### Requirement format:
+`src/lib/api/cache.ts` — wraps each search fetcher (TMDB / RAWG / Open Library):
+
+- Key pattern `search:{hobby}:{normalized_query}` (lowercase, trimmed).
+- TTL 15 minutes.
+- Cache reads and writes wrap `try/catch` and never block the actual search request.
+
+## Achievements
+
+`src/lib/achievements.ts` — registry-style evaluator keyed by `requirement.type`:
 
 ```json
-{ "type": "items_completed", "count": 1 }
-{ "type": "items_completed", "count": 10, "hobby": "movies" }
-{ "type": "items_completed", "count": 100 }
-{ "type": "all_hobbies", "min_per_hobby": 5 }
+{ "type": "items_completed", "count": 5, "hobby": "movies" }
+{ "type": "all_hobbies", "min_per_hobby": 1, "mode": "logged" }
 { "type": "items_rated", "count": 10 }
 ```
 
-### Achievement checker (`src/lib/achievements.ts`):
-- Run after every item status change (completed/uncompleted) or rating change
-- **Use denormalized counters from users table** (`totalPoints`, `moviesCompleted`,
-  `gamesCompleted`, `booksCompleted`, `itemsRated`) — do NOT run COUNT queries
-- Compare counters against unearned achievements
-- If criteria met → insert into `user_achievements`, trigger unlock animation
-- Must be idempotent (safe to re-run)
+- Adding a new requirement type = add to the union in `schema.ts` and register in the
+  `evaluators` map. No DB migration.
+- Adding new achievements = add a row to the seed array; the seed script upserts.
+- `checkAchievements(userId)` is called after every counter-changing action (`addItem`,
+  `updateItem`, `deleteItem`, `refreshShow`) and on `/achievements` and `/dashboard` page
+  visits (idempotent — only inserts unearned).
+- Server actions return `unlocks: AchievementUnlock[]`. Client components dispatch
+  `notifyUnlocks(res.unlocks)` on success; the `<UnlockToaster>` mounted in the (main)
+  layout shows the Motion toast.
 
-### Starter achievements to seed:
+## Guilds
 
-| Slug | Name | Criteria |
-|------|------|----------|
-| first_step | First Step | 1 completed (any) |
-| movie_buff_5 | Movie Buff | 5 completed (movies) |
-| gamer_5 | Gamer | 5 completed (games) |
-| bookworm_5 | Bookworm | 5 completed (books) |
-| movie_buff_25 | Cinephile | 25 completed (movies) |
-| gamer_25 | Hardcore Gamer | 25 completed (games) |
-| bookworm_25 | Scholar | 25 completed (books) |
-| well_rounded | Well Rounded | 5+ in each hobby |
-| century | Century | 100 completed (any) |
-| dedicated | Dedicated | 50 in any single hobby |
-| explorer | Explorer | 1+ in all 3 hobbies |
-| critic | Critic | 10 items rated |
-
-### Extending achievements:
-Add new rows to `achievements` table. Add new `type` handlers in `achievements.ts`.
-No schema changes needed. Future types: streaks, social, seasonal.
-
-## Guild System
-
-Guilds are social groups where members compare progress in a friendly, self-moderated environment.
-No in-app chat — guilds link to Discord for communication.
-
-**Leaderboard philosophy:** There is NO global leaderboard. Competition exists only within
-guilds and among friends. This is intentional — small-group accountability prevents cheating
-better than any algorithm. Guild masters can kick dishonest members. Friends call each other
-out. Points and achievements are primarily for personal motivation.
-
-### Roles:
-- **Guild Master** (creator): full control — edit guild, manage roles, kick, delete, transfer ownership
-- **Officer** (promoted by Master): can kick members, edit guild description
-- **Member** (default on join): view guild content, leave
-
-### Features:
-- Guild page: member list with role badges, guild leaderboard, guild stats
-- "Join Guild Discord" button → opens `discordInviteUrl` in new tab
-- Max 50 members (configurable per guild)
-- Users can join multiple guilds
-- Invite via shareable code/link
+- Roles: **master** (creator; promote / demote / kick / transfer / delete), **officer**
+  (kick members, edit description), **member**.
+- Master cannot leave a non-empty guild — UI forces transfer first. Master deleting a
+  one-member guild is the only "leave that becomes a delete".
+- Invite codes generated with `randomBytes` (8 chars, ambiguous letters stripped). Master
+  can rotate; old code stops working immediately.
+- Max 50 members default, configurable per guild.
+- Guild detail page: member list with role badges, invite code, Discord button, leaderboard
+  link, settings link (master/officer).
+- No global leaderboard, ever. Both `/friends/leaderboard` and `/guilds/[id]/leaderboard`
+  require the relevant relationship.
+- Guild communication is Discord-linked, not in-app.
 
 ## Profile Privacy
 
-Users choose their visibility in settings:
-- **Public**: anyone can view profile, dashboard, items, achievements
-- **Friends only**: only accepted friends see full profile
-- **Guild only**: only members of shared guilds see full profile
-- **Private**: only the user sees their own profile
+Visibility tiers (`users.profileVisibility`), enforced on `/profile/[username]`:
 
-All API endpoints that return user data MUST check `profileVisibility` and the
-requesting user's relationship (friend? same guild?) before returning data.
+- **public** — anyone signed in
+- **friends_only** — owner + accepted friends only (`getFriendshipStatus` from
+  `src/lib/friendships.ts`)
+- **guild_only** — owner + anyone sharing at least one guild (`shareGuild` from
+  `src/lib/guilds.ts`)
+- **private** — owner only
 
-## External API Integration
+Non-permitted viewers get a 404 (not a 403, to avoid leaking existence).
 
-All external API calls go through server-side proxy routes to protect API keys.
+## External APIs
 
-### TMDB (Movies/TV)
-- Search: `GET /api/search/movies?q={query}`
-- Proxy to: `https://api.themoviedb.org/3/search/movie`
-- Map to: { externalId, title, year, imageUrl (poster), externalRating (vote_average) }
+All external calls go through server-side proxies that protect API keys.
 
-### RAWG (Games)
-- Search: `GET /api/search/games?q={query}`
-- Proxy to: `https://api.rawg.io/api/games?search={query}`
-- Map to: { externalId, title, year (released), imageUrl (background_image), externalRating (metacritic) }
+- **TMDB movies**: `GET /api/search/movies?q={query}` → `/3/search/movie`.
+  Map: `{ externalId, title, year (release_date), imageUrl (poster), externalRating (vote_average) }`.
+- **TMDB TV**: `GET /api/search/tv?q={query}` → `/3/search/tv`. Same shape, `name` →
+  `title`, `first_air_date` → `year`. Multi-season shows use `getTvShow(externalId)` to
+  fetch the full season list at add time and on demand via the row's "refresh" button.
+- **RAWG**: `GET /api/search/games?q={query}`. Map: `{ id, name, released, background_image, metacritic }`.
+- **Open Library**: `GET /api/search/books?q={query}`. Map:
+  `{ key, title, first_publish_year, cover_i }`. `externalRating` is null.
 
-### Open Library (Books)
-- Search: `GET /api/search/books?q={query}`
-- Proxy to: `https://openlibrary.org/search.json?q={query}`
-- Map to: { externalId (key), title, year (first_publish_year), imageUrl (covers), externalRating: null }
+Search behavior: client debounces 300ms, hits the proxy, the proxy `cachedSearch`-wraps the
+fetcher (15-min Redis TTL).
 
-### Search Behavior
-- Client sends debounced query (300ms) to our proxy
-- Show autocomplete dropdown with results (max 8)
-- On select: auto-fill item form with external data
-- Client-side: cache search results in React state during session
-- **Server-side: cache search results in Upstash Redis (TTL 15 minutes)**
-  - Cache key pattern: `search:{hobby}:{normalized_query}` (lowercase, trimmed)
-  - On search request: check Redis first → if hit, return cached → if miss, call external API, cache response, return
-  - This protects external API rate limits and dramatically speeds up repeated/popular queries
-  - Use the same Upstash Redis instance as rate limiting
+Cross-tab safety: each hobby tab's add dialog calls only its own `/api/search/{hobby}` route,
+and the server action validates `hobbySlug` against the enum, so cross-adding is impossible.
 
 ## UI/UX Design Specification
 
-### Color Tokens (CSS variables in globals.css)
+CSS variables (current state in `src/app/globals.css`):
 
-```css
-:root {
-  --bg-primary: #0a0a0f;
-  --bg-surface: #14141f;
-  --bg-surface-hover: #1e1e2e;
-  --border: #2a2a3a;
-  --color-primary: #7c5cff;
-  --color-primary-hover: #9d82ff;
-  --color-accent: #00e5a0;
-  --color-warning: #ffa726;
-  --color-error: #ff5252;
-  --text-primary: #e8e8f0;
-  --text-secondary: #8888a0;
-  --guild-gold: #ffd700;
-  --officer-silver: #c0c0c0;
-}
+```
+--background           dark base
+--card / --card-foreground
+--primary  #7c5cff     button + accents
+--accent   #00e5a0     "in progress" badge, "yes" feedback, achievement icon backgrounds
+--warning  #ffa726     notes, slot-warning banners
+--destructive          delete buttons + confirm dialogs
+--border  #2a2a3a
+--muted-foreground / --muted
 ```
 
-### Fonts
-- Headings, badges, points: "Press Start 2P" (Google Fonts)
-- Body text: "Inter"
-- Stats/numbers: "JetBrains Mono"
-Load via `next/font`.
+Fonts (`src/app/layout.tsx`, `next/font`):
+- **Press Start 2P** (`font-pixel`) — page titles, stat values, achievement section labels.
+- **Inter** — body text (default).
+- **JetBrains Mono** (`font-mono`) — usernames, point values, invite codes, IDs.
 
-### Component Style Guide
-- Cards: `bg-surface`, `border border-border`, `rounded-xl`, subtle hover glow
-- Buttons primary: `bg-primary hover:bg-primary-hover`, pixel-style border
-- Inputs: `bg-surface`, `border-border`, `focus:ring-primary`
-- Pixel elements: use SVG or small PNG sprites, `image-rendering: pixelated`
-- XP bar: segmented fill, animated with Motion
-- Rating stars: 10 pixel-art stars, fill sequentially with sparkle animation
-- Achievement badges: pixel-art icons, grayscale when locked, colorful when unlocked
-- Guild role badges: gold (Master), silver (Officer), none (Member)
+Components:
+- Cards: `rounded-xl border border-border bg-card`.
+- Status badges: default for completed, accent green for in_progress, outline for planned,
+  ghost for dropped.
+- "Again?" indicator: `RotateCw` icon (the lucide `Sparkles` icon is BANNED project-wide —
+  see memory).
+- Sidebar: 240px expanded, 56px collapsed (`w-14`). User avatar + dropdown lives at the
+  bottom of the sidebar, not the top header.
 
-### Layout
-- Sidebar: 72px collapsed / 240px expanded, fixed left
-- Header: 64px height, search bar + user menu
-- Content: max-w-7xl, centered, responsive grid
-- Mobile: sidebar becomes full-width drawer
-
-### Animations (Motion — `import { motion } from "motion/react"`)
-- Page transitions: `x: -20, opacity: 0` → `x: 0, opacity: 1` (200ms ease-out)
-- Cards: `whileHover={{ y: -4, boxShadow: "..." }}`
-- Item add: scale pop (0.8 → 1.0) + optional confetti
-- Points: `animate={{ value }}` with counting effect
-- Achievement unlock: toast notification with pixel fanfare + badge reveal
-- Staggered lists: `staggerChildren: 0.05`
-- Skeleton: shimmer gradient animation
+Animations (Motion) — only `<UnlockToaster>` is wired up so far; the rest of the polish
+specced in earlier drafts is deferred.
 
 ## File Structure
 
-Follow the structure below. Do NOT create files outside this pattern without asking.
+Source of truth is the actual repo. High-level shape:
 
 ```
 src/
-├── app/(auth)/          # Login, register (no sidebar)
-├── app/(main)/          # All authenticated pages (with sidebar layout)
+├── app/(auth)/                         Login, register
+├── app/(main)/                         Authenticated routes (sidebar layout)
 │   ├── dashboard/
-│   ├── movies/ games/ books/
-│   ├── profile/[username]/
-│   ├── settings/
-│   ├── achievements/
-│   ├── guilds/
-│   │   ├── [id]/
-│   │   │   └── settings/
-│   └── friends/
-├── app/api/             # API routes
-├── components/ui/       # shadcn/ui
-├── components/layout/   # Sidebar, Header, MobileDrawer
-├── components/items/    # Item-related components
-├── components/guilds/   # Guild components
-├── components/achievements/ # Achievement components
-├── components/pixel/    # Pixel-art themed components
-├── lib/db/              # Drizzle schema, connection, migrations, seed
-├── lib/auth/            # Auth.js configuration
-├── lib/api/             # External API clients (TMDB, RAWG, OpenLibrary)
-├── lib/achievements.ts  # Achievement checker
-├── lib/points.ts        # Points calculation
-├── lib/rate-limit.ts    # Anti-spam (Upstash)
-├── hooks/               # Custom React hooks
-├── types/               # Shared TypeScript types
-└── styles/              # Global CSS
+│   ├── movies/  tv/  games/  books/    Hobby pages (use HobbyPage from components/items)
+│   ├── achievements/                   Locked + unlocked grid
+│   ├── profile/[username]/             Identity card + stats + recent items + edit form
+│   ├── friends/                        List + add form + incoming/outgoing requests
+│   │   └── leaderboard/                Friends scope ranked
+│   ├── guilds/                         List + create + join-by-code
+│   │   ├── [id]/                       Detail with members + role-aware actions
+│   │   │   ├── settings/               Master/officer edit; master rotate code + delete
+│   │   │   └── leaderboard/            Guild scope ranked
+│   │   └── join/[code]/                Confirm-and-join landing
+│   └── items/                          Server actions (add/update/delete/refresh) co-located
+│                                       with the components that call them
+├── app/api/                            Search proxies + Auth.js handlers
+├── components/
+│   ├── ui/                             shadcn primitives (button, dialog, dropdown, etc.)
+│   ├── layout/                         Sidebar, Header, MobileDrawer, SidebarUserMenu
+│   ├── items/                          Hobby table, toolbar, add dialog, row actions
+│   ├── dashboard/                      New-releases section + skeleton
+│   ├── achievements/                   UnlockToaster
+│   └── leaderboard/                    ScopeTabs + Table
+├── lib/
+│   ├── db/                             Drizzle schema, connection, seed, recalc-points
+│   ├── auth/                           Auth.js config, password hashing, username slugify
+│   ├── api/                            tmdb, rawg, openlibrary clients + search-handler + cache
+│   ├── points.ts                       Counter delta + snapshotPoints
+│   ├── achievements.ts                 Evaluator registry + checker
+│   ├── achievement-icons.ts            Slug → lucide icon map
+│   ├── friendships.ts                  Friend status helpers
+│   ├── guilds.ts                       Guild helpers + invite-code generator
+│   ├── leaderboards.ts                 Pure types + sort helpers (client-safe)
+│   ├── leaderboard-queries.ts          DB loaders (server-only)
+│   ├── rate-limit.ts                   Upstash sliding windows
+│   ├── redis.ts                        Shared Upstash client
+│   └── notify-unlocks.ts               Window-event dispatcher for achievement toasts
+└── types/                              Cross-feature TS types (e.g. ItemRow)
 ```
-
-## Development Phases
-
-### Phase 1 (MVP — build this first):
-1. Project setup (Next.js, Tailwind, Drizzle, Neon, Auth.js)
-2. Database schema + migrations + seed (hobbies + achievements)
-3. Auth (register, login, OAuth — name/username auto-derived on signup, editable in settings)
-4. Sidebar layout + routing
-5. External API search proxies
-6. Item CRUD (add via search, rate, note, status with dropped, delete)
-7. Points system (1 per completed)
-8. Anti-spam rate limiting
-9. Achievement system + unlock animations
-10. Dashboard with stats + achievement showcase
-11. Settings page (profile, privacy, name/username editing)
-12. Polish: animations, pixel components, responsive
-
-### Phase 2 (Social — build after Phase 1 is complete):
-1. User profiles with privacy enforcement
-2. Friend requests
-3. Guilds (create, invite, join, roles, Discord link)
-4. Leaderboards (guild-only and friends-only, per-hobby filters — NO global leaderboard, ever)
 
 ## Code Style
 
-- Use Biome for linting and formatting (single `biome.json` config). Do NOT install ESLint or Prettier.
-- Use named exports (not default) for components
-- Prefer `function` keyword for components, arrow functions for utilities
-- Use `cn()` helper (from shadcn) for conditional classnames
-- Error handling: try/catch with meaningful error messages, never silent fails
-- API responses: always return `{ data, error }` shape
-- Prefer composition over prop drilling — use React Context sparingly
-- Write JSDoc comments for complex functions
-- Component files: one component per file, filename matches component name
-- Pre-commit hook: use Husky + lint-staged with `biome check --write` (not eslint/prettier)
+- Biome only (single `biome.json`).
+- Named exports for components.
+- `function` for components, arrow functions for utilities.
+- `cn()` helper for conditional classnames.
+- Server actions return `{ ok: true, ... } | { ok: false; error: string }`.
+- Component file = one component, filename matches the export.
+- Don't write JSDoc for trivial functions; do write a short note when a function has subtle
+  semantics (snapshot logic, role enforcement, etc.).
+- Avoid backwards-compat shims; if something is unused, delete it.
 
 ## Environment Variables
 
 ```
-DATABASE_URL=              # Neon Postgres connection string
-AUTH_SECRET=               # Random secret for Auth.js (`openssl rand -base64 32`)
-AUTH_GOOGLE_ID=            # From Google Cloud Console OAuth client
+DATABASE_URL=                 Neon Postgres
+AUTH_SECRET=                  openssl rand -base64 32
+AUTH_GOOGLE_ID=               Google Cloud Console OAuth client
 AUTH_GOOGLE_SECRET=
-TMDB_API_KEY=              # From themoviedb.org
-RAWG_API_KEY=              # From rawg.io
-UPSTASH_REDIS_REST_URL=    # From upstash.com
+TMDB_API_KEY=                 themoviedb.org
+RAWG_API_KEY=                 rawg.io
+UPSTASH_REDIS_REST_URL=       upstash.com
 UPSTASH_REDIS_REST_TOKEN=
 ```
