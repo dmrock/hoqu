@@ -17,6 +17,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { hobbies, items, userAchievements, users } from "@/lib/db/schema";
 import { getFriendshipStatus } from "@/lib/friendships";
+import { shareGuild } from "@/lib/guilds";
 import type { HobbySlug } from "@/lib/points";
 import { EditProfileForm } from "./edit-profile-form";
 import { FriendStatusButton } from "./friend-status-button";
@@ -77,7 +78,10 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
   if (visibility === "friends_only" && !isOwner && friendship.status !== "friends") {
     notFound();
   }
-  // guild_only still treated as public until guild membership lands in Phase 2.
+  if (visibility === "guild_only" && !isOwner) {
+    const sharesGuild = await shareGuild(session.user.id, profile.id);
+    if (!sharesGuild) notFound();
+  }
 
   const [totalUnlocked, recentlyCompletedRows, inProgressRows] = await Promise.all([
     db.$count(userAchievements, eq(userAchievements.userId, profile.id)),
