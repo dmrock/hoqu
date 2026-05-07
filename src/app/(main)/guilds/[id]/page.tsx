@@ -1,4 +1,4 @@
-import { ExternalLink, Settings, Shield } from "lucide-react";
+import { ExternalLink, Settings, Shield, Trophy } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -50,6 +50,12 @@ export default async function GuildDetailPage({ params }: { params: Promise<{ id
           ) : null}
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/guilds/${guild.id}/leaderboard`}>
+              <Trophy />
+              Leaderboard
+            </Link>
+          </Button>
           {canEdit ? (
             <Button variant="outline" size="sm" asChild>
               <Link href={`/guilds/${guild.id}/settings`}>

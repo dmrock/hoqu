@@ -1,6 +1,8 @@
+import { Trophy } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { auth } from "@/lib/auth";
 import { type FriendListEntry, loadFriendships } from "@/lib/friendships";
 import { AddFriendForm } from "./add-friend-form";
@@ -56,7 +58,15 @@ export default async function FriendsPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
-      <h1 className="font-pixel text-2xl">Friends</h1>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="font-pixel text-2xl">Friends</h1>
+        <Button variant="outline" size="sm" asChild>
+          <Link href="/friends/leaderboard">
+            <Trophy />
+            Leaderboard
+          </Link>
+        </Button>
+      </div>
 
       <section className="space-y-3 rounded-xl border border-border bg-card p-5">
         <h2 className="font-pixel text-sm text-muted-foreground uppercase">Add friend</h2>
