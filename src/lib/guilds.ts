@@ -168,6 +168,26 @@ export async function getGuildMembers(guildId: string): Promise<GuildMemberRow[]
     });
 }
 
+/**
+ * Authorization check: returns the viewer's role in the guild if it's in the
+ * `allowed` set, else null. Callers supply their own error message so the UX
+ * stays specific (e.g. "Only the master can rotate the invite code").
+ */
+export async function requireGuildRole(
+  viewerId: string,
+  guildId: string,
+  allowed: GuildRole[],
+): Promise<GuildRole | null> {
+  const [viewer] = await db
+    .select({ role: guildMembers.role })
+    .from(guildMembers)
+    .where(and(eq(guildMembers.guildId, guildId), eq(guildMembers.userId, viewerId)))
+    .limit(1);
+  if (!viewer) return null;
+  const role = viewer.role as GuildRole;
+  return allowed.includes(role) ? role : null;
+}
+
 /** Whether two users share at least one guild. Used for guild_only visibility. */
 export async function shareGuild(viewerId: string, otherUserId: string): Promise<boolean> {
   if (viewerId === otherUserId) return false;

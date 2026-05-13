@@ -3,7 +3,7 @@
 import { and, eq, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { auth } from "@/lib/auth";
+import { requireUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 
@@ -35,8 +35,8 @@ export type UpdateProfileResult =
   | { ok: false; error: string; field?: "name" | "username" | "profileVisibility" };
 
 export async function updateProfile(input: UpdateProfileInput): Promise<UpdateProfileResult> {
-  const session = await auth();
-  if (!session?.user?.id) return { ok: false, error: "Unauthorized" };
+  const session = await requireUserId();
+  if (!session.ok) return session;
 
   const parsed = updateProfileSchema.safeParse(input);
   if (!parsed.success) {
@@ -52,7 +52,7 @@ export async function updateProfile(input: UpdateProfileInput): Promise<UpdatePr
     };
   }
 
-  const userId = session.user.id;
+  const userId = session.userId;
   const data = parsed.data;
 
   const [collision] = await db

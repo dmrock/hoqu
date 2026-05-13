@@ -76,10 +76,16 @@ export function AddItemDialog({ hobbySlug, existingExternalIds }: Props) {
       setResults([]);
       return;
     }
+    const ctrl = new AbortController();
+    let timedOut = false;
     let cancelled = false;
+    const timeout = setTimeout(() => {
+      timedOut = true;
+      ctrl.abort();
+    }, 10_000);
     setSearching(true);
     setSearchError(null);
-    fetch(`/api/search/${hobbySlug}?q=${encodeURIComponent(debounced)}`)
+    fetch(`/api/search/${hobbySlug}?q=${encodeURIComponent(debounced)}`, { signal: ctrl.signal })
       .then((r) => r.json() as Promise<SearchResponse>)
       .then((json) => {
         if (cancelled) return;
@@ -90,17 +96,24 @@ export function AddItemDialog({ hobbySlug, existingExternalIds }: Props) {
           setResults(json.data ?? []);
         }
       })
-      .catch(() => {
-        if (!cancelled) {
+      .catch((err) => {
+        if (cancelled) return;
+        if (err?.name === "AbortError" && timedOut) {
+          setSearchError("Search timed out");
+          setResults([]);
+        } else if (err?.name !== "AbortError") {
           setSearchError("Search failed");
           setResults([]);
         }
       })
       .finally(() => {
+        clearTimeout(timeout);
         if (!cancelled) setSearching(false);
       });
     return () => {
       cancelled = true;
+      clearTimeout(timeout);
+      ctrl.abort();
     };
   }, [debounced, hobbySlug, selected]);
 

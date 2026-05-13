@@ -3,10 +3,10 @@
 import { and, eq, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { auth } from "@/lib/auth";
+import { requireUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { guildMembers, guilds } from "@/lib/db/schema";
-import { generateInviteCode } from "@/lib/guilds";
+import { generateInviteCode, requireGuildRole } from "@/lib/guilds";
 
 export type ActionResult<T = unknown> = { ok: true; data?: T } | { ok: false; error: string };
 
@@ -72,15 +72,15 @@ async function generateUniqueInviteCode(): Promise<string> {
 export async function createGuild(
   input: CreateGuildInput,
 ): Promise<ActionResult<{ guildId: string }>> {
-  const session = await auth();
-  if (!session?.user?.id) return { ok: false, error: "Unauthorized" };
+  const session = await requireUserId();
+  if (!session.ok) return session;
 
   const parsed = createGuildSchema.safeParse(input);
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
   const data = parsed.data;
-  const userId = session.user.id;
+  const userId = session.userId;
 
   const [nameClash] = await db
     .select({ id: guilds.id })
@@ -113,14 +113,14 @@ export async function createGuild(
 export async function joinGuildByCode(input: {
   code: string;
 }): Promise<ActionResult<{ guildId: string }>> {
-  const session = await auth();
-  if (!session?.user?.id) return { ok: false, error: "Unauthorized" };
+  const session = await requireUserId();
+  if (!session.ok) return session;
 
   const parsed = joinSchema.safeParse(input);
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
-  const userId = session.user.id;
+  const userId = session.userId;
   const code = parsed.data.code;
 
   const [guild] = await db
@@ -154,22 +154,18 @@ export async function joinGuildByCode(input: {
 }
 
 export async function leaveGuild(input: { guildId: string }): Promise<ActionResult> {
-  const session = await auth();
-  if (!session?.user?.id) return { ok: false, error: "Unauthorized" };
+  const session = await requireUserId();
+  if (!session.ok) return session;
 
   const parsed = guildIdSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid input" };
-  const userId = session.user.id;
+  const userId = session.userId;
   const { guildId } = parsed.data;
 
-  const [me] = await db
-    .select({ role: guildMembers.role })
-    .from(guildMembers)
-    .where(and(eq(guildMembers.guildId, guildId), eq(guildMembers.userId, userId)))
-    .limit(1);
-  if (!me) return { ok: false, error: "You're not a member of this guild" };
+  const role = await requireGuildRole(userId, guildId, ["master", "officer", "member"]);
+  if (!role) return { ok: false, error: "You're not a member of this guild" };
 
-  if (me.role === "master") {
+  if (role === "master") {
     const otherCount = await db.$count(
       guildMembers,
       and(eq(guildMembers.guildId, guildId), ne(guildMembers.userId, userId)),
@@ -198,23 +194,17 @@ export async function kickMember(input: {
   guildId: string;
   memberUserId: string;
 }): Promise<ActionResult> {
-  const session = await auth();
-  if (!session?.user?.id) return { ok: false, error: "Unauthorized" };
+  const session = await requireUserId();
+  if (!session.ok) return session;
 
   const parsed = memberActionSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid input" };
-  const viewerId = session.user.id;
+  const viewerId = session.userId;
   const { guildId, memberUserId } = parsed.data;
   if (viewerId === memberUserId) return { ok: false, error: "Use Leave to remove yourself" };
 
-  const [viewer] = await db
-    .select({ role: guildMembers.role })
-    .from(guildMembers)
-    .where(and(eq(guildMembers.guildId, guildId), eq(guildMembers.userId, viewerId)))
-    .limit(1);
-  if (!viewer || (viewer.role !== "master" && viewer.role !== "officer")) {
-    return { ok: false, error: "Only masters and officers can kick" };
-  }
+  const viewerRole = await requireGuildRole(viewerId, guildId, ["master", "officer"]);
+  if (!viewerRole) return { ok: false, error: "Only masters and officers can kick" };
 
   const [target] = await db
     .select({ role: guildMembers.role })
@@ -223,7 +213,7 @@ export async function kickMember(input: {
     .limit(1);
   if (!target) return { ok: false, error: "Member not found" };
   if (target.role === "master") return { ok: false, error: "You can't kick the master" };
-  if (viewer.role === "officer" && target.role === "officer") {
+  if (viewerRole === "officer" && target.role === "officer") {
     return { ok: false, error: "Officers can only kick members" };
   }
 
@@ -238,22 +228,16 @@ export async function promoteMember(input: {
   guildId: string;
   memberUserId: string;
 }): Promise<ActionResult> {
-  const session = await auth();
-  if (!session?.user?.id) return { ok: false, error: "Unauthorized" };
+  const session = await requireUserId();
+  if (!session.ok) return session;
 
   const parsed = memberActionSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid input" };
-  const viewerId = session.user.id;
+  const viewerId = session.userId;
   const { guildId, memberUserId } = parsed.data;
 
-  const [viewer] = await db
-    .select({ role: guildMembers.role })
-    .from(guildMembers)
-    .where(and(eq(guildMembers.guildId, guildId), eq(guildMembers.userId, viewerId)))
-    .limit(1);
-  if (!viewer || viewer.role !== "master") {
-    return { ok: false, error: "Only the master can promote" };
-  }
+  const viewerRole = await requireGuildRole(viewerId, guildId, ["master"]);
+  if (!viewerRole) return { ok: false, error: "Only the master can promote" };
 
   const result = await db
     .update(guildMembers)
@@ -276,22 +260,16 @@ export async function demoteMember(input: {
   guildId: string;
   memberUserId: string;
 }): Promise<ActionResult> {
-  const session = await auth();
-  if (!session?.user?.id) return { ok: false, error: "Unauthorized" };
+  const session = await requireUserId();
+  if (!session.ok) return session;
 
   const parsed = memberActionSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid input" };
-  const viewerId = session.user.id;
+  const viewerId = session.userId;
   const { guildId, memberUserId } = parsed.data;
 
-  const [viewer] = await db
-    .select({ role: guildMembers.role })
-    .from(guildMembers)
-    .where(and(eq(guildMembers.guildId, guildId), eq(guildMembers.userId, viewerId)))
-    .limit(1);
-  if (!viewer || viewer.role !== "master") {
-    return { ok: false, error: "Only the master can demote" };
-  }
+  const viewerRole = await requireGuildRole(viewerId, guildId, ["master"]);
+  if (!viewerRole) return { ok: false, error: "Only the master can demote" };
 
   const result = await db
     .update(guildMembers)
@@ -314,23 +292,17 @@ export async function transferOwnership(input: {
   guildId: string;
   memberUserId: string;
 }): Promise<ActionResult> {
-  const session = await auth();
-  if (!session?.user?.id) return { ok: false, error: "Unauthorized" };
+  const session = await requireUserId();
+  if (!session.ok) return session;
 
   const parsed = memberActionSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid input" };
-  const viewerId = session.user.id;
+  const viewerId = session.userId;
   const { guildId, memberUserId } = parsed.data;
   if (viewerId === memberUserId) return { ok: false, error: "You're already the master" };
 
-  const [viewer] = await db
-    .select({ role: guildMembers.role })
-    .from(guildMembers)
-    .where(and(eq(guildMembers.guildId, guildId), eq(guildMembers.userId, viewerId)))
-    .limit(1);
-  if (!viewer || viewer.role !== "master") {
-    return { ok: false, error: "Only the current master can transfer" };
-  }
+  const viewerRole = await requireGuildRole(viewerId, guildId, ["master"]);
+  if (!viewerRole) return { ok: false, error: "Only the current master can transfer" };
 
   const [target] = await db
     .select({ role: guildMembers.role })
@@ -355,24 +327,18 @@ export async function transferOwnership(input: {
 }
 
 export async function updateGuild(input: UpdateGuildInput): Promise<ActionResult> {
-  const session = await auth();
-  if (!session?.user?.id) return { ok: false, error: "Unauthorized" };
+  const session = await requireUserId();
+  if (!session.ok) return session;
 
   const parsed = updateSchema.safeParse(input);
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
-  const viewerId = session.user.id;
+  const viewerId = session.userId;
   const { guildId, description, discordInviteUrl } = parsed.data;
 
-  const [viewer] = await db
-    .select({ role: guildMembers.role })
-    .from(guildMembers)
-    .where(and(eq(guildMembers.guildId, guildId), eq(guildMembers.userId, viewerId)))
-    .limit(1);
-  if (!viewer || (viewer.role !== "master" && viewer.role !== "officer")) {
-    return { ok: false, error: "Only masters and officers can edit" };
-  }
+  const viewerRole = await requireGuildRole(viewerId, guildId, ["master", "officer"]);
+  if (!viewerRole) return { ok: false, error: "Only masters and officers can edit" };
 
   await db
     .update(guilds)
@@ -387,22 +353,16 @@ export async function updateGuild(input: UpdateGuildInput): Promise<ActionResult
 export async function rotateInviteCode(input: {
   guildId: string;
 }): Promise<ActionResult<{ inviteCode: string }>> {
-  const session = await auth();
-  if (!session?.user?.id) return { ok: false, error: "Unauthorized" };
+  const session = await requireUserId();
+  if (!session.ok) return session;
 
   const parsed = guildIdSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid input" };
-  const viewerId = session.user.id;
+  const viewerId = session.userId;
   const { guildId } = parsed.data;
 
-  const [viewer] = await db
-    .select({ role: guildMembers.role })
-    .from(guildMembers)
-    .where(and(eq(guildMembers.guildId, guildId), eq(guildMembers.userId, viewerId)))
-    .limit(1);
-  if (!viewer || viewer.role !== "master") {
-    return { ok: false, error: "Only the master can rotate the invite code" };
-  }
+  const viewerRole = await requireGuildRole(viewerId, guildId, ["master"]);
+  if (!viewerRole) return { ok: false, error: "Only the master can rotate the invite code" };
 
   const code = await generateUniqueInviteCode();
   await db
@@ -416,22 +376,16 @@ export async function rotateInviteCode(input: {
 }
 
 export async function deleteGuild(input: { guildId: string }): Promise<ActionResult> {
-  const session = await auth();
-  if (!session?.user?.id) return { ok: false, error: "Unauthorized" };
+  const session = await requireUserId();
+  if (!session.ok) return session;
 
   const parsed = guildIdSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid input" };
-  const viewerId = session.user.id;
+  const viewerId = session.userId;
   const { guildId } = parsed.data;
 
-  const [viewer] = await db
-    .select({ role: guildMembers.role })
-    .from(guildMembers)
-    .where(and(eq(guildMembers.guildId, guildId), eq(guildMembers.userId, viewerId)))
-    .limit(1);
-  if (!viewer || viewer.role !== "master") {
-    return { ok: false, error: "Only the master can delete the guild" };
-  }
+  const viewerRole = await requireGuildRole(viewerId, guildId, ["master"]);
+  if (!viewerRole) return { ok: false, error: "Only the master can delete the guild" };
 
   await db.delete(guilds).where(eq(guilds.id, guildId));
   revalidatePath("/guilds");

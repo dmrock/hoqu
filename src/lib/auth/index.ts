@@ -82,3 +82,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
 });
+
+export type AuthCheckResult = { ok: true; userId: string } | { ok: false; error: string };
+
+/**
+ * Server-action gate: resolves the current session and returns the user id, or
+ * a uniform `{ ok: false; error: "Unauthorized" }` shape that's assignable to
+ * every action's failure branch.
+ */
+export async function requireUserId(): Promise<AuthCheckResult> {
+  const session = await auth();
+  if (!session?.user?.id) return { ok: false, error: "Unauthorized" };
+  return { ok: true, userId: session.user.id };
+}

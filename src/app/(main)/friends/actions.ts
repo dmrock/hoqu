@@ -3,7 +3,7 @@
 import { and, eq, or } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { auth } from "@/lib/auth";
+import { requireUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { friendships, users } from "@/lib/db/schema";
 
@@ -20,15 +20,15 @@ const sendFriendRequestSchema = z.object({ username: usernameSchema });
 const friendshipIdSchema = z.object({ friendshipId: z.uuid() });
 
 export async function sendFriendRequest(input: { username: string }): Promise<ActionResult> {
-  const session = await auth();
-  if (!session?.user?.id) return { ok: false, error: "Unauthorized" };
+  const session = await requireUserId();
+  if (!session.ok) return session;
 
   const parsed = sendFriendRequestSchema.safeParse(input);
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
 
-  const userId = session.user.id;
+  const userId = session.userId;
   const target = parsed.data.username;
 
   const [other] = await db
@@ -66,13 +66,13 @@ export async function sendFriendRequest(input: { username: string }): Promise<Ac
 }
 
 export async function acceptFriendRequest(input: { friendshipId: string }): Promise<ActionResult> {
-  const session = await auth();
-  if (!session?.user?.id) return { ok: false, error: "Unauthorized" };
+  const session = await requireUserId();
+  if (!session.ok) return session;
 
   const parsed = friendshipIdSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid input" };
 
-  const userId = session.user.id;
+  const userId = session.userId;
   const result = await db
     .update(friendships)
     .set({ status: "accepted", updatedAt: new Date() })
@@ -92,13 +92,13 @@ export async function acceptFriendRequest(input: { friendshipId: string }): Prom
 }
 
 export async function declineFriendRequest(input: { friendshipId: string }): Promise<ActionResult> {
-  const session = await auth();
-  if (!session?.user?.id) return { ok: false, error: "Unauthorized" };
+  const session = await requireUserId();
+  if (!session.ok) return session;
 
   const parsed = friendshipIdSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid input" };
 
-  const userId = session.user.id;
+  const userId = session.userId;
   // Delete on decline so the requester can try again later. We never write the
   // "declined" status; it's available in the schema but unused for now.
   const result = await db
@@ -119,13 +119,13 @@ export async function declineFriendRequest(input: { friendshipId: string }): Pro
 }
 
 export async function cancelFriendRequest(input: { friendshipId: string }): Promise<ActionResult> {
-  const session = await auth();
-  if (!session?.user?.id) return { ok: false, error: "Unauthorized" };
+  const session = await requireUserId();
+  if (!session.ok) return session;
 
   const parsed = friendshipIdSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid input" };
 
-  const userId = session.user.id;
+  const userId = session.userId;
   const result = await db
     .delete(friendships)
     .where(
@@ -144,13 +144,13 @@ export async function cancelFriendRequest(input: { friendshipId: string }): Prom
 }
 
 export async function removeFriend(input: { friendshipId: string }): Promise<ActionResult> {
-  const session = await auth();
-  if (!session?.user?.id) return { ok: false, error: "Unauthorized" };
+  const session = await requireUserId();
+  if (!session.ok) return session;
 
   const parsed = friendshipIdSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid input" };
 
-  const userId = session.user.id;
+  const userId = session.userId;
   const result = await db
     .delete(friendships)
     .where(

@@ -45,12 +45,6 @@ export async function getFriendshipStatus(
   return { status: "none", friendshipId: null };
 }
 
-export async function areFriends(viewerId: string, otherUserId: string): Promise<boolean> {
-  if (viewerId === otherUserId) return false;
-  const { status } = await getFriendshipStatus(viewerId, otherUserId);
-  return status === "friends";
-}
-
 export type FriendListEntry = {
   friendshipId: string;
   status: "friends" | "pending_incoming" | "pending_outgoing";

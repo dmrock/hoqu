@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { type AchievementUnlock, checkAchievements } from "@/lib/achievements";
 import { getTvShow, type TvSeason } from "@/lib/api/tmdb";
-import { auth } from "@/lib/auth";
+import { requireUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { hobbies, items, users } from "@/lib/db/schema";
 import {
@@ -80,6 +80,33 @@ function addDelta(a: CounterDelta, b: CounterDelta): CounterDelta {
   };
 }
 
+/**
+ * Load an item that the user owns. Returns null if the item doesn't exist or
+ * belongs to someone else — every caller wants the "not found" UX in both cases
+ * (we don't want to confirm existence to a non-owner).
+ */
+async function loadOwnedItem(userId: string, itemId: string) {
+  const [row] = await db
+    .select({
+      id: items.id,
+      hobbyId: items.hobbyId,
+      externalId: items.externalId,
+      imageUrl: items.imageUrl,
+      status: items.status,
+      userRating: items.userRating,
+      note: items.note,
+      wouldRevisit: items.wouldRevisit,
+      completedAt: items.completedAt,
+      parentItemId: items.parentItemId,
+      seasonCount: items.seasonCount,
+      pointsAwarded: items.pointsAwarded,
+    })
+    .from(items)
+    .where(and(eq(items.id, itemId), eq(items.userId, userId)))
+    .limit(1);
+  return row ?? null;
+}
+
 function counterUpdateSet(delta: CounterDelta) {
   return {
     totalPoints: sql`${users.totalPoints} + ${delta.totalPoints}`,
@@ -132,13 +159,13 @@ function seasonRow(args: {
 }
 
 export async function addItem(input: AddItemInput): Promise<AddItemResult> {
-  const session = await auth();
-  if (!session?.user?.id) return { ok: false, error: "Unauthorized" };
+  const session = await requireUserId();
+  if (!session.ok) return session;
 
   const parsed = addItemSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid input" };
 
-  const userId = session.user.id;
+  const userId = session.userId;
   const data = parsed.data;
 
   const limit = await checkAddItemLimit(userId);
@@ -304,28 +331,16 @@ export async function addItem(input: AddItemInput): Promise<AddItemResult> {
 }
 
 export async function updateItem(input: UpdateItemInput): Promise<ActionResult> {
-  const session = await auth();
-  if (!session?.user?.id) return { ok: false, error: "Unauthorized" };
+  const session = await requireUserId();
+  if (!session.ok) return session;
 
   const parsed = updateItemSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid input" };
 
-  const userId = session.user.id;
+  const userId = session.userId;
   const data = parsed.data;
 
-  const [existing] = await db
-    .select({
-      status: items.status,
-      userRating: items.userRating,
-      hobbyId: items.hobbyId,
-      completedAt: items.completedAt,
-      parentItemId: items.parentItemId,
-      seasonCount: items.seasonCount,
-      pointsAwarded: items.pointsAwarded,
-    })
-    .from(items)
-    .where(and(eq(items.id, data.itemId), eq(items.userId, userId)))
-    .limit(1);
+  const existing = await loadOwnedItem(userId, data.itemId);
   if (!existing) return { ok: false, error: "Item not found" };
 
   if (existing.parentItemId === null && (existing.seasonCount ?? 1) >= 2) {
@@ -381,26 +396,16 @@ export async function updateItem(input: UpdateItemInput): Promise<ActionResult> 
 }
 
 export async function deleteItem(input: { itemId: string }): Promise<ActionResult> {
-  const session = await auth();
-  if (!session?.user?.id) return { ok: false, error: "Unauthorized" };
+  const session = await requireUserId();
+  if (!session.ok) return session;
 
   const parsed = deleteItemSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid input" };
 
-  const userId = session.user.id;
+  const userId = session.userId;
   const { itemId } = parsed.data;
 
-  const [existing] = await db
-    .select({
-      status: items.status,
-      userRating: items.userRating,
-      hobbyId: items.hobbyId,
-      parentItemId: items.parentItemId,
-      pointsAwarded: items.pointsAwarded,
-    })
-    .from(items)
-    .where(and(eq(items.id, itemId), eq(items.userId, userId)))
-    .limit(1);
+  const existing = await loadOwnedItem(userId, itemId);
   if (!existing) return { ok: false, error: "Item not found" };
 
   const [hobby] = await db
@@ -457,33 +462,16 @@ export async function deleteItem(input: { itemId: string }): Promise<ActionResul
 }
 
 export async function refreshShow(input: { itemId: string }): Promise<RefreshShowResult> {
-  const session = await auth();
-  if (!session?.user?.id) return { ok: false, error: "Unauthorized" };
+  const session = await requireUserId();
+  if (!session.ok) return session;
 
   const parsed = refreshShowSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid input" };
 
-  const userId = session.user.id;
+  const userId = session.userId;
   const { itemId } = parsed.data;
 
-  const [existing] = await db
-    .select({
-      id: items.id,
-      hobbyId: items.hobbyId,
-      externalId: items.externalId,
-      imageUrl: items.imageUrl,
-      status: items.status,
-      userRating: items.userRating,
-      note: items.note,
-      wouldRevisit: items.wouldRevisit,
-      completedAt: items.completedAt,
-      parentItemId: items.parentItemId,
-      seasonCount: items.seasonCount,
-      pointsAwarded: items.pointsAwarded,
-    })
-    .from(items)
-    .where(and(eq(items.id, itemId), eq(items.userId, userId)))
-    .limit(1);
+  const existing = await loadOwnedItem(userId, itemId);
   if (!existing) return { ok: false, error: "Item not found" };
   if (existing.parentItemId !== null) {
     return { ok: false, error: "Refresh from the show, not a season" };

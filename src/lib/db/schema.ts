@@ -1,6 +1,7 @@
 import {
   type AnyPgColumn,
   boolean,
+  index,
   integer,
   jsonb,
   pgEnum,
@@ -106,7 +107,11 @@ export const items = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [unique("items_user_hobby_external_unique").on(t.userId, t.hobbyId, t.externalId)],
+  (t) => [
+    unique("items_user_hobby_external_unique").on(t.userId, t.hobbyId, t.externalId),
+    index("items_user_hobby_idx").on(t.userId, t.hobbyId),
+    index("items_parent_idx").on(t.parentItemId),
+  ],
 );
 
 export const guilds = pgTable("guilds", {
@@ -133,21 +138,31 @@ export const guildMembers = pgTable(
     role: guildRoleEnum("role").notNull().default("member"),
     joinedAt: timestamp("joined_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [primaryKey({ columns: [t.guildId, t.userId] })],
+  (t) => [
+    primaryKey({ columns: [t.guildId, t.userId] }),
+    index("guild_members_user_idx").on(t.userId),
+  ],
 );
 
-export const friendships = pgTable("friendships", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  requesterId: uuid("requester_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  addresseeId: uuid("addressee_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  status: friendshipStatusEnum("status").notNull().default("pending"),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+export const friendships = pgTable(
+  "friendships",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    requesterId: uuid("requester_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    addresseeId: uuid("addressee_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    status: friendshipStatusEnum("status").notNull().default("pending"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("friendships_requester_idx").on(t.requesterId),
+    index("friendships_addressee_idx").on(t.addresseeId),
+  ],
+);
 
 export type AchievementRequirement =
   | { type: "items_completed"; count: number; hobby?: string }
@@ -181,7 +196,10 @@ export const userAchievements = pgTable(
       .references(() => achievements.id, { onDelete: "cascade" }),
     unlockedAt: timestamp("unlocked_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [primaryKey({ columns: [t.userId, t.achievementId] })],
+  (t) => [
+    primaryKey({ columns: [t.userId, t.achievementId] }),
+    index("user_achievements_user_idx").on(t.userId),
+  ],
 );
 
 export const accounts = pgTable(
