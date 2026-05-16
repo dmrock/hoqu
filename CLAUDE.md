@@ -70,6 +70,21 @@ registration, Vercel deployment config.
 user has already configured the environment — these aren't external setup, they apply existing
 migrations to the existing database.
 
+## Testing
+
+- **Unit tests** (Vitest): `pnpm test` / `pnpm test:watch`. Pure logic only — `src/lib/`
+  helpers, no DB or Redis. Sources of dummy env in `vitest.setup.ts`.
+- **E2E tests** (Playwright): `pnpm e2e` / `pnpm e2e:ui`. Uses Page Object Model with a
+  `PageHolder` base ([e2e/pages/base.ts](e2e/pages/base.ts)) and prefers `getByRole` over
+  other selectors. Talks to an isolated Neon `e2e-test` branch via `E2E_DATABASE_URL` in
+  `.env.test.local`. Global setup truncates user-data, reseeds hobbies + achievements, and
+  creates two known test users; auth setup saves storage state for both.
+- **E2E port**: the suite spawns its own Next.js dev server on **:3100** (not :3000) so it
+  doesn't conflict with the user's `pnpm dev`. However, Next 16 enforces a singleton dev
+  server per project directory, so **stop `pnpm dev` before running `pnpm e2e`**. Restart it
+  after.
+- **Integration tests** (Phase 3): planned, not yet implemented.
+
 ## Database Schema
 
 Source of truth: `src/lib/db/schema.ts`. The shapes below are summaries.

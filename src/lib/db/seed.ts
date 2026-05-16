@@ -1,17 +1,15 @@
-import { config } from "dotenv";
 import { sql } from "drizzle-orm";
-import type { AchievementRequirement } from "./schema";
+import { db } from "./index";
+import { type AchievementRequirement, achievements, hobbies } from "./schema";
 
-config({ path: ".env.local" });
-
-const HOBBIES = [
+export const HOBBIES = [
   { slug: "movies", name: "Movies", icon: "film", pointsPerItem: 1 },
   { slug: "tv", name: "TV Shows", icon: "tv", pointsPerItem: 5 },
   { slug: "games", name: "Games", icon: "gamepad", pointsPerItem: 10 },
   { slug: "books", name: "Books", icon: "book", pointsPerItem: 6 },
 ];
 
-type SeedAchievement = {
+export type SeedAchievement = {
   slug: string;
   name: string;
   description: string;
@@ -21,7 +19,7 @@ type SeedAchievement = {
   sortOrder: number;
 };
 
-const ACHIEVEMENTS: SeedAchievement[] = [
+export const ACHIEVEMENTS: SeedAchievement[] = [
   {
     slug: "first_step",
     name: "First Step",
@@ -150,10 +148,7 @@ const ACHIEVEMENTS: SeedAchievement[] = [
   },
 ];
 
-async function main() {
-  const { db } = await import("./index");
-  const { achievements, hobbies } = await import("./schema");
-
+export async function runSeed(): Promise<void> {
   console.log("Seeding hobbies…");
   await db
     .insert(hobbies)
@@ -186,7 +181,12 @@ async function main() {
   console.log("Done.");
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+// Auto-run when invoked as a script (tsx src/lib/db/seed.ts). When imported
+// from global-setup or anywhere else, this block is skipped.
+const invokedAsScript = process.argv[1]?.includes("/seed.ts");
+if (invokedAsScript) {
+  runSeed().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}
