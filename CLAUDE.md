@@ -72,18 +72,22 @@ migrations to the existing database.
 
 ## Testing
 
+Three layers, three commands. `pnpm test:all` runs everything.
+
 - **Unit tests** (Vitest): `pnpm test` / `pnpm test:watch`. Pure logic only — `src/lib/`
-  helpers, no DB or Redis. Sources of dummy env in `vitest.setup.ts`.
-- **E2E tests** (Playwright): `pnpm e2e` / `pnpm e2e:ui`. Uses Page Object Model with a
-  `PageHolder` base ([e2e/pages/base.ts](e2e/pages/base.ts)) and prefers `getByRole` over
-  other selectors. Talks to an isolated Neon `e2e-test` branch via `E2E_DATABASE_URL` in
-  `.env.test.local`. Global setup truncates user-data, reseeds hobbies + achievements, and
-  creates two known test users; auth setup saves storage state for both.
-- **E2E port**: the suite spawns its own Next.js dev server on **:3100** (not :3000) so it
-  doesn't conflict with the user's `pnpm dev`. However, Next 16 enforces a singleton dev
-  server per project directory, so **stop `pnpm dev` before running `pnpm e2e`**. Restart it
-  after.
-- **Integration tests** (Phase 3): planned, not yet implemented.
+  helpers, no DB or Redis. Dummy env in `vitest.setup.ts`.
+- **Integration tests** (Vitest, separate project): `pnpm test:integration`. Server actions
+  end-to-end against the real e2e Neon branch (reuses `E2E_DATABASE_URL`). Setup at
+  [tests/integration/setup.ts](tests/integration/setup.ts) loads env, stubs `@/lib/auth`
+  (no Next bundler available outside Next) and `@/lib/rate-limit`, then truncates user-data
+  + reseeds hobbies/achievements per test. Tests use `setTestUserId(id)` to drive the auth
+  gate. Runs serially against one branch (no per-file branching).
+- **E2E tests** (Playwright): `pnpm e2e` / `pnpm e2e:headed` / `pnpm e2e:ui`. POM with
+  `PageHolder` base ([e2e/pages/base.ts](e2e/pages/base.ts)) and `getByRole` preferred.
+  Spawns its own Next dev server on **:3100** against the e2e Neon branch.
+- **Dev server conflict**: Next 16 enforces a singleton dev server per project directory,
+  so **stop `pnpm dev` before running `pnpm e2e`**. Integration tests don't need the dev
+  server (they call server actions directly), so they can run while `pnpm dev` is up.
 
 ## Database Schema
 
