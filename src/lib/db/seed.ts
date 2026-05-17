@@ -180,13 +180,3 @@ export async function runSeed(): Promise<void> {
 
   console.log("Done.");
 }
-
-// Auto-run when invoked as a script (tsx src/lib/db/seed.ts). When imported
-// from global-setup or anywhere else, this block is skipped.
-const invokedAsScript = process.argv[1]?.includes("/seed.ts");
-if (invokedAsScript) {
-  runSeed().catch((err) => {
-    console.error(err);
-    process.exit(1);
-  });
-}
