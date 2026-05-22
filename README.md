@@ -86,12 +86,31 @@ src/
     guilds/                   guilds/[id]/  guilds/[id]/settings/
                               guilds/[id]/leaderboard/  guilds/join/[code]/
   app/api/                   Search proxies + auth handlers
+  app/privacy/  app/terms/   Public legal pages (no sidebar, no auth)
   components/                UI primitives + per-feature components
   lib/                       Db, auth, points, achievements, leaderboards,
                              friendships, guilds, rate-limit, redis, api clients
 drizzle/                     Generated SQL migrations
+.github/workflows/           CI workflow (typecheck, lint, unit, integration, e2e)
 ```
 
 ## Deployment
 
-Deploys on Vercel. Set the environment variables in the Vercel project settings; database migrations are part of the release process (`pnpm db:migrate`).
+Hosted on Vercel at [hoqu.dev](https://hoqu.dev) and auto-deployed on every push to `main`.
+
+**PR workflow:**
+
+1. Create a feature branch and open a PR.
+2. GitHub Actions runs typecheck, lint, unit tests, and integration + E2E against an ephemeral Neon branch — see [.github/workflows/ci.yml](.github/workflows/ci.yml).
+3. Vercel creates a per-PR preview deploy.
+4. When CI is green, merge the PR. Vercel deploys to production.
+
+Branch protection isn't enforceable on GitHub Free private repos, so the workflow is by convention: always go through a PR, never push directly to `main`.
+
+**Build command:** Vercel runs `pnpm db:migrate && pnpm db:seed && pnpm build`, so schema migrations and the hobby/achievement seed catalog stay in sync with each prod deploy.
+
+**Environment split:**
+
+- **Local dev** — `.env.local` (gitignored) points at the dev Neon branch, dev Upstash, and the `hoqu-dev` Google OAuth client.
+- **Production** — env vars set in Vercel (Production scope) point at the prod Neon branch, prod Upstash, the `hoqu-prod` Google OAuth client, and a separate `AUTH_SECRET`.
+- **Preview** — per-PR env vars not yet configured; preview deploys build but currently fail at runtime when they hit the DB.

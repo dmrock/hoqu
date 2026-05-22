@@ -273,6 +273,8 @@ src/
 │   └── items/                          Server actions (add/update/delete/refresh) co-located
 │                                       with the components that call them
 ├── app/api/                            Search proxies + Auth.js handlers
+├── app/privacy/                        Public privacy policy (no auth, no sidebar)
+├── app/terms/                          Public terms of service (no auth, no sidebar)
 ├── components/
 │   ├── ui/                             shadcn primitives (button, dialog, dropdown, etc.)
 │   ├── layout/                         Sidebar, Header, MobileDrawer, SidebarUserMenu
