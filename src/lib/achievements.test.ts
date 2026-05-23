@@ -29,12 +29,57 @@ describe("evaluateRequirement — items_completed", () => {
     expect(result.current).toBe(0);
   });
 
-  it("without hobby filter falls back to totalPoints", () => {
+  it("without hobby filter sums all completed-item counters (not totalPoints)", () => {
     const result = evaluateRequirement(
-      { type: "items_completed", count: 50 },
-      { ...baseCounters, totalPoints: 75 },
+      { type: "items_completed", count: 100 },
+      {
+        ...baseCounters,
+        totalPoints: 9999,
+        moviesCompleted: 40,
+        showsCompleted: 30,
+        gamesCompleted: 20,
+        booksCompleted: 10,
+      },
     );
-    expect(result).toEqual({ satisfied: true, current: 75, target: 50 });
+    expect(result).toEqual({ satisfied: true, current: 100, target: 100 });
+  });
+
+  it("without hobby filter is not satisfied when item sum is below target despite high points", () => {
+    const result = evaluateRequirement(
+      { type: "items_completed", count: 100 },
+      { ...baseCounters, totalPoints: 500, gamesCompleted: 50 },
+    );
+    expect(result.satisfied).toBe(false);
+    expect(result.current).toBe(50);
+  });
+
+  it("hobby:any takes the max completion across hobbies", () => {
+    const result = evaluateRequirement(
+      { type: "items_completed", count: 50, hobby: "any" },
+      {
+        ...baseCounters,
+        moviesCompleted: 10,
+        showsCompleted: 50,
+        gamesCompleted: 20,
+        booksCompleted: 5,
+      },
+    );
+    expect(result).toEqual({ satisfied: true, current: 50, target: 50 });
+  });
+
+  it("hobby:any is not satisfied when no single hobby reaches the target", () => {
+    const result = evaluateRequirement(
+      { type: "items_completed", count: 50, hobby: "any" },
+      {
+        ...baseCounters,
+        moviesCompleted: 49,
+        showsCompleted: 49,
+        gamesCompleted: 49,
+        booksCompleted: 49,
+      },
+    );
+    expect(result.satisfied).toBe(false);
+    expect(result.current).toBe(49);
   });
 
   it("unknown hobby slug yields 0 current", () => {

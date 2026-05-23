@@ -134,7 +134,7 @@ export const ACHIEVEMENTS: SeedAchievement[] = [
     description: "Complete 50 in any single hobby",
     icon: "flame",
     category: "general",
-    requirement: { type: "items_completed", count: 50 },
+    requirement: { type: "items_completed", count: 50, hobby: "any" },
     sortOrder: 51,
   },
   {
