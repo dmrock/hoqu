@@ -311,6 +311,29 @@ src/
   semantics (snapshot logic, role enforcement, etc.).
 - Avoid backwards-compat shims; if something is unused, delete it.
 
+## Git Conventions
+
+**Branches** (kebab-case):
+- `feat/<slug>` — new feature
+- `fix/<slug>` — bug fix
+- `refactor/<slug>` — restructure without behavior change
+- `chore/<slug>` — tooling, deps, build
+- `docs/<slug>` — docs only
+- `ci/<slug>` — CI/workflow changes
+- `test/<slug>` — test-only changes
+
+**Commits** — Conventional Commits with the same type prefix (`feat:`, `fix:`, `refactor:`,
+`chore:`, `docs:`, `ci:`, `test:`). Optional scope in parens, e.g. `feat(achievements): add
+streak tiers`. Subject in the imperative, no trailing period, ≤72 chars.
+
+**Pull requests** — title mirrors the commit style. Body has `## Summary` (1-3 bullets, why
+over what) and `## Test plan` (markdown checklist of what was verified).
+
+**Rules**:
+- Create new commits rather than amending pushed ones.
+- Never `--no-verify`; fix the hook failure instead.
+- One logical change per commit when feasible (split docs/code if both touched).
+
 ## Environment Variables
 
 ```
