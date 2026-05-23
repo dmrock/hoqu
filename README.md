@@ -113,4 +113,4 @@ Branch protection isn't enforceable on GitHub Free private repos, so the workflo
 
 - **Local dev** — `.env.local` (gitignored) points at the dev Neon branch, dev Upstash, and the `hoqu-dev` Google OAuth client.
 - **Production** — env vars set in Vercel (Production scope) point at the prod Neon branch, prod Upstash, the `hoqu-prod` Google OAuth client, and a separate `AUTH_SECRET`.
-- **Preview** — per-PR env vars not yet configured; preview deploys build but currently fail at runtime when they hit the DB.
+- **Preview** — per-PR env vars intentionally left unconfigured. Previews still build (a useful signal that code compiles) but don't run at runtime. Revisit if we ever need to demo PRs at a real URL or share previews with collaborators.
