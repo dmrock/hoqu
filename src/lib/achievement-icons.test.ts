@@ -5,7 +5,7 @@ import { achievementIcon } from "./achievement-icons";
 describe("achievementIcon", () => {
   it("returns the mapped icon for a known slug", () => {
     expect(achievementIcon("footprints")).toBe(Footprints);
-    expect(achievementIcon("gamepad-badge")).toBe(Gamepad2);
+    expect(achievementIcon("gamepad")).toBe(Gamepad2);
   });
 
   it("falls back to Trophy for unknown slugs", () => {

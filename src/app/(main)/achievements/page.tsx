@@ -14,6 +14,8 @@ import { cn } from "@/lib/utils";
 
 const CATEGORY_LABEL: Record<string, string> = {
   general: "General",
+  milestones: "Milestones",
+  ratings: "Ratings",
   movies: "Movies",
   tv: "TV Shows",
   games: "Games",
@@ -79,7 +81,16 @@ export default async function AchievementsPage() {
     list.push(r);
     grouped.set(r.category, list);
   }
-  const categoryOrder = ["general", "movies", "tv", "games", "books", "social"];
+  const categoryOrder = [
+    "general",
+    "milestones",
+    "ratings",
+    "movies",
+    "tv",
+    "games",
+    "books",
+    "social",
+  ];
 
   return (
     <div className="space-y-8">
@@ -99,7 +110,7 @@ export default async function AchievementsPage() {
               <h2 className="font-pixel text-sm text-muted-foreground uppercase">
                 {CATEGORY_LABEL[category] ?? category}
               </h2>
-              <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {items.map((item) => {
                   const Icon = achievementIcon(item.icon);
                   const pct =

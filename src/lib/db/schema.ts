@@ -38,6 +38,8 @@ export const friendshipStatusEnum = pgEnum("friendship_status", [
 
 export const achievementCategoryEnum = pgEnum("achievement_category", [
   "general",
+  "milestones",
+  "ratings",
   "movies",
   "tv",
   "games",

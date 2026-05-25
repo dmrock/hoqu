@@ -53,12 +53,27 @@ function completedCount(c: UserCounters, slug: string): number {
   return typeof value === "number" ? value : 0;
 }
 
+function totalCompletedAcrossHobbies(c: UserCounters): number {
+  return DEFAULT_ALL_HOBBIES.reduce((sum, slug) => sum + completedCount(c, slug), 0);
+}
+
+function maxCompletedInAnyHobby(c: UserCounters): number {
+  return DEFAULT_ALL_HOBBIES.reduce((max, slug) => Math.max(max, completedCount(c, slug)), 0);
+}
+
 const evaluators: {
   [K in AchievementRequirement["type"]]: Evaluator<Extract<AchievementRequirement, { type: K }>>;
 } = {
   items_completed: (req, c) => {
     const target = req.count;
-    const current = req.hobby ? completedCount(c, req.hobby) : c.totalPoints;
+    let current: number;
+    if (!req.hobby) {
+      current = totalCompletedAcrossHobbies(c);
+    } else if (req.hobby === "any") {
+      current = maxCompletedInAnyHobby(c);
+    } else {
+      current = completedCount(c, req.hobby);
+    }
     return { satisfied: current >= target, current, target };
   },
   all_hobbies: (req, c) => {
