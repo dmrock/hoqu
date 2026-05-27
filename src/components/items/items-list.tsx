@@ -154,7 +154,7 @@ export function ItemsList({
                 const isOpen = expanded.has(item.id);
                 return (
                   <Fragment key={item.id}>
-                    <tr className="border-t border-border bg-muted/10">
+                    <tr id={`item-${item.id}`} className="border-t border-border bg-muted/10">
                       <td className="px-3 py-2">
                         <Poster src={item.imageUrl} alt={item.title} size={40} />
                       </td>
@@ -218,7 +218,11 @@ export function ItemsList({
 
               const isFlatTv = item.kind === "flat" && hobbySlug === "tv";
               return (
-                <tr key={item.id} className="border-t border-border hover:bg-muted/30">
+                <tr
+                  key={item.id}
+                  id={`item-${item.id}`}
+                  className="border-t border-border hover:bg-muted/30"
+                >
                   <td className="px-3 py-2">
                     <Poster src={item.imageUrl} alt={item.title} size={40} />
                   </td>
@@ -253,7 +257,11 @@ export function ItemsList({
           if (item.kind === "show_parent") {
             const isOpen = expanded.has(item.id);
             return (
-              <div key={item.id} className="rounded-lg border border-border bg-muted/10 p-3">
+              <div
+                key={item.id}
+                id={`item-${item.id}`}
+                className="rounded-lg border border-border bg-muted/10 p-3"
+              >
                 <div className="flex gap-3">
                   <Poster src={item.imageUrl} alt={item.title} size={48} />
                   <div className="min-w-0 flex-1 space-y-1">
@@ -319,7 +327,11 @@ export function ItemsList({
 
           const isFlatTv = item.kind === "flat" && hobbySlug === "tv";
           return (
-            <div key={item.id} className="flex gap-3 rounded-lg border border-border bg-card p-3">
+            <div
+              key={item.id}
+              id={`item-${item.id}`}
+              className="flex gap-3 rounded-lg border border-border bg-card p-3"
+            >
               <Poster src={item.imageUrl} alt={item.title} size={56} />
               <div className="min-w-0 flex-1 space-y-1">
                 <div className="flex items-start justify-between gap-2">
