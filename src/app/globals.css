@@ -153,6 +153,21 @@
   image-rendering: pixelated;
 }
 
+@keyframes row-focus-pulse {
+  0%,
+  100% {
+    background-color: transparent;
+  }
+  20%,
+  60% {
+    background-color: color-mix(in oklab, var(--primary) 22%, transparent);
+  }
+}
+
+.row-focus-pulse {
+  animation: row-focus-pulse 1.8s ease-in-out;
+}
+
 /* Neutralize Chrome/Safari autofill styling so inputs match the dark theme */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,

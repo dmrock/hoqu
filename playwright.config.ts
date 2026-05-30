@@ -45,7 +45,7 @@ export default defineConfig({
     },
     {
       name: "authed",
-      testMatch: /(add-item|friends|guild-flow)\.spec\.ts/,
+      testMatch: /(add-item|friends|guild-flow|search)\.spec\.ts/,
       dependencies: ["setup"],
       use: {
         ...devices["Desktop Chrome"],

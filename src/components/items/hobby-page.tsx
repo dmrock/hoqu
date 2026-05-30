@@ -9,6 +9,7 @@ import type { ItemKind, ItemRow } from "@/types/item";
 import { AddItemDialog } from "./add-item-dialog";
 import { ItemsList } from "./items-list";
 import { ItemsToolbar } from "./items-toolbar";
+import { RowFocus } from "./row-focus";
 
 type SearchParamsInput = { [key: string]: string | string[] | undefined };
 
@@ -39,6 +40,12 @@ function parseExpanded(searchParams: SearchParamsInput): Set<string> {
   return new Set(value.split(",").filter(Boolean));
 }
 
+function parseFocus(searchParams: SearchParamsInput): string | null {
+  const raw = searchParams.focus;
+  if (typeof raw !== "string") return null;
+  return /^[0-9a-f-]{8,}$/i.test(raw) ? raw : null;
+}
+
 export async function HobbyPage({
   hobbySlug,
   title,
@@ -53,6 +60,7 @@ export async function HobbyPage({
 
   const filter = parseItemsFilter(searchParams);
   const expanded = parseExpanded(searchParams);
+  const focusId = parseFocus(searchParams);
 
   const [hobby] = await db
     .select({ id: hobbies.id })
@@ -193,6 +201,7 @@ export async function HobbyPage({
       ) : (
         <ItemsList items={userItems} hobbySlug={hobbySlug} expanded={expanded} />
       )}
+      <RowFocus focusId={focusId} />
     </div>
   );
 }
