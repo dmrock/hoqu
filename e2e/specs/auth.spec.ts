@@ -21,14 +21,17 @@ test("user can register, sign out, and sign back in", async ({ page }) => {
   await dashboard.expectWelcome(localPart);
 
   // Sign out via the sidebar profile menu.
+  // Auth.js sign-out POST + /login compile have flaked at the default 5s on
+  // CI runners; bump just this assertion's timeout so we don't have to raise
+  // it globally. Same story for the post-sign-in /dashboard redirect below.
   const sidebar = new Sidebar(page);
   await sidebar.signOut();
-  await expect(page).toHaveURL(/\/login(\?.*)?$/);
+  await expect(page).toHaveURL(/\/login(\?.*)?$/, { timeout: 15_000 });
 
   // Sign back in with the same credentials.
   const login = new LoginPage(page);
   await login.goto();
   await login.signIn(email, USER_PASSWORD);
-  await expect(page).toHaveURL(/\/dashboard$/);
+  await expect(page).toHaveURL(/\/dashboard$/, { timeout: 15_000 });
   await dashboard.expectWelcome(localPart);
 });
