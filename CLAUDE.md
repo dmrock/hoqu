@@ -247,6 +247,12 @@ Components:
   see memory).
 - Sidebar: 240px expanded, 56px collapsed (`w-14`). User avatar + dropdown lives at the
   bottom of the sidebar, not the top header.
+- Global search: a Cmd/Ctrl+K command palette, triggered by a compact right-aligned
+  button in the header (icon-only below `sm`). The trigger is intentionally NOT a wide
+  input-shaped bar — pages pick their own `max-w-*` (e.g. `max-w-7xl` on hobby pages,
+  `max-w-3xl` on guilds/friends), so a wide trigger fails to line up with one or the
+  other. Right-aligning decouples it. Don't move it to the sidebar or center it
+  without re-considering this trade-off.
 
 Animations (Motion) — only `<UnlockToaster>` is wired up so far; the rest of the polish
 specced in earlier drafts is deferred.
@@ -270,17 +276,20 @@ src/
 │   │   │   ├── settings/               Master/officer edit; master rotate code + delete
 │   │   │   └── leaderboard/            Guild scope ranked
 │   │   └── join/[code]/                Confirm-and-join landing
-│   └── items/                          Server actions (add/update/delete/refresh) co-located
-│                                       with the components that call them
+│   ├── items/                          Server actions (add/update/delete/refresh) co-located
+│   │                                   with the components that call them
+│   └── search/                         searchCollection server action for the Cmd+K palette
 ├── app/api/                            Search proxies + Auth.js handlers
 ├── app/privacy/                        Public privacy policy (no auth, no sidebar)
 ├── app/terms/                          Public terms of service (no auth, no sidebar)
 ├── components/
 │   ├── ui/                             shadcn primitives (button, dialog, dropdown, etc.)
 │   ├── layout/                         Sidebar, Header, MobileDrawer, SidebarUserMenu
-│   ├── items/                          Hobby table, toolbar, add dialog, row actions
+│   ├── items/                          Hobby table, toolbar, add dialog, row actions,
+│   │                                   row-focus (scroll + pulse for ?focus= deep links)
 │   ├── dashboard/                      New-releases section + skeleton
 │   ├── achievements/                   UnlockToaster
+│   ├── search/                         Cmd+K command palette (header trigger + dialog)
 │   └── leaderboard/                    ScopeTabs + Table
 ├── lib/
 │   ├── db/                             Drizzle schema, connection, seed, recalc-points
