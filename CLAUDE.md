@@ -50,6 +50,10 @@ sprites, responsive sweep) is intentionally deferred — see `MEMORY.md`.
     secrets must start with `import "server-only"` if a client component might import from it.
     Pure types/constants live in a sibling file with no DB imports — see
     `src/lib/leaderboards.ts` (pure) vs `src/lib/leaderboard-queries.ts` (DB).
+12. **Public vs. authed routes** (`src/proxy.ts`): `/`, `/privacy`, and `/terms` are public.
+    Every other non-`/login`/`/register` path requires a session and bounces unauthed users
+    to `/login?from=…`. Authed users on `/`, `/login`, or `/register` get redirected to
+    `/dashboard` so the landing/auth screens never render once signed in.
 
 ## Workflow Rules
 
@@ -263,6 +267,7 @@ Source of truth is the actual repo. High-level shape:
 
 ```
 src/
+├── app/page.tsx                        Public landing (`/`); authed users get bounced to /dashboard
 ├── app/(auth)/                         Login, register
 ├── app/(main)/                         Authenticated routes (sidebar layout)
 │   ├── dashboard/
