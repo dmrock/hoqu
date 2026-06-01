@@ -12,9 +12,9 @@ export default function RegisterPage() {
 
   return (
     <div className="space-y-6">
-      <div className="text-center space-y-2">
-        <h1 className="font-pixel text-2xl tracking-tight">HOQU</h1>
-        <p className="text-sm text-muted-foreground">Create your account to start questing</p>
+      <div className="space-y-2 text-center">
+        <h1 className="font-pixel text-base tracking-tight">Create account</h1>
+        <p className="text-sm text-muted-foreground">Start questing</p>
       </div>
 
       <form action={formAction} className="space-y-4">
