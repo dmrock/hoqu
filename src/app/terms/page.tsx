@@ -86,8 +86,8 @@ export default function TermsPage() {
             <h2 className="font-pixel text-sm text-accent">Termination</h2>
             <p>
               You can request account deletion at any time by emailing{" "}
-              <a href="mailto:denis.rork@gmail.com" className="text-primary hover:underline">
-                denis.rork@gmail.com
+              <a href="mailto:hello@hoqu.dev" className="text-primary hover:underline">
+                hello@hoqu.dev
               </a>
               . We may suspend or remove accounts that violate these terms.
             </p>
@@ -114,8 +114,8 @@ export default function TermsPage() {
             <h2 className="font-pixel text-sm text-accent">Contact</h2>
             <p>
               Questions about these terms?{" "}
-              <a href="mailto:denis.rork@gmail.com" className="text-primary hover:underline">
-                denis.rork@gmail.com
+              <a href="mailto:hello@hoqu.dev" className="text-primary hover:underline">
+                hello@hoqu.dev
               </a>
               .
             </p>
