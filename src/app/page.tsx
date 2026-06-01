@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { DataAttribution } from "@/components/layout/data-attribution";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -46,16 +47,19 @@ export default function LandingPage() {
         <FeatureGrid />
       </section>
 
-      <footer className="flex flex-wrap items-center justify-center gap-3 pt-4 text-xs text-muted-foreground">
-        <span>© {new Date().getFullYear()} HOQU</span>
-        <span aria-hidden>·</span>
-        <Link href="/privacy" className="transition-colors hover:text-foreground">
-          Privacy
-        </Link>
-        <span aria-hidden>·</span>
-        <Link href="/terms" className="transition-colors hover:text-foreground">
-          Terms
-        </Link>
+      <footer className="flex flex-col items-center gap-2 pt-4 text-xs text-muted-foreground">
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <span>© {new Date().getFullYear()} HOQU</span>
+          <span aria-hidden>·</span>
+          <Link href="/privacy" className="transition-colors hover:text-foreground">
+            Privacy
+          </Link>
+          <span aria-hidden>·</span>
+          <Link href="/terms" className="transition-colors hover:text-foreground">
+            Terms
+          </Link>
+        </div>
+        <DataAttribution />
       </footer>
     </main>
   );
