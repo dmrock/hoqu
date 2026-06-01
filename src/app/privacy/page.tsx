@@ -86,6 +86,10 @@ export default function PrivacyPage() {
           </p>
         </section>
       </div>
+
+      <footer className="mt-12 border-t border-border pt-6 text-center text-xs text-muted-foreground">
+        © {new Date().getFullYear()} HOQU
+      </footer>
     </main>
   );
 }

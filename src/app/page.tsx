@@ -46,7 +46,9 @@ export default function LandingPage() {
         <FeatureGrid />
       </section>
 
-      <footer className="flex items-center justify-center gap-3 pt-4 text-xs text-muted-foreground">
+      <footer className="flex flex-wrap items-center justify-center gap-3 pt-4 text-xs text-muted-foreground">
+        <span>© {new Date().getFullYear()} HOQU</span>
+        <span aria-hidden>·</span>
         <Link href="/privacy" className="transition-colors hover:text-foreground">
           Privacy
         </Link>
