@@ -12,9 +12,9 @@ export default function LoginPage() {
 
   return (
     <div className="space-y-6">
-      <div className="text-center space-y-2">
-        <h1 className="font-pixel text-2xl tracking-tight">HOQU</h1>
-        <p className="text-sm text-muted-foreground">Sign in to continue your quest</p>
+      <div className="space-y-2 text-center">
+        <h1 className="font-pixel text-base tracking-tight">Sign in</h1>
+        <p className="text-sm text-muted-foreground">Continue your quest</p>
       </div>
 
       <form action={formAction} className="space-y-4">
