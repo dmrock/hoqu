@@ -45,7 +45,7 @@ export default defineConfig({
     },
     {
       name: "authed",
-      testMatch: /(add-item|friends|guild-flow|landing|search)\.spec\.ts/,
+      testMatch: /(add-item|dashboard-new-releases|friends|guild-flow|landing|search)\.spec\.ts/,
       dependencies: ["setup"],
       use: {
         ...devices["Desktop Chrome"],
@@ -60,6 +60,9 @@ export default defineConfig({
     timeout: 120_000,
     env: {
       DATABASE_URL: process.env.E2E_DATABASE_URL,
+      // Swap in deterministic new-releases data — TMDB/RAWG are server-side
+      // fetches Playwright's page.route can't intercept.
+      E2E_NEW_RELEASES_FIXTURES: "1",
     },
   },
 });
