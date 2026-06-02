@@ -1,3 +1,4 @@
+import { newReleasesFixture } from "./new-releases-fixtures";
 import type { SearchResult } from "./search";
 
 const RAWG_API_URL = "https://api.rawg.io/api";
@@ -44,6 +45,9 @@ export async function searchGames(query: string): Promise<SearchResult[]> {
 }
 
 export async function getRecentGames(): Promise<SearchResult[]> {
+  const fixture = newReleasesFixture("games");
+  if (fixture) return fixture;
+
   const apiKey = process.env.RAWG_API_KEY;
   if (!apiKey) throw new Error("RAWG_API_KEY is not set");
 

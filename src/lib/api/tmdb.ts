@@ -1,3 +1,4 @@
+import { newReleasesFixture } from "./new-releases-fixtures";
 import type { SearchResult } from "./search";
 
 const TMDB_API_URL = "https://api.themoviedb.org/3";
@@ -66,6 +67,9 @@ export async function searchMovies(query: string): Promise<SearchResult[]> {
 }
 
 export async function getNowPlayingMovies(): Promise<SearchResult[]> {
+  const fixture = newReleasesFixture("movies");
+  if (fixture) return fixture;
+
   const apiKey = process.env.TMDB_API_KEY;
   if (!apiKey) throw new Error("TMDB_API_KEY is not set");
 
@@ -87,6 +91,9 @@ export async function getNowPlayingMovies(): Promise<SearchResult[]> {
 }
 
 export async function getOnTheAirTvShows(): Promise<SearchResult[]> {
+  const fixture = newReleasesFixture("tv");
+  if (fixture) return fixture;
+
   const apiKey = process.env.TMDB_API_KEY;
   if (!apiKey) throw new Error("TMDB_API_KEY is not set");
 

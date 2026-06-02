@@ -32,6 +32,13 @@ import type { HobbySlug, ItemStatus } from "@/lib/points";
 type Props = {
   hobbySlug: HobbySlug;
   existingExternalIds: string[];
+  /** When set, the dialog opens straight to the configure step and skips search. */
+  initialSelection?: SearchResult | null;
+  defaultStatus?: ItemStatus;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  /** Pass `null` to suppress the built-in "Add" trigger button. */
+  trigger?: React.ReactNode;
 };
 
 const STATUSES: { value: ItemStatus; label: string }[] = [
@@ -48,21 +55,45 @@ const HOBBY_SINGULAR: Record<HobbySlug, string> = {
   books: "book",
 };
 
-export function AddItemDialog({ hobbySlug, existingExternalIds }: Props) {
-  const [open, setOpen] = useState(false);
+export function AddItemDialog({
+  hobbySlug,
+  existingExternalIds,
+  initialSelection = null,
+  defaultStatus = "completed",
+  open: openProp,
+  onOpenChange,
+  trigger,
+}: Props) {
+  const controlled = openProp !== undefined;
+  const [openInternal, setOpenInternal] = useState(false);
+  const open = controlled ? openProp : openInternal;
+  const setOpen = (next: boolean) => {
+    if (!controlled) setOpenInternal(next);
+    onOpenChange?.(next);
+  };
+
   const [query, setQuery] = useState("");
   const [debounced, setDebounced] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
-  const [selected, setSelected] = useState<SearchResult | null>(null);
-  const [status, setStatus] = useState<ItemStatus>("completed");
+  const [selected, setSelected] = useState<SearchResult | null>(initialSelection);
+  const [status, setStatus] = useState<ItemStatus>(defaultStatus);
   const [userRating, setUserRating] = useState<string>("none");
   const [note, setNote] = useState("");
   const [wouldRevisit, setWouldRevisit] = useState(false);
   const [submitting, startTransition] = useTransition();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [slotsLeft, setSlotsLeft] = useState<number | null>(null);
+
+  // Re-sync from props on each open so a single mounted dialog can serve
+  // multiple external triggers.
+  useEffect(() => {
+    if (open) {
+      setSelected(initialSelection);
+      setStatus(defaultStatus);
+    }
+  }, [open, initialSelection, defaultStatus]);
 
   const ownedSet = useMemo(() => new Set(existingExternalIds), [existingExternalIds]);
 
@@ -122,8 +153,8 @@ export function AddItemDialog({ hobbySlug, existingExternalIds }: Props) {
     setDebounced("");
     setResults([]);
     setSearchError(null);
-    setSelected(null);
-    setStatus("completed");
+    setSelected(initialSelection);
+    setStatus(defaultStatus);
     setUserRating("none");
     setNote("");
     setWouldRevisit(false);
@@ -162,14 +193,19 @@ export function AddItemDialog({ hobbySlug, existingExternalIds }: Props) {
     });
   }
 
+  const triggerNode =
+    trigger === undefined ? (
+      <Button>
+        <Plus />
+        Add
+      </Button>
+    ) : (
+      trigger
+    );
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus />
-          Add
-        </Button>
-      </DialogTrigger>
+      {triggerNode ? <DialogTrigger asChild>{triggerNode}</DialogTrigger> : null}
       <DialogContent className="max-w-lg">
         {slotsLeft !== null && slotsLeft <= 20 ? (
           <p className="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-warning">
@@ -255,8 +291,18 @@ export function AddItemDialog({ hobbySlug, existingExternalIds }: Props) {
             </label>
             {submitError ? <p className="text-sm text-destructive">{submitError}</p> : null}
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setSelected(null)}>
-                Back
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  if (initialSelection) {
+                    handleOpenChange(false);
+                  } else {
+                    setSelected(null);
+                  }
+                }}
+              >
+                {initialSelection ? "Cancel" : "Back"}
               </Button>
               <Button type="submit" disabled={submitting}>
                 {submitting ? "Adding..." : "Add"}

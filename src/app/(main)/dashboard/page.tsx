@@ -1,4 +1,4 @@
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull } from "drizzle-orm";
 import {
   BookOpen,
   CircleCheck,
@@ -23,7 +23,7 @@ import { achievementIcon } from "@/lib/achievement-icons";
 import { checkAchievements } from "@/lib/achievements";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { achievements, userAchievements, users } from "@/lib/db/schema";
+import { achievements, hobbies, items, userAchievements, users } from "@/lib/db/schema";
 import type { HobbySlug } from "@/lib/points";
 
 type HobbyCard = {
@@ -76,6 +76,27 @@ export default async function DashboardPage() {
     userAchievements,
     eq(userAchievements.userId, session.user.id),
   );
+
+  const ownedRows = await db
+    .select({ externalId: items.externalId, hobbySlug: hobbies.slug })
+    .from(items)
+    .innerJoin(hobbies, eq(items.hobbyId, hobbies.id))
+    .where(
+      and(
+        eq(items.userId, session.user.id),
+        isNull(items.parentItemId),
+        inArray(hobbies.slug, ["movies", "tv", "games"]),
+      ),
+    );
+  const ownedByHobby: Record<"movies" | "tv" | "games", string[]> = {
+    movies: [],
+    tv: [],
+    games: [],
+  };
+  for (const row of ownedRows) {
+    const slug = row.hobbySlug as "movies" | "tv" | "games";
+    ownedByHobby[slug]?.push(row.externalId);
+  }
 
   const hobbyCards: HobbyCard[] = [
     { slug: "movies", label: "Movies", icon: Clapperboard, count: user.moviesCompleted },
@@ -170,13 +191,13 @@ export default async function DashboardPage() {
       <section className="space-y-4">
         <h2 className="font-pixel text-sm text-muted-foreground uppercase">New releases</h2>
         <Suspense fallback={<NewReleasesSkeleton title="Now in theaters" />}>
-          <MoviesNewReleases />
+          <MoviesNewReleases ownedExternalIds={ownedByHobby.movies} />
         </Suspense>
         <Suspense fallback={<NewReleasesSkeleton title="New episodes" />}>
-          <TvNewReleases />
+          <TvNewReleases ownedExternalIds={ownedByHobby.tv} />
         </Suspense>
         <Suspense fallback={<NewReleasesSkeleton title="Just launched" />}>
-          <GamesNewReleases />
+          <GamesNewReleases ownedExternalIds={ownedByHobby.games} />
         </Suspense>
       </section>
     </div>
