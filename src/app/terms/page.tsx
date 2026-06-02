@@ -46,8 +46,39 @@ export default function TermsPage() {
             <h2 className="font-pixel text-sm text-accent">Content</h2>
             <p>
               Your items, notes, achievements, and profile are yours. Catalog metadata (titles,
-              cover images, ratings) is provided by TMDB, RAWG, and Open Library and remains subject
-              to their respective terms.
+              cover images, ratings) is provided by{" "}
+              <a
+                href="https://www.themoviedb.org/"
+                target="_blank"
+                rel="noreferrer noopener"
+                className="text-primary hover:underline"
+              >
+                TMDB
+              </a>
+              ,{" "}
+              <a
+                href="https://rawg.io/"
+                target="_blank"
+                rel="noreferrer noopener"
+                className="text-primary hover:underline"
+              >
+                RAWG
+              </a>
+              , and{" "}
+              <a
+                href="https://openlibrary.org/"
+                target="_blank"
+                rel="noreferrer noopener"
+                className="text-primary hover:underline"
+              >
+                Open Library
+              </a>{" "}
+              and remains subject to their respective terms. Game data and images are provided by
+              RAWG.
+            </p>
+            <p>
+              This product uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise
+              approved by TMDB.
             </p>
           </section>
 
@@ -55,8 +86,8 @@ export default function TermsPage() {
             <h2 className="font-pixel text-sm text-accent">Termination</h2>
             <p>
               You can request account deletion at any time by emailing{" "}
-              <a href="mailto:denis.rork@gmail.com" className="text-primary hover:underline">
-                denis.rork@gmail.com
+              <a href="mailto:hello@hoqu.dev" className="text-primary hover:underline">
+                hello@hoqu.dev
               </a>
               . We may suspend or remove accounts that violate these terms.
             </p>
@@ -83,8 +114,8 @@ export default function TermsPage() {
             <h2 className="font-pixel text-sm text-accent">Contact</h2>
             <p>
               Questions about these terms?{" "}
-              <a href="mailto:denis.rork@gmail.com" className="text-primary hover:underline">
-                denis.rork@gmail.com
+              <a href="mailto:hello@hoqu.dev" className="text-primary hover:underline">
+                hello@hoqu.dev
               </a>
               .
             </p>

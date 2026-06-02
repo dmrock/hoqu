@@ -57,8 +57,8 @@ export default function PrivacyPage() {
             <p>
               You control your profile visibility from your profile settings (public, friends only,
               guild only, or private). To delete your account or request a copy of your data, email{" "}
-              <a href="mailto:denis.rork@gmail.com" className="text-primary hover:underline">
-                denis.rork@gmail.com
+              <a href="mailto:hello@hoqu.dev" className="text-primary hover:underline">
+                hello@hoqu.dev
               </a>
               .
             </p>
@@ -76,8 +76,8 @@ export default function PrivacyPage() {
             <h2 className="font-pixel text-sm text-accent">Contact</h2>
             <p>
               Questions? Reach the maintainer at{" "}
-              <a href="mailto:denis.rork@gmail.com" className="text-primary hover:underline">
-                denis.rork@gmail.com
+              <a href="mailto:hello@hoqu.dev" className="text-primary hover:underline">
+                hello@hoqu.dev
               </a>
               .
             </p>

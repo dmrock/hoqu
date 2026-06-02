@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { UnlockToaster } from "@/components/achievements/unlock-toaster";
+import { DataAttribution } from "@/components/layout/data-attribution";
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
 import { auth } from "@/lib/auth";
@@ -33,6 +34,9 @@ export default async function MainLayout({ children }: { children: React.ReactNo
       <div className="flex min-w-0 flex-1 flex-col">
         <Header {...userProps} />
         <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 md:px-6">{children}</main>
+        <footer className="mx-auto w-full max-w-7xl px-4 pb-6 md:px-6">
+          <DataAttribution />
+        </footer>
       </div>
       <UnlockToaster />
     </div>
