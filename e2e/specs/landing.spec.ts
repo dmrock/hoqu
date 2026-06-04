@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "../fixtures/test";
 
 // Locks in the proxy contract from src/proxy.ts:
 //   - `/` is public — unauthed visitors land on the marketing page, not /login.

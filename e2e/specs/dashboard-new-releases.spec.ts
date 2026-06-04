@@ -1,11 +1,12 @@
-import { expect, test } from "@playwright/test";
-import { DashboardPage } from "../pages/dashboard.page";
+import { expect, test } from "../fixtures/test";
 
 const FIXTURE_MOVIE_TITLE = "Fixture Movie One";
 
-test("adding a movie from the dashboard new-releases row works end-to-end", async ({ page }) => {
-  const dashboard = new DashboardPage(page);
-  await dashboard.goto();
+test("adding a movie from the dashboard new-releases row works end-to-end", async ({
+  page,
+  app,
+}) => {
+  await app.dashboard.goto();
 
   await page.getByRole("button", { name: `Add ${FIXTURE_MOVIE_TITLE} to collection` }).click();
 
@@ -22,7 +23,7 @@ test("adding a movie from the dashboard new-releases row works end-to-end", asyn
   await page.goto("/movies");
   await expect(page.getByRole("row", { name: new RegExp(FIXTURE_MOVIE_TITLE) })).toBeVisible();
 
-  await dashboard.goto();
+  await app.dashboard.goto();
   const ownedPoster = page.getByRole("button", {
     name: `Add ${FIXTURE_MOVIE_TITLE} to collection`,
   });

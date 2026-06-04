@@ -1,9 +1,8 @@
-import { expect, test } from "@playwright/test";
 import { and, eq } from "drizzle-orm";
 import { db } from "../../src/lib/db";
 import { hobbies, items, users } from "../../src/lib/db/schema";
+import { expect, test } from "../fixtures/test";
 import { USER_A } from "../fixtures/users";
-import { SearchPalettePage } from "../pages/search-palette.page";
 
 // Unique to the search spec so it doesn't collide with whatever add-item.spec.ts
 // seeded for the same user. Title is intentionally not in any other spec.
@@ -56,23 +55,24 @@ test.afterAll(async () => {
     .where(and(eq(items.userId, user.id), eq(items.externalId, SEED_EXTERNAL_ID)));
 });
 
-test("Cmd+K opens the palette, Escape closes it", async ({ page }) => {
+test("Cmd+K opens the palette, Escape closes it", async ({ page, app }) => {
   await page.goto("/dashboard");
 
-  const palette = new SearchPalettePage(page);
-  await palette.openWithShortcut();
-  await expect(palette.hint).toBeVisible();
-  await palette.closeWithEscape();
+  await app.searchPalette.openWithShortcut();
+  await expect(app.searchPalette.hint).toBeVisible();
+  await app.searchPalette.closeWithEscape();
 });
 
-test("typing finds a seeded item and clicking navigates with focus param", async ({ page }) => {
+test("typing finds a seeded item and clicking navigates with focus param", async ({
+  page,
+  app,
+}) => {
   await page.goto("/dashboard");
-  const palette = new SearchPalettePage(page);
-  await palette.openWithClick();
-  await palette.type("probe");
-  await expect(palette.result(SEED_TITLE)).toBeVisible();
+  await app.searchPalette.openWithClick();
+  await app.searchPalette.type("probe");
+  await expect(app.searchPalette.result(SEED_TITLE)).toBeVisible();
 
-  await palette.pickResult(SEED_TITLE);
+  await app.searchPalette.pickResult(SEED_TITLE);
 
   // Lands on /movies with the focus param. RowFocus keeps it for ~1.8s while
   // the row pulses, then replaces the URL with no params. We verify (a) the
