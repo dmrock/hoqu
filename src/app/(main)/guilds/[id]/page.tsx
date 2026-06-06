@@ -75,7 +75,9 @@ export default async function GuildDetailPage({ params }: { params: Promise<{ id
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="rounded-xl border border-border bg-card p-4">
           <p className="text-xs uppercase text-muted-foreground">Invite code</p>
-          <p className="mt-1 font-mono text-lg tracking-wider">{guild.inviteCode}</p>
+          <p className="mt-1 font-mono text-lg tracking-wider" data-testid="invite-code">
+            {guild.inviteCode}
+          </p>
           <p className="mt-1 text-xs text-muted-foreground">
             Share this with anyone you want to invite.
           </p>

@@ -1,3 +1,4 @@
+import { FIRST_NAV_TIMEOUT_MS } from "../constants";
 import { expect, test } from "../fixtures/test";
 
 // Locks in the proxy contract from src/proxy.ts:
@@ -16,10 +17,8 @@ test.describe("landing page", () => {
     });
   });
 
-  // First /dashboard nav can pay the Turbopack first-compile cost in CI;
-  // align timeout with the rest of the suite (see auth.setup.ts).
   test("authenticated visitor at / is redirected to /dashboard", async ({ page }) => {
     await page.goto("/");
-    await expect(page).toHaveURL(/\/dashboard$/, { timeout: 15_000 });
+    await expect(page).toHaveURL(/\/dashboard$/, { timeout: FIRST_NAV_TIMEOUT_MS });
   });
 });

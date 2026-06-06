@@ -12,6 +12,12 @@ const INCEPTION = {
 test("adding a movie ticks the points counter and unlocks First Step", async ({ page, app }) => {
   await mockMovieSearch(page, [INCEPTION]);
 
+  // The e2e branch is shared across specs, so capture a baseline and assert a
+  // delta rather than an absolute total.
+  await app.dashboard.goto();
+  const pointsBefore = await app.dashboard.statValue("Total points");
+  const completedBefore = await app.dashboard.statValue("Items completed");
+
   await app.movies.goto();
   await app.movies.openAddDialog();
   await app.movies.searchAndPick("inception", INCEPTION.title);
@@ -24,8 +30,8 @@ test("adding a movie ticks the points counter and unlocks First Step", async ({ 
   await expect(page.getByText("Achievement unlocked")).toBeVisible();
   await expect(page.getByText("First Step")).toBeVisible();
 
-  // Dashboard counters tick: total points = 1, movies completed = 1.
+  // Movies are worth 1 point; completing one ticks both counters by exactly one.
   await app.dashboard.goto();
-  expect(await app.dashboard.statValue("Total points")).toBe(1);
-  expect(await app.dashboard.statValue("Items completed")).toBeGreaterThanOrEqual(1);
+  expect(await app.dashboard.statValue("Total points")).toBe(pointsBefore + 1);
+  expect(await app.dashboard.statValue("Items completed")).toBe(completedBefore + 1);
 });

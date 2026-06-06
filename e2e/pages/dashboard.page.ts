@@ -1,4 +1,5 @@
 import { expect } from "@playwright/test";
+import { AddItemDialog } from "./add-item-dialog";
 import { PageHolder } from "./base";
 
 export class DashboardPage extends PageHolder {
@@ -17,12 +18,27 @@ export class DashboardPage extends PageHolder {
     await expect(this.heading).toContainText(name);
   }
 
-  /** Reads the numeric value rendered under a stat label like "Total points". */
+  /** Reads the numeric value of the stat card with the given label. */
   async statValue(label: string): Promise<number> {
-    const card = this.page.locator("div").filter({
-      has: this.page.getByText(label, { exact: true }),
-    });
-    const text = await card.locator("p.font-pixel").first().innerText();
+    const text = await this.page.getByTestId(`stat-${label}`).innerText();
     return Number.parseInt(text, 10);
+  }
+
+  newReleasePoster(title: string) {
+    return this.page.getByRole("button", { name: `Add ${title} to collection` });
+  }
+
+  /** Click a new-releases poster and wait for the shared add dialog to open. */
+  async openAddFromPoster(title: string): Promise<AddItemDialog> {
+    await this.newReleasePoster(title).click();
+    const dialog = new AddItemDialog(this.page);
+    await dialog.waitOpen();
+    return dialog;
+  }
+
+  async expectPosterOwned(title: string) {
+    const poster = this.newReleasePoster(title);
+    await expect(poster).toBeDisabled();
+    await expect(poster.getByText("Owned")).toBeVisible();
   }
 }

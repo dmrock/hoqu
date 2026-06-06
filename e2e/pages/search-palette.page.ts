@@ -30,7 +30,7 @@ export class SearchPalettePage extends PageHolder {
   }
 
   result(title: string) {
-    return this.dialog.getByRole("option", { name: new RegExp(title) });
+    return this.dialog.getByRole("option", { name: title });
   }
 
   async pickResult(title: string) {

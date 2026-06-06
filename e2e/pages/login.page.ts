@@ -5,7 +5,6 @@ export class LoginPage extends PageHolder {
   readonly emailInput = this.page.getByRole("textbox", { name: "Email" });
   readonly passwordInput = this.page.getByLabel("Password", { exact: true });
   readonly submitButton = this.page.getByRole("button", { name: "Sign in", exact: true });
-  readonly registerLink = this.page.getByRole("link", { name: "Create an account" });
 
   async goto() {
     await this.page.goto("/login");
