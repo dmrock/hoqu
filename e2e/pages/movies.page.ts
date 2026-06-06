@@ -1,14 +1,11 @@
 import { expect } from "@playwright/test";
+import { AddItemDialog } from "./add-item-dialog";
 import { PageHolder } from "./base";
 
 export class MoviesPage extends PageHolder {
   readonly heading = this.page.getByRole("heading", { level: 1, name: "Movies" });
   readonly addButton = this.page.getByRole("button", { name: "Add", exact: true });
-
-  // Within the add dialog
-  readonly dialog = this.page.getByRole("dialog");
-  readonly searchInput = this.dialog.getByPlaceholder("Search...");
-  readonly submitAddButton = this.dialog.getByRole("button", { name: "Add", exact: true });
+  readonly dialog = new AddItemDialog(this.page);
 
   async goto() {
     await this.page.goto("/movies");
@@ -17,21 +14,19 @@ export class MoviesPage extends PageHolder {
 
   async openAddDialog() {
     await this.addButton.click();
-    await expect(this.dialog).toBeVisible();
+    await this.dialog.waitOpen();
   }
 
   async searchAndPick(query: string, resultTitle: string) {
-    await this.searchInput.fill(query);
-    await this.dialog.getByRole("button", { name: resultTitle }).click();
+    await this.dialog.searchAndPick(query, resultTitle);
   }
 
   async confirmAdd() {
-    await this.submitAddButton.click();
-    await expect(this.dialog).toBeHidden();
+    await this.dialog.confirm();
   }
 
   rowFor(title: string) {
-    return this.page.getByRole("row", { name: new RegExp(title) });
+    return this.page.getByRole("row", { name: title });
   }
 
   async expectRow(title: string) {

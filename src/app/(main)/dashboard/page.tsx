@@ -128,7 +128,9 @@ export default async function DashboardPage() {
               <p className="text-xs uppercase">{s.label}</p>
               <s.icon className="size-4" />
             </div>
-            <p className="font-pixel text-2xl text-primary">{s.value}</p>
+            <p className="font-pixel text-2xl text-primary" data-testid={`stat-${s.label}`}>
+              {s.value}
+            </p>
           </div>
         ))}
       </section>
