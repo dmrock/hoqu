@@ -1,7 +1,5 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "../fixtures/test";
 import { mockMovieSearch } from "../helpers/search-mocks";
-import { DashboardPage } from "../pages/dashboard.page";
-import { MoviesPage } from "../pages/movies.page";
 
 const INCEPTION = {
   externalId: "27205",
@@ -11,25 +9,23 @@ const INCEPTION = {
   externalRating: 8.4,
 };
 
-test("adding a movie ticks the points counter and unlocks First Step", async ({ page }) => {
+test("adding a movie ticks the points counter and unlocks First Step", async ({ page, app }) => {
   await mockMovieSearch(page, [INCEPTION]);
 
-  const movies = new MoviesPage(page);
-  await movies.goto();
-  await movies.openAddDialog();
-  await movies.searchAndPick("inception", INCEPTION.title);
-  await movies.confirmAdd();
+  await app.movies.goto();
+  await app.movies.openAddDialog();
+  await app.movies.searchAndPick("inception", INCEPTION.title);
+  await app.movies.confirmAdd();
 
   // The row shows up in the movies table.
-  await movies.expectRow(INCEPTION.title);
+  await app.movies.expectRow(INCEPTION.title);
 
   // First Step achievement toast appears on the same page (toaster is global).
   await expect(page.getByText("Achievement unlocked")).toBeVisible();
   await expect(page.getByText("First Step")).toBeVisible();
 
   // Dashboard counters tick: total points = 1, movies completed = 1.
-  const dashboard = new DashboardPage(page);
-  await dashboard.goto();
-  expect(await dashboard.statValue("Total points")).toBe(1);
-  expect(await dashboard.statValue("Items completed")).toBeGreaterThanOrEqual(1);
+  await app.dashboard.goto();
+  expect(await app.dashboard.statValue("Total points")).toBe(1);
+  expect(await app.dashboard.statValue("Items completed")).toBeGreaterThanOrEqual(1);
 });
