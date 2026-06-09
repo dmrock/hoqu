@@ -1,8 +1,9 @@
 import "server-only";
 
-import { and, eq, inArray, or } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { db } from "./db";
-import { friendships, guildMembers, users } from "./db/schema";
+import { guildMembers, users } from "./db/schema";
+import { getAcceptedFriendIds } from "./friendships";
 import type { LeaderboardRow } from "./leaderboards";
 
 const ROW_COLUMNS = {
@@ -45,22 +46,7 @@ function toRow(r: RawRow): LeaderboardRow {
  * Both directions of the friendship row are considered.
  */
 export async function loadFriendsLeaderboard(viewerId: string): Promise<LeaderboardRow[]> {
-  const friendRows = await db
-    .select({
-      requesterId: friendships.requesterId,
-      addresseeId: friendships.addresseeId,
-    })
-    .from(friendships)
-    .where(
-      and(
-        eq(friendships.status, "accepted"),
-        or(eq(friendships.requesterId, viewerId), eq(friendships.addresseeId, viewerId)),
-      ),
-    );
-
-  const friendIds = friendRows.map((r) =>
-    r.requesterId === viewerId ? r.addresseeId : r.requesterId,
-  );
+  const friendIds = await getAcceptedFriendIds(viewerId);
   const userIds = [viewerId, ...friendIds];
 
   const rows = await db.select(ROW_COLUMNS).from(users).where(inArray(users.id, userIds));

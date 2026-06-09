@@ -45,6 +45,24 @@ export async function getFriendshipStatus(
   return { status: "none", friendshipId: null };
 }
 
+/** IDs of the viewer's accepted friends (checking both directions), viewer excluded. */
+export async function getAcceptedFriendIds(viewerId: string): Promise<string[]> {
+  const rows = await db
+    .select({
+      requesterId: friendships.requesterId,
+      addresseeId: friendships.addresseeId,
+    })
+    .from(friendships)
+    .where(
+      and(
+        eq(friendships.status, "accepted"),
+        or(eq(friendships.requesterId, viewerId), eq(friendships.addresseeId, viewerId)),
+      ),
+    );
+
+  return rows.map((r) => (r.requesterId === viewerId ? r.addresseeId : r.requesterId));
+}
+
 export type FriendListEntry = {
   friendshipId: string;
   status: "friends" | "pending_incoming" | "pending_outgoing";

@@ -1,6 +1,10 @@
 import { ExternalLink, Settings, Shield, Trophy } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { Suspense } from "react";
+import { ActivityFeedSkeleton } from "@/components/activity/activity-feed-skeleton";
+import { ActivityMineToggle } from "@/components/activity/activity-mine-toggle";
+import { GuildActivity } from "@/components/activity/guild-activity";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,6 +12,8 @@ import { auth } from "@/lib/auth";
 import { type GuildRole, getGuildMembers, getGuildWithMembership } from "@/lib/guilds";
 import { LeaveGuildButton } from "./leave-guild-button";
 import { MemberActionsMenu } from "./member-actions-menu";
+
+type SearchParamsInput = { [key: string]: string | string[] | undefined };
 
 const ROLE_LABEL: Record<GuildRole, string> = {
   master: "Master",
@@ -21,7 +27,13 @@ const ROLE_BADGE: Record<GuildRole, "default" | "secondary" | "outline"> = {
   member: "outline",
 };
 
-export default async function GuildDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function GuildDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<SearchParamsInput>;
+}) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
@@ -29,6 +41,9 @@ export default async function GuildDetailPage({ params }: { params: Promise<{ id
   const ctx = await getGuildWithMembership(id, session.user.id);
   if (!ctx) notFound();
   if (!ctx.viewerRole) notFound();
+
+  const sp = await searchParams;
+  const includeSelf = sp.mine === "1";
 
   const members = await getGuildMembers(id);
   const { guild, viewerRole } = ctx;
@@ -97,6 +112,16 @@ export default async function GuildDetailPage({ params }: { params: Promise<{ id
             </p>
           )}
         </div>
+      </section>
+
+      <section className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="font-pixel text-sm text-muted-foreground uppercase">Trending</h2>
+          <ActivityMineToggle includeSelf={includeSelf} />
+        </div>
+        <Suspense key={includeSelf ? "mine" : "others"} fallback={<ActivityFeedSkeleton />}>
+          <GuildActivity guildId={guild.id} viewerId={session.user.id} includeSelf={includeSelf} />
+        </Suspense>
       </section>
 
       <section className="space-y-3">
