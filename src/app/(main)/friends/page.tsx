@@ -1,12 +1,18 @@
 import { Trophy } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
+import { ActivityFeedSkeleton } from "@/components/activity/activity-feed-skeleton";
+import { ActivityMineToggle } from "@/components/activity/activity-mine-toggle";
+import { FriendsActivity } from "@/components/activity/friends-activity";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { auth } from "@/lib/auth";
 import { type FriendListEntry, loadFriendships } from "@/lib/friendships";
 import { AddFriendForm } from "./add-friend-form";
 import { FriendRowActions } from "./friend-row-actions";
+
+type SearchParamsInput = { [key: string]: string | string[] | undefined };
 
 function FriendRow({
   entry,
@@ -47,9 +53,16 @@ function FriendRow({
   );
 }
 
-export default async function FriendsPage() {
+export default async function FriendsPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParamsInput>;
+}) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
+
+  const sp = await searchParams;
+  const includeSelf = sp.mine === "1";
 
   const entries = await loadFriendships(session.user.id);
   const incoming = entries.filter((e) => e.status === "pending_incoming");
@@ -94,6 +107,18 @@ export default async function FriendsPage() {
           </ul>
         </section>
       ) : null}
+
+      <section className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="font-pixel text-sm text-muted-foreground uppercase">
+            Trending with friends
+          </h2>
+          <ActivityMineToggle includeSelf={includeSelf} />
+        </div>
+        <Suspense key={includeSelf ? "mine" : "others"} fallback={<ActivityFeedSkeleton />}>
+          <FriendsActivity viewerId={session.user.id} includeSelf={includeSelf} />
+        </Suspense>
+      </section>
 
       <section className="space-y-3">
         <h2 className="font-pixel text-sm text-muted-foreground uppercase">
