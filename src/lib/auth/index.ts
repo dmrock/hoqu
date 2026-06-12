@@ -1,5 +1,5 @@
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
@@ -11,7 +11,8 @@ import { verifyPassword } from "./password";
 import { generateUniqueUsername, slugifyEmail } from "./username";
 
 const credentialsSchema = z.object({
-  email: z.email(),
+  // Lowercased to match registration, which normalizes emails on write.
+  email: z.email().transform((s) => s.toLowerCase()),
   password: z.string().min(1),
 });
 
@@ -44,7 +45,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!parsed.success) return null;
         const { email, password } = parsed.data;
 
-        const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+        // lower() instead of plain equality so pre-normalization rows still match.
+        const [user] = await db
+          .select()
+          .from(users)
+          .where(sql`lower(${users.email}) = ${email}`)
+          .limit(1);
 
         if (!user?.passwordHash) return null;
 

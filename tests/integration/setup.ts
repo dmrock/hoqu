@@ -34,6 +34,7 @@ vi.mock("@/lib/auth", async () => {
 
 vi.mock("@/lib/rate-limit", () => ({
   checkAddItemLimit: vi.fn(async () => ({ ok: true as const, slotsLeft: 50 })),
+  checkAuthLimit: vi.fn(async () => ({ ok: true as const, resetAt: null })),
 }));
 
 vi.mock("next/cache", async () => {

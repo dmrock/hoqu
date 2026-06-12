@@ -1,6 +1,7 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { sql } from "drizzle-orm";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { AuthError } from "next-auth";
 import { z } from "zod";
@@ -9,16 +10,29 @@ import { hashPassword } from "@/lib/auth/password";
 import { generateUniqueUsername, slugifyEmail } from "@/lib/auth/username";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
+import { checkAuthLimit } from "@/lib/rate-limit";
+import { clientIpFrom } from "@/lib/request-ip";
+
+// Emails are stored and compared lowercase so the same mailbox can't register
+// twice with different casing (and can always sign back in).
+const emailSchema = z.email().transform((s) => s.toLowerCase());
 
 const registerSchema = z.object({
-  email: z.email(),
+  email: emailSchema,
   password: z.string().min(8, "Password must be at least 8 characters").max(100),
 });
 
 const loginSchema = z.object({
-  email: z.email(),
+  email: emailSchema,
   password: z.string().min(1, "Password is required"),
 });
+
+function tooManyAttempts(resetAt: number | null): string {
+  const minutes = resetAt ? Math.max(1, Math.ceil((resetAt - Date.now()) / 60_000)) : null;
+  return minutes
+    ? `Too many attempts — try again in ~${minutes} min.`
+    : "Too many attempts — try again later.";
+}
 
 export type ActionState = { error: string | null } | null;
 
@@ -34,10 +48,14 @@ export async function registerAction(_prev: ActionState, formData: FormData): Pr
   }
   const { email, password } = parsed.data;
 
+  const limit = await checkAuthLimit("register", clientIpFrom(await headers()));
+  if (!limit.ok) return { error: tooManyAttempts(limit.resetAt) };
+
+  // lower() instead of plain equality so pre-normalization rows still match.
   const [existing] = await db
     .select({ id: users.id })
     .from(users)
-    .where(eq(users.email, email))
+    .where(sql`lower(${users.email}) = ${email}`)
     .limit(1);
   if (existing) {
     return { error: "An account with this email already exists" };
@@ -73,6 +91,9 @@ export async function loginAction(_prev: ActionState, formData: FormData): Promi
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
+
+  const limit = await checkAuthLimit("login", clientIpFrom(await headers()));
+  if (!limit.ok) return { error: tooManyAttempts(limit.resetAt) };
 
   try {
     await signIn("credentials", {
