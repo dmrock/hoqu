@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { PublicShell } from "@/components/layout/public-shell";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — HOQU",
+  title: "Privacy Policy",
   description: "How HOQU handles your data.",
+  alternates: { canonical: "/privacy" },
 };
 
 export default function PrivacyPage() {
