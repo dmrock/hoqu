@@ -1,5 +1,6 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { and, eq, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -90,24 +91,27 @@ export async function createGuild(
   if (nameClash) return { ok: false, error: "A guild with that name already exists" };
 
   const code = await generateUniqueInviteCode();
-  const [guild] = await db
-    .insert(guilds)
-    .values({
+  // Client-generated id so guild + master membership land in one atomic batch;
+  // a failure between separate inserts would orphan the guild and permanently
+  // lock its unique name and invite code with no member able to manage it.
+  const guildId = randomUUID();
+  await db.batch([
+    db.insert(guilds).values({
+      id: guildId,
       name: data.name,
       description: data.description,
       discordInviteUrl: data.discordInviteUrl,
       inviteCode: code,
-    })
-    .returning({ id: guilds.id });
-
-  await db.insert(guildMembers).values({
-    guildId: guild.id,
-    userId,
-    role: "master",
-  });
+    }),
+    db.insert(guildMembers).values({
+      guildId,
+      userId,
+      role: "master",
+    }),
+  ]);
 
   revalidatePath("/guilds");
-  return { ok: true, data: { guildId: guild.id } };
+  return { ok: true, data: { guildId } };
 }
 
 export async function joinGuildByCode(input: {
