@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { PublicShell } from "@/components/layout/public-shell";
 
 export const metadata: Metadata = {
-  title: "Terms of Service — HOQU",
+  title: "Terms of Service",
   description: "The terms you agree to when using HOQU.",
+  alternates: { canonical: "/terms" },
 };
 
 export default function TermsPage() {
