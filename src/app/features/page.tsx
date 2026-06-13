@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
+  BarsSprite,
   FriendsSprite,
   HobbiesSprite,
   LockSprite,
-  StarSprite,
   TrophySprite,
   XpSprite,
 } from "@/components/landing/sprites";
@@ -67,7 +67,7 @@ export default function FeaturesPage() {
             </ul>
           </Section>
 
-          <Section sprite={<StarSprite className="size-6" />} title="Your rating and the world's">
+          <Section sprite={<XpSprite className="size-6" />} title="Your rating and the world's">
             <p>
               Next to your own score, each title shows its external rating so you always have a
               second opinion: the TMDB score for movies and TV shows, and the Metacritic score for
@@ -116,7 +116,7 @@ export default function FeaturesPage() {
             </p>
           </Section>
 
-          <Section sprite={<XpSprite className="size-6" />} title="A dashboard that keeps score">
+          <Section sprite={<BarsSprite className="size-6" />} title="A dashboard that keeps score">
             <p>
               Your dashboard shows total XP, items completed, items rated, and achievements at a
               glance, plus a per-hobby breakdown and your most recent unlocks. A New Releases strip

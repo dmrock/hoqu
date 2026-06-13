@@ -145,26 +145,6 @@ export function LockSprite({ className }: SpriteProps) {
   );
 }
 
-export function StarSprite({ className }: SpriteProps) {
-  return (
-    <PixelArt
-      className={cn("fill-warning", className)}
-      width={12}
-      rows={[
-        ".....##.....",
-        ".....##.....",
-        "....####....",
-        "....####....",
-        "############",
-        ".##########.",
-        "..########..",
-        "..###..###..",
-        ".##......##.",
-      ]}
-    />
-  );
-}
-
 export function TrophySprite({ className }: SpriteProps) {
   return (
     <PixelArt
