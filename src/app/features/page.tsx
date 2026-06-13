@@ -44,21 +44,25 @@ export default function FeaturesPage() {
             </p>
             <ul className="ml-4 list-disc space-y-1.5">
               <li>
-                <strong className="text-foreground">A status for where you are</strong> — Planned,
-                In progress, Completed, or Dropped. Build a watchlist, mark what you&apos;re in the
-                middle of, and tick things off as you finish.
+                <strong className="text-foreground">A status for where you are</strong>
+                {" — "}
+                Planned, In progress, Completed, or Dropped. Build a watchlist, mark what
+                you&apos;re in the middle of, and tick things off as you finish.
               </li>
               <li>
-                <strong className="text-foreground">Your own rating</strong> — score anything from 1
-                to 10.
+                <strong className="text-foreground">Your own rating</strong>
+                {" — "}
+                score anything from 1 to 10.
               </li>
               <li>
-                <strong className="text-foreground">A note</strong> — jot a quick thought or
-                reminder on any title.
+                <strong className="text-foreground">A note</strong>
+                {" — "}
+                jot a quick thought or reminder on any title.
               </li>
               <li>
-                <strong className="text-foreground">An &ldquo;Again?&rdquo; flag</strong> — mark the
-                movies, games, and books you&apos;d happily rewatch, replay, or reread.
+                <strong className="text-foreground">An &ldquo;Again?&rdquo; flag</strong>
+                {" — "}
+                mark the movies, games, and books you&apos;d happily rewatch, replay, or reread.
               </li>
             </ul>
           </Section>
@@ -128,8 +132,9 @@ export default function FeaturesPage() {
             <p>
               A trending feed highlights the top movies, shows, games, and books your{" "}
               <strong className="text-foreground">friends</strong> and{" "}
-              <strong className="text-foreground">guildmates</strong> have been into over the last
-              month, ranked by their combined rating and how many people picked it up. It&apos;s
+              <strong className="text-foreground">guildmates</strong>
+              {" have been into over the last month, "}
+              ranked by their combined rating and how many people picked it up. It&apos;s
               recommendations from the people you actually know — there&apos;s no global feed of
               strangers.
             </p>
