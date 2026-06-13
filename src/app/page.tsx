@@ -1,13 +1,21 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import {
+  BarsSprite,
+  FriendsSprite,
+  HobbiesSprite,
+  LockSprite,
+  XpSprite,
+} from "@/components/landing/sprites";
 import { DataAttribution } from "@/components/layout/data-attribution";
 import { Button } from "@/components/ui/button";
 import { SITE_URL } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
-// Title and description come from the root layout defaults; the landing is the site root.
 export const metadata: Metadata = {
-  alternates: { canonical: "/" },
+  title: "HOQU — Log what you watch, play, and read.",
+  description:
+    "HOQU turns your hobbies into a game. Earn XP for every movie, show, game, and book you finish. Unlock achievements, join guilds, and climb leaderboards with friends.",
 };
 
 const jsonLd = {
@@ -37,12 +45,14 @@ export default function LandingPage() {
 
       <header className="flex items-center justify-between">
         <span className="font-pixel text-base text-primary md:text-lg">HOQU</span>
-        <Link
-          href="/login"
-          className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          Sign in
-        </Link>
+        <nav className="flex items-center gap-4 text-sm text-muted-foreground">
+          <Link href="/features" className="transition-colors hover:text-foreground">
+            Features
+          </Link>
+          <Link href="/login" className="transition-colors hover:text-foreground">
+            Sign in
+          </Link>
+        </nav>
       </header>
 
       <section className="grid items-center gap-10 py-10 md:min-h-[70svh] md:grid-cols-2 md:gap-12 md:py-12">
@@ -141,6 +151,15 @@ export default function LandingPage() {
         </p>
       </FeatureRow>
 
+      <div className="flex justify-center pb-4">
+        <Link
+          href="/features"
+          className="text-sm text-primary transition-colors hover:text-primary-hover"
+        >
+          See all features →
+        </Link>
+      </div>
+
       <section className="my-10 rounded-xl border border-border bg-card px-6 py-10 text-center md:my-14 md:py-14">
         <h2 className="font-pixel text-base leading-relaxed md:text-lg">
           Ready to level up your hobbies?
@@ -158,6 +177,10 @@ export default function LandingPage() {
       <footer className="flex flex-col items-center gap-2 pt-4 text-xs text-muted-foreground">
         <div className="flex flex-wrap items-center justify-center gap-3">
           <span>© {new Date().getFullYear()} HOQU</span>
+          <span aria-hidden>·</span>
+          <Link href="/features" className="transition-colors hover:text-foreground">
+            Features
+          </Link>
           <span aria-hidden>·</span>
           <Link href="/privacy" className="transition-colors hover:text-foreground">
             Privacy
@@ -265,22 +288,22 @@ function FeatureGrid() {
   return (
     <div className="mx-auto grid w-full max-w-md grid-cols-2 gap-3 sm:gap-4">
       <FeatureTile
-        sprite={<HobbiesSprite />}
+        sprite={<HobbiesSprite className="size-7" />}
         title="4 hobbies"
         description="Movies, TV, games, books"
       />
       <FeatureTile
-        sprite={<XpSprite className={spriteClass} />}
+        sprite={<XpSprite className="size-7" />}
         title="XP & achievements"
         description="Points for every quest, badges to unlock"
       />
       <FeatureTile
-        sprite={<FriendsSprite className={spriteClass} />}
+        sprite={<FriendsSprite className="size-7" />}
         title="Friends & guilds"
         description="Add friends, form parties of up to 50"
       />
       <FeatureTile
-        sprite={<BarsSprite className={spriteClass} />}
+        sprite={<BarsSprite className="size-7" />}
         title="Leaderboards"
         description="Compare progress with friends and guildmates"
       />
@@ -307,150 +330,5 @@ function FeatureTile({
         <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{description}</p>
       </div>
     </div>
-  );
-}
-
-const spriteClass = "size-7";
-
-function HobbiesSprite() {
-  return (
-    <svg
-      viewBox="0 0 12 12"
-      className={spriteClass}
-      shapeRendering="crispEdges"
-      aria-hidden
-      role="presentation"
-    >
-      <rect x="0" y="0" width="5" height="5" className="fill-primary" />
-      <rect x="7" y="0" width="5" height="5" className="fill-accent" />
-      <rect x="0" y="7" width="5" height="5" className="fill-warning" />
-      <rect x="7" y="7" width="5" height="5" className="fill-foreground" />
-    </svg>
-  );
-}
-
-type SpriteProps = {
-  className?: string;
-};
-
-function XpSprite({ className }: SpriteProps) {
-  return (
-    <PixelArt
-      className={cn("fill-accent", className)}
-      width={12}
-      rows={[
-        "############",
-        "#..........#",
-        "#.########.#",
-        "#.#......#.#",
-        "#.#......#.#",
-        ".#.######.#.",
-        "..########..",
-        "....####....",
-        "...######...",
-        "..########..",
-        ".##########.",
-      ]}
-    />
-  );
-}
-
-function FriendsSprite({ className }: SpriteProps) {
-  return (
-    <PixelArt
-      className={cn("fill-primary", className)}
-      width={12}
-      rows={[
-        "..##....##..",
-        ".####..####.",
-        ".####..####.",
-        "..##....##..",
-        "............",
-        ".####..####.",
-        "############",
-        "############",
-        "############",
-      ]}
-    />
-  );
-}
-
-function BarsSprite({ className }: SpriteProps) {
-  return (
-    <PixelArt
-      className={cn("fill-warning", className)}
-      width={12}
-      rows={[
-        ".........###",
-        ".........###",
-        ".........###",
-        ".....###.###",
-        ".....###.###",
-        ".....###.###",
-        ".###.###.###",
-        ".###.###.###",
-        ".###.###.###",
-        "############",
-      ]}
-    />
-  );
-}
-
-function LockSprite({ className }: SpriteProps) {
-  return (
-    <PixelArt
-      className={cn("fill-foreground", className)}
-      width={12}
-      rows={[
-        "...######...",
-        "..##....##..",
-        "..#......#..",
-        "..#......#..",
-        "############",
-        "############",
-        "#####..#####",
-        "####....####",
-        "#####..#####",
-        "############",
-        "############",
-      ]}
-    />
-  );
-}
-
-type PixelArtProps = {
-  rows: string[];
-  width: number;
-  className?: string;
-};
-
-function PixelArt({ rows, width, className }: PixelArtProps) {
-  const rects: React.ReactElement[] = [];
-  for (let y = 0; y < rows.length; y++) {
-    const row = rows[y];
-    let runStart: number | null = null;
-    for (let x = 0; x <= row.length; x++) {
-      const filled = x < row.length && row[x] === "#";
-      if (filled && runStart === null) {
-        runStart = x;
-      } else if (!filled && runStart !== null) {
-        rects.push(
-          <rect key={`r${y}c${runStart}`} x={runStart} y={y} width={x - runStart} height={1} />,
-        );
-        runStart = null;
-      }
-    }
-  }
-  return (
-    <svg
-      viewBox={`0 0 ${width} ${rows.length}`}
-      className={className}
-      shapeRendering="crispEdges"
-      aria-hidden
-      role="presentation"
-    >
-      <title>pixel icon</title>
-      {rects}
-    </svg>
   );
 }
