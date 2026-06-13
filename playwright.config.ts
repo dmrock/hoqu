@@ -44,8 +44,12 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
     },
     {
+      // Runs every spec authenticated as userA, except auth.spec.ts, which drives
+      // the login/register flow itself and runs unauthenticated (the auth-flow
+      // project above). New specs are picked up automatically.
       name: "authed",
-      testMatch: /(add-item|dashboard-new-releases|features|friends|guild-flow|landing|search)\.spec\.ts/,
+      testMatch: /\.spec\.ts$/,
+      testIgnore: /auth\.spec\.ts$/,
       dependencies: ["setup"],
       use: {
         ...devices["Desktop Chrome"],
