@@ -19,6 +19,10 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
         <div className="flex flex-wrap items-center justify-center gap-3">
           <span>© {new Date().getFullYear()} HOQU</span>
           <span aria-hidden>·</span>
+          <Link href="/features" className="transition-colors hover:text-foreground">
+            Features
+          </Link>
+          <span aria-hidden>·</span>
           <Link href="/privacy" className="transition-colors hover:text-foreground">
             Privacy
           </Link>
