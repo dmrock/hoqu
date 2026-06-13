@@ -22,14 +22,20 @@ const pressStart2P = Press_Start_2P({
   display: "swap",
 });
 
+const title = "HOQU - Hobby tracker for movies, TV, games & books";
+
+// Meta description (~155 chars to survive Google's snippet truncation) and a
+// shorter Open Graph variant (~125) that social previews show without cutting.
 const description =
-  "HOQU is a gamified hobby tracker for movies, TV shows, video games, and books. Earn weighted XP for everything you finish, unlock achievements, and climb friends-only and guild leaderboards.";
+  "HOQU is a gamified hobby tracker for movies, TV, games, and books. Earn XP for what you finish, unlock achievements, and climb leaderboards with friends.";
+const ogDescription =
+  "A gamified hobby tracker for movies, TV, games & books. Earn XP, unlock achievements, and climb leaderboards with friends.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   applicationName: "HOQU",
   title: {
-    default: "HOQU — Gamified hobby tracker for movies, TV, games & books",
+    default: title,
     template: "%s · HOQU",
   },
   description,
@@ -49,8 +55,8 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: "/",
     siteName: "HOQU",
-    title: "HOQU — Gamified hobby tracker for movies, TV, games & books",
-    description,
+    title,
+    description: ogDescription,
   },
   twitter: {
     card: "summary_large_image",
