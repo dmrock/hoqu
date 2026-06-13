@@ -22,7 +22,7 @@ const pressStart2P = Press_Start_2P({
   display: "swap",
 });
 
-const title = "HOQU — Hobby tracker for movies, TV, games & books";
+const title = "HOQU - Hobby tracker for movies, TV, games & books";
 
 // Meta description (~155 chars to survive Google's snippet truncation) and a
 // shorter Open Graph variant (~125) that social previews show without cutting.
