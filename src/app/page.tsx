@@ -12,10 +12,9 @@ import { Button } from "@/components/ui/button";
 import { SITE_URL } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
+// Title and description come from the root layout defaults; the landing is the site root.
 export const metadata: Metadata = {
-  title: "HOQU — Log what you watch, play, and read.",
-  description:
-    "HOQU turns your hobbies into a game. Earn XP for every movie, show, game, and book you finish. Unlock achievements, join guilds, and climb leaderboards with friends.",
+  alternates: { canonical: "/" },
 };
 
 const jsonLd = {
