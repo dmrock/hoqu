@@ -1,6 +1,11 @@
-import { eq } from "drizzle-orm";
-import { describe, expect, it } from "vitest";
-import { resetPasswordAction } from "@/app/(auth)/actions";
+import { and, eq } from "drizzle-orm";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("next/headers", () => ({
+  headers: async () => new Headers({ host: "localhost:3100" }),
+}));
+
+import { requestPasswordResetAction, resetPasswordAction } from "@/app/(auth)/actions";
 import { confirmEmailChangeAction } from "@/app/(main)/settings/actions";
 import { verifyPassword } from "@/lib/auth/password";
 import { consumeToken, issueToken } from "@/lib/auth/tokens";
@@ -111,5 +116,37 @@ describe("confirmEmailChangeAction", () => {
 
     const res = await confirmEmailChangeAction(raw);
     expect(res.ok).toBe(false);
+  });
+});
+
+describe("requestPasswordResetAction", () => {
+  function form(email: string) {
+    const fd = new FormData();
+    fd.set("email", email);
+    return fd;
+  }
+
+  it("issues a reset token for an existing credentials user", async () => {
+    const user = await createTestUser();
+    expect(await requestPasswordResetAction(null, form(user.email))).toEqual({ sent: true });
+    const count = await db.$count(
+      authTokens,
+      and(eq(authTokens.userId, user.id), eq(authTokens.purpose, "password_reset")),
+    );
+    expect(count).toBe(1);
+  });
+
+  it("acknowledges an unknown email without issuing a token (no enumeration)", async () => {
+    expect(await requestPasswordResetAction(null, form("nobody@int.test"))).toEqual({ sent: true });
+    expect(await db.$count(authTokens)).toBe(0);
+  });
+
+  it("issues no token for a Google-only account that has no password", async () => {
+    const [u] = await db
+      .insert(users)
+      .values({ email: "google@int.test", username: "google-int", name: "G" })
+      .returning({ id: users.id });
+    expect(await requestPasswordResetAction(null, form("google@int.test"))).toEqual({ sent: true });
+    expect(await db.$count(authTokens, eq(authTokens.userId, u?.id ?? ""))).toBe(0);
   });
 });

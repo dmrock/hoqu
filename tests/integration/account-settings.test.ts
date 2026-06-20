@@ -12,7 +12,7 @@ import {
 } from "@/app/(main)/settings/actions";
 import { verifyPassword } from "@/lib/auth/password";
 import { db } from "@/lib/db";
-import { authTokens, guildMembers, guilds } from "@/lib/db/schema";
+import { authTokens, guildMembers, guilds, users } from "@/lib/db/schema";
 import { generateInviteCode } from "@/lib/guilds";
 import { setTestUserId } from "./helpers/auth-mock";
 import { createTestUser, fetchUser, TEST_PASSWORD } from "./helpers/db-helpers";
@@ -41,6 +41,19 @@ describe("changePasswordAction", () => {
 
     const row = await fetchUser(user.id);
     expect(await verifyPassword("the-new-password-1", row?.passwordHash ?? "")).toBe(true);
+  });
+
+  it("lets a Google-only account set a password without a current one", async () => {
+    const [u] = await db
+      .insert(users)
+      .values({ email: "nopw@int.test", username: "nopw-int", name: "No PW" })
+      .returning({ id: users.id });
+    setTestUserId(u?.id ?? null);
+
+    const res = await changePasswordAction({ newPassword: "first-password-1" });
+    expect(res).toEqual({ ok: true });
+    const row = await fetchUser(u?.id ?? "");
+    expect(await verifyPassword("first-password-1", row?.passwordHash ?? "")).toBe(true);
   });
 });
 
@@ -134,5 +147,49 @@ describe("deleteAccountAction", () => {
 
     expect(await fetchUser(master.id)).toBeFalsy();
     expect(await db.$count(guilds, eq(guilds.id, guildId))).toBe(0);
+  });
+
+  it("promotes an officer over an earlier-joined member", async () => {
+    const master = await createTestUser();
+    const earlyMember = await createTestUser();
+    const officer = await createTestUser();
+    const guildId = crypto.randomUUID();
+    await db.insert(guilds).values({
+      id: guildId,
+      name: `Rank ${guildId.slice(0, 8)}`,
+      inviteCode: generateInviteCode(),
+    });
+    // The member joined before the officer — a naive "earliest joiner wins" rule
+    // would pick them; rank-first selection must pick the officer instead.
+    await db.batch([
+      db.insert(guildMembers).values({
+        guildId,
+        userId: master.id,
+        role: "master",
+        joinedAt: new Date(Date.now() - 30_000),
+      }),
+      db.insert(guildMembers).values({
+        guildId,
+        userId: earlyMember.id,
+        role: "member",
+        joinedAt: new Date(Date.now() - 20_000),
+      }),
+      db.insert(guildMembers).values({
+        guildId,
+        userId: officer.id,
+        role: "officer",
+        joinedAt: new Date(Date.now() - 10_000),
+      }),
+    ]);
+
+    setTestUserId(master.id);
+    expect(await deleteAccountAction({ confirmUsername: master.username })).toEqual({ ok: true });
+
+    const roles = await db
+      .select({ userId: guildMembers.userId, role: guildMembers.role })
+      .from(guildMembers)
+      .where(eq(guildMembers.guildId, guildId));
+    expect(roles.find((r) => r.userId === officer.id)?.role).toBe("master");
+    expect(roles.find((r) => r.userId === earlyMember.id)?.role).toBe("member");
   });
 });
