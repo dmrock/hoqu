@@ -1,17 +1,22 @@
 "use server";
 
-import { sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { AuthError } from "next-auth";
 import { z } from "zod";
 import { signIn } from "@/lib/auth";
 import { hashPassword } from "@/lib/auth/password";
+import { consumeToken, issueToken } from "@/lib/auth/tokens";
 import { generateUniqueUsername, slugifyEmail } from "@/lib/auth/username";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
-import { checkAuthLimit } from "@/lib/rate-limit";
+import { sendPasswordResetEmail } from "@/lib/email/send";
+import { checkAuthLimit, checkPasswordResetEmailLimit } from "@/lib/rate-limit";
 import { clientIpFrom } from "@/lib/request-ip";
+import { originFrom } from "@/lib/request-url";
+
+const RESET_TOKEN_TTL_MINUTES = 60;
 
 // Emails are stored and compared lowercase so the same mailbox can't register
 // twice with different casing (and can always sign back in).
@@ -113,4 +118,80 @@ export async function loginAction(_prev: ActionState, formData: FormData): Promi
 
 export async function googleSignInAction(): Promise<void> {
   await signIn("google", { redirectTo: "/dashboard" });
+}
+
+const forgotSchema = z.object({ email: emailSchema });
+
+// Generic acknowledgement shown whether or not an account exists, so the form
+// can't be used to probe which emails are registered.
+export type ResetRequestState = { error: string } | { sent: true } | null;
+
+export async function requestPasswordResetAction(
+  _prev: ResetRequestState,
+  formData: FormData,
+): Promise<ResetRequestState> {
+  const parsed = forgotSchema.safeParse({ email: formData.get("email")?.toString() ?? "" });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  }
+  const { email } = parsed.data;
+
+  const [ipLimit, emailLimit] = await Promise.all([
+    checkAuthLimit("forgot", clientIpFrom(await headers())),
+    checkPasswordResetEmailLimit(email),
+  ]);
+  if (!ipLimit.ok) return { error: tooManyAttempts(ipLimit.resetAt) };
+  if (!emailLimit.ok) return { error: tooManyAttempts(emailLimit.resetAt) };
+
+  const [user] = await db
+    .select({ id: users.id, passwordHash: users.passwordHash })
+    .from(users)
+    .where(sql`lower(${users.email}) = ${email}`)
+    .limit(1);
+
+  // Only credentials users have a password to reset; Google-only accounts get
+  // the same generic success without an email.
+  if (user?.passwordHash) {
+    const token = await issueToken({
+      userId: user.id,
+      purpose: "password_reset",
+      ttlMinutes: RESET_TOKEN_TTL_MINUTES,
+    });
+    const origin = originFrom(await headers());
+    await sendPasswordResetEmail(email, `${origin}/reset-password?token=${token}`);
+  }
+
+  return { sent: true };
+}
+
+const resetSchema = z.object({
+  token: z.string().min(1, "Missing reset token"),
+  password: z.string().min(8, "Password must be at least 8 characters").max(100),
+});
+
+export type ResetPasswordState = { error: string } | { ok: true } | null;
+
+export async function resetPasswordAction(
+  _prev: ResetPasswordState,
+  formData: FormData,
+): Promise<ResetPasswordState> {
+  const parsed = resetSchema.safeParse({
+    token: formData.get("token")?.toString() ?? "",
+    password: formData.get("password")?.toString() ?? "",
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  }
+
+  const consumed = await consumeToken(parsed.data.token, "password_reset");
+  if (!consumed) {
+    return { error: "This reset link is invalid or has expired. Request a new one." };
+  }
+
+  // JWT sessions can't be server-revoked, so existing sessions elsewhere survive
+  // the reset — acceptable for a hobby app; the password itself is now changed.
+  const passwordHash = await hashPassword(parsed.data.password);
+  await db.update(users).set({ passwordHash }).where(eq(users.id, consumed.userId));
+
+  return { ok: true };
 }

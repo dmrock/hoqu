@@ -50,9 +50,11 @@ sprites, responsive sweep) is intentionally deferred — see `MEMORY.md`.
     secrets must start with `import "server-only"` if a client component might import from it.
     Pure types/constants live in a sibling file with no DB imports — see
     `src/lib/leaderboards.ts` (pure) vs `src/lib/leaderboard-queries.ts` (DB).
-12. **Public vs. authed routes** (`src/proxy.ts`): `/`, `/privacy`, and `/terms` are public.
-    Every other non-`/login`/`/register` path requires a session and bounces unauthed users
-    to `/login?from=…`. Authed users on `/`, `/login`, or `/register` get redirected to
+12. **Public vs. authed routes** (`src/proxy.ts`): `/`, `/features`, `/privacy`, `/terms`,
+    `/forgot-password`, `/reset-password`, and `/confirm-email` are public (the last three
+    are token-authorized recovery pages reachable while signed out). Every other
+    non-`/login`/`/register` path requires a session and bounces unauthed users to
+    `/login?from=…`. Authed users on `/`, `/login`, or `/register` get redirected to
     `/dashboard` so the landing/auth screens never render once signed in.
 
 ## Workflow Rules
@@ -116,6 +118,11 @@ Source of truth: `src/lib/db/schema.ts`. The shapes below are summaries.
   (master/officer/member).
 - **achievements** — definition rows with `requirement: jsonb`. **user_achievements** records
   unlocks. Categories: general / movies / tv / games / books / social.
+- **auth_tokens** — single-use tokens for password reset + email change. Stores the
+  **SHA-256 hash** of the token (never the raw value), `purpose` enum, optional `newEmail`
+  (email_change only), `expiresAt`. Cascades on user delete. Helpers in
+  `src/lib/auth/tokens.ts` (`issueToken`/`consumeToken`); pure hash/generate split into
+  `tokens-crypto.ts` so they're unit-testable.
 
 Seed: `pnpm db:seed` upserts hobbies and starter achievements. Edit `src/lib/db/seed.ts` to
 extend.
@@ -204,6 +211,30 @@ Visibility tiers (`users.profileVisibility`), enforced on `/profile/[username]`:
 
 Non-permitted viewers get a 404 (not a 403, to avoid leaking existence).
 
+## Account & Auth Recovery
+
+Self-service auth lives in `src/app/(main)/settings/` (authed) and the recovery pages under
+`src/app/(auth)/` (public). All flows use single-use `auth_tokens` (SHA-256 hashed, 1-hour TTL).
+
+- **Forgot/reset password** — `requestPasswordResetAction` (generic success regardless of
+  whether the email exists, so it can't enumerate accounts; rate-limited per-IP **and**
+  per-email) emails a `/reset-password?token=` link; `resetPasswordAction` consumes it and
+  rewrites `passwordHash`. JWT sessions can't be server-revoked, so other live sessions
+  survive a reset.
+- **Change password** — credentials users verify their current password; Google-only users
+  (no `passwordHash`) can *set* one to enable email sign-in.
+- **Change email** — verify-new-address flow: `requestEmailChangeAction` (credentials users
+  only) emails a `/confirm-email?token=` link to the **new** address; the switch happens in
+  `confirmEmailChangeAction` (token-authorized, not session-gated, with a uniqueness re-check).
+- **Delete account** — confirmed by typing the exact username. Resolves guild mastership
+  first (promote senior member, or delete a sole-member guild) so no guild is orphaned, then
+  deletes the user row — FK cascades clear items, friendships, memberships, achievements,
+  accounts and auth_tokens.
+
+Email goes through `src/lib/email/` (Resend). The client **fails soft**: with no
+`RESEND_API_KEY` it logs and returns false instead of throwing, so builds, blank-env previews
+and tests don't break.
+
 ## External APIs
 
 All external calls go through server-side proxies that protect API keys.
@@ -268,9 +299,11 @@ Source of truth is the actual repo. High-level shape:
 ```
 src/
 ├── app/page.tsx                        Public landing (`/`); authed users get bounced to /dashboard
-├── app/(auth)/                         Login, register
+├── app/(auth)/                         Login, register, forgot/reset password, confirm-email
+│   │                                   (public; group layout sets robots noindex)
 ├── app/(main)/                         Authenticated routes (sidebar layout)
 │   ├── dashboard/
+│   ├── settings/                       Account: change password, change email, delete account
 │   ├── movies/  tv/  games/  books/    Hobby pages (use HobbyPage from components/items)
 │   ├── achievements/                   Locked + unlocked grid
 │   ├── profile/[username]/             Identity card + stats + recent items + edit form
@@ -294,11 +327,14 @@ src/
 │   │                                   row-focus (scroll + pulse for ?focus= deep links)
 │   ├── dashboard/                      New-releases section + skeleton
 │   ├── achievements/                   UnlockToaster
+│   ├── settings/                       Change-password / change-email / delete-account cards
 │   ├── search/                         Cmd+K command palette (header trigger + dialog)
 │   └── leaderboard/                    ScopeTabs + Table
 ├── lib/
 │   ├── db/                             Drizzle schema, connection, seed, recalc-points
-│   ├── auth/                           Auth.js config, password hashing, username slugify
+│   ├── auth/                           Auth.js config, password hashing, username slugify,
+│   │                                   tokens (reset/email-change) + pure tokens-crypto
+│   ├── email/                          Resend client (fails soft) + transactional templates
 │   ├── api/                            tmdb, rawg, openlibrary clients + search-handler + cache
 │   ├── points.ts                       Counter delta + snapshotPoints
 │   ├── achievements.ts                 Evaluator registry + checker
@@ -359,4 +395,8 @@ TMDB_API_KEY=                 themoviedb.org
 RAWG_API_KEY=                 rawg.io
 UPSTASH_REDIS_REST_URL=       upstash.com
 UPSTASH_REDIS_REST_TOKEN=
+RESEND_API_KEY=               resend.com — transactional email (password reset, email change)
 ```
+
+`RESEND_API_KEY` is optional: without it, email sending fails soft (logs + no-op), so local
+dev and previews still run — recovery emails just won't be delivered.

@@ -47,6 +47,8 @@ export const achievementCategoryEnum = pgEnum("achievement_category", [
   "social",
 ]);
 
+export const tokenPurposeEnum = pgEnum("token_purpose", ["password_reset", "email_change"]);
+
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
   email: text("email").notNull().unique(),
@@ -232,4 +234,30 @@ export const verificationTokens = pgTable(
     expires: timestamp("expires", { withTimezone: true, mode: "date" }).notNull(),
   },
   (t) => [primaryKey({ columns: [t.identifier, t.token] })],
+);
+
+/**
+ * Single-use tokens for self-service auth flows (password reset, email change).
+ * We store the SHA-256 hash of the token, never the raw value — the raw token
+ * only ever lives in the emailed link, so a DB leak can't be replayed. Rows are
+ * deleted on use and superseded when a newer token of the same purpose is issued.
+ */
+export const authTokens = pgTable(
+  "auth_tokens",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    purpose: tokenPurposeEnum("purpose").notNull(),
+    tokenHash: text("token_hash").notNull(),
+    // Only set for email_change: the address to switch to once confirmed.
+    newEmail: text("new_email"),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("auth_tokens_token_hash_idx").on(t.tokenHash),
+    index("auth_tokens_user_purpose_idx").on(t.userId, t.purpose),
+  ],
 );

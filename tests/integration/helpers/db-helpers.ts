@@ -4,7 +4,8 @@ import { hashPassword } from "@/lib/auth/password";
 import { db } from "@/lib/db";
 import { hobbies, users } from "@/lib/db/schema";
 
-const PASSWORD = "int-test-pw-1234";
+export const TEST_PASSWORD = "int-test-pw-1234";
+const PASSWORD = TEST_PASSWORD;
 
 type CreateUserOverrides = {
   name?: string;
