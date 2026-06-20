@@ -67,6 +67,10 @@ export default defineConfig({
       // Swap in deterministic new-releases data — TMDB/RAWG are server-side
       // fetches Playwright's page.route can't intercept.
       E2E_NEW_RELEASES_FIXTURES: "1",
+      // Force the email client into its no-op path so e2e never sends a real
+      // message, even if a real RESEND_API_KEY lives in .env.local. Empty is
+      // already-defined, so Next won't override it from the .env file.
+      RESEND_API_KEY: "",
     },
   },
 });

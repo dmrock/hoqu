@@ -2,7 +2,15 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 const SESSION_COOKIE_NAMES = ["authjs.session-token", "__Secure-authjs.session-token"];
-const PUBLIC_PATHS = new Set(["/", "/features", "/privacy", "/terms"]);
+const PUBLIC_PATHS = new Set([
+  "/",
+  "/features",
+  "/privacy",
+  "/terms",
+  "/forgot-password",
+  "/reset-password",
+  "/confirm-email",
+]);
 
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;

@@ -168,12 +168,16 @@
   animation: row-focus-pulse 1.8s ease-in-out;
 }
 
-/* Neutralize Chrome/Safari autofill styling so inputs match the dark theme */
+/* Neutralize browser autofill styling so inputs match the dark theme. The fill
+   uses --card to match an input's rendered background (bg-input/30 over the
+   page), not --background, which looked flat/too dark on autofilled fields. */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
-input:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 1000px var(--background) inset;
+input:-webkit-autofill:active,
+input:autofill {
+  -webkit-box-shadow: 0 0 0 1000px var(--card) inset;
+  box-shadow: 0 0 0 1000px var(--card) inset;
   -webkit-text-fill-color: var(--foreground);
   caret-color: var(--foreground);
   transition: background-color 9999s ease-in-out 0s;

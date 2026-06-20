@@ -1,3 +1,15 @@
+# pnpm's build-script approval gate, declared for both pnpm majors so neither
+# blocks install/run:
+#   - pnpm 11 reads `allowBuilds` (package -> boolean)
+#   - pnpm 10 / CI read `ignoredBuiltDependencies` (block-list)
+# We decline these native builds — esbuild's binary ships via its platform
+# optional-dep, and the app doesn't rely on sharp's local build — so the gate
+# resolves without compiling anything. Flip a value to `true` (and add it to
+# onlyBuiltDependencies) if you later want that build to run.
+allowBuilds:
+  esbuild: false
+  sharp: false
 ignoredBuiltDependencies:
+  - esbuild
   - sharp
   - unrs-resolver

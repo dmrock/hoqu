@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronsUpDown, LogOut, Trophy, User as UserIcon } from "lucide-react";
+import { ChevronsUpDown, LogOut, Settings, Trophy, User as UserIcon } from "lucide-react";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -93,6 +93,12 @@ export function SidebarUserMenu({
           <Link href="/achievements" onClick={onNavigate}>
             <Trophy />
             Achievements
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/settings" onClick={onNavigate}>
+            <Settings />
+            Settings
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />

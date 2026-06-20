@@ -7,6 +7,7 @@ import { LoginPage } from "./pages/login.page";
 import { MoviesPage } from "./pages/movies.page";
 import { RegisterPage } from "./pages/register.page";
 import { SearchPalettePage } from "./pages/search-palette.page";
+import { SettingsPage } from "./pages/settings.page";
 import { Sidebar } from "./pages/sidebar";
 
 /**
@@ -23,6 +24,7 @@ export class App {
   readonly movies: MoviesPage;
   readonly register: RegisterPage;
   readonly searchPalette: SearchPalettePage;
+  readonly settings: SettingsPage;
   readonly sidebar: Sidebar;
 
   constructor(readonly page: Page) {
@@ -34,6 +36,7 @@ export class App {
     this.movies = new MoviesPage(page);
     this.register = new RegisterPage(page);
     this.searchPalette = new SearchPalettePage(page);
+    this.settings = new SettingsPage(page);
     this.sidebar = new Sidebar(page);
   }
 }

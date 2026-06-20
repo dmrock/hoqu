@@ -71,6 +71,13 @@
       "when": 1779524938074,
       "tag": "0009_uneven_lady_bullseye",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1781793664585,
+      "tag": "0010_happy_captain_cross",
+      "breakpoints": true
     }
   ]
 }

@@ -32,9 +32,22 @@ vi.mock("@/lib/auth", async () => {
   };
 });
 
+// The (auth) server actions import `AuthError` straight from next-auth, which
+// transitively pulls `next/server` — unresolvable outside the Next bundler.
+// @/lib/auth itself is fully mocked above, so a stub AuthError is all we need.
+vi.mock("next-auth", () => ({
+  AuthError: class AuthError extends Error {},
+}));
+
 vi.mock("@/lib/rate-limit", () => ({
   checkAddItemLimit: vi.fn(async () => ({ ok: true as const, slotsLeft: 50 })),
   checkAuthLimit: vi.fn(async () => ({ ok: true as const, resetAt: null })),
+  checkPasswordResetEmailLimit: vi.fn(async () => ({ ok: true as const, resetAt: null })),
+}));
+
+vi.mock("@/lib/email/send", () => ({
+  sendPasswordResetEmail: vi.fn(async () => true),
+  sendEmailChangeEmail: vi.fn(async () => true),
 }));
 
 vi.mock("next/cache", async () => {
@@ -79,6 +92,7 @@ async function truncateUserData() {
       guilds,
       accounts,
       verification_tokens,
+      auth_tokens,
       users
     RESTART IDENTITY CASCADE
   `);

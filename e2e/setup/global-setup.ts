@@ -16,6 +16,7 @@ export default async function globalSetup() {
       guilds,
       accounts,
       verification_tokens,
+      auth_tokens,
       users
     RESTART IDENTITY CASCADE
   `);
