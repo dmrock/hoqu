@@ -1,3 +1,9 @@
+# pnpm 10+ won't run dependencies' build (postinstall) scripts unless they're
+# decided here. We deliberately skip these native builds — esbuild's binary
+# comes from its platform optional-dep, and the app doesn't rely on sharp's
+# local build — so they go in the ignore list to keep `pnpm install`/`pnpm dev`
+# from stopping on the approval gate.
 ignoredBuiltDependencies:
+  - esbuild
   - sharp
   - unrs-resolver
