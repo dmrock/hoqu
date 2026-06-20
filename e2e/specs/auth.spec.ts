@@ -45,3 +45,22 @@ test("reset password without a token tells the user to request a new link", asyn
   await expect(page.getByText(/missing its token/i)).toBeVisible();
   await expect(page.getByRole("link", { name: "Request a new link" })).toBeVisible();
 });
+
+test("login tabs email -> password and keeps the email after a failed attempt", async ({
+  page,
+  app,
+}) => {
+  await app.login.goto();
+
+  // Tab from email lands on the password field, not the "Forgot password?" link.
+  await app.login.emailInput.fill("someone@e2e.test");
+  await app.login.emailInput.press("Tab");
+  await expect(app.login.passwordInput).toBeFocused();
+
+  await app.login.passwordInput.fill("definitely-wrong");
+  await app.login.submitButton.click();
+
+  await expect(page.getByText("Invalid email or password")).toBeVisible();
+  // Email survives the post-action form reset; password is intentionally cleared.
+  await expect(app.login.emailInput).toHaveValue("someone@e2e.test");
+});

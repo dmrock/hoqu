@@ -39,7 +39,9 @@ function tooManyAttempts(resetAt: number | null): string {
     : "Too many attempts — try again later.";
 }
 
-export type ActionState = { error: string | null } | null;
+// `email` is echoed back on failure so the form can repopulate it — React 19
+// resets the form after a server action, which would otherwise wipe the field.
+export type ActionState = { error: string | null; email?: string } | null;
 
 export async function registerAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const raw = {
@@ -49,12 +51,12 @@ export async function registerAction(_prev: ActionState, formData: FormData): Pr
 
   const parsed = registerSchema.safeParse(raw);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    return { error: parsed.error.issues[0]?.message ?? "Invalid input", email: raw.email };
   }
   const { email, password } = parsed.data;
 
   const limit = await checkAuthLimit("register", clientIpFrom(await headers()));
-  if (!limit.ok) return { error: tooManyAttempts(limit.resetAt) };
+  if (!limit.ok) return { error: tooManyAttempts(limit.resetAt), email: raw.email };
 
   // lower() instead of plain equality so pre-normalization rows still match.
   const [existing] = await db
@@ -63,7 +65,7 @@ export async function registerAction(_prev: ActionState, formData: FormData): Pr
     .where(sql`lower(${users.email}) = ${email}`)
     .limit(1);
   if (existing) {
-    return { error: "An account with this email already exists" };
+    return { error: "An account with this email already exists", email: raw.email };
   }
 
   const emailLocal = email.split("@")[0] ?? "user";
@@ -79,7 +81,8 @@ export async function registerAction(_prev: ActionState, formData: FormData): Pr
   try {
     await signIn("credentials", { email, password, redirect: false });
   } catch (err) {
-    if (err instanceof AuthError) return { error: "Registration succeeded but sign-in failed" };
+    if (err instanceof AuthError)
+      return { error: "Registration succeeded but sign-in failed", email: raw.email };
     throw err;
   }
 
@@ -94,11 +97,11 @@ export async function loginAction(_prev: ActionState, formData: FormData): Promi
 
   const parsed = loginSchema.safeParse(raw);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    return { error: parsed.error.issues[0]?.message ?? "Invalid input", email: raw.email };
   }
 
   const limit = await checkAuthLimit("login", clientIpFrom(await headers()));
-  if (!limit.ok) return { error: tooManyAttempts(limit.resetAt) };
+  if (!limit.ok) return { error: tooManyAttempts(limit.resetAt), email: raw.email };
 
   try {
     await signIn("credentials", {
@@ -108,7 +111,7 @@ export async function loginAction(_prev: ActionState, formData: FormData): Promi
     });
   } catch (err) {
     if (err instanceof AuthError) {
-      return { error: "Invalid email or password" };
+      return { error: "Invalid email or password", email: raw.email };
     }
     throw err;
   }

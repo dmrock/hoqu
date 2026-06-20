@@ -20,18 +20,17 @@ export default function LoginPage() {
       <form action={formAction} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
-          <Input id="email" name="email" type="email" autoComplete="email" required />
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            defaultValue={state?.email ?? ""}
+            required
+          />
         </div>
         <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="password">Password</Label>
-            <Link
-              href="/forgot-password"
-              className="text-xs text-muted-foreground hover:text-foreground underline"
-            >
-              Forgot password?
-            </Link>
-          </div>
+          <Label htmlFor="password">Password</Label>
           <Input
             id="password"
             name="password"
@@ -39,6 +38,14 @@ export default function LoginPage() {
             autoComplete="current-password"
             required
           />
+          <div className="flex justify-end">
+            <Link
+              href="/forgot-password"
+              className="text-xs text-muted-foreground hover:text-foreground underline"
+            >
+              Forgot password?
+            </Link>
+          </div>
         </div>
         {state?.error && <p className="text-sm text-destructive">{state.error}</p>}
         <Button type="submit" className="w-full" disabled={pending}>
