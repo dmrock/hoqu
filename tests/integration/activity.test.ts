@@ -1,6 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { loadFriendsActivity, loadGuildActivity } from "@/lib/activity-queries";
+import {
+  loadFriendsActivity,
+  loadGuildActivity,
+  loadOwnedExternalIds,
+} from "@/lib/activity-queries";
 import { db } from "@/lib/db";
 import { friendships, guildMembers, guilds, items } from "@/lib/db/schema";
 import { createTestUser, getHobbyId } from "./helpers/db-helpers";
@@ -463,5 +467,83 @@ describe("loadGuildActivity", () => {
 
     const withMine = await loadGuildActivity(guildId, viewer.id, true);
     expect(withMine.movies.map((m) => m.externalId).sort()).toEqual(["M", "VG"]);
+  });
+});
+
+describe("loadOwnedExternalIds", () => {
+  it("groups the user's externalIds by hobby (any status) and filters to requested slugs", async () => {
+    const viewer = await createTestUser();
+    const other = await createTestUser();
+    const [movies, games, books] = await Promise.all([
+      getHobbyId("movies"),
+      getHobbyId("games"),
+      getHobbyId("books"),
+    ]);
+
+    await addItemRow({ userId: viewer.id, hobbyId: movies, externalId: "m1", title: "m1" });
+    // Ownership is status-agnostic: a planned item still blocks re-adding from a feed.
+    await addItemRow({
+      userId: viewer.id,
+      hobbyId: movies,
+      externalId: "m2",
+      title: "m2",
+      status: "planned",
+    });
+    await addItemRow({ userId: viewer.id, hobbyId: games, externalId: "g1", title: "g1" });
+    await addItemRow({ userId: viewer.id, hobbyId: books, externalId: "b1", title: "b1" });
+    // Another user's item must not leak in.
+    await addItemRow({ userId: other.id, hobbyId: movies, externalId: "x", title: "x" });
+
+    const owned = await loadOwnedExternalIds(viewer.id, ["movies", "games"]);
+
+    expect(owned.movies.sort()).toEqual(["m1", "m2"]);
+    expect(owned.games).toEqual(["g1"]);
+    // books was owned but not requested → stays empty; tv had nothing.
+    expect(owned.books).toEqual([]);
+    expect(owned.tv).toEqual([]);
+  });
+
+  it("maps a multi-season show to the show's externalId and ignores season children", async () => {
+    const viewer = await createTestUser();
+    const tv = await getHobbyId("tv");
+
+    const parentId = await addItemRow({
+      userId: viewer.id,
+      hobbyId: tv,
+      externalId: "show1",
+      title: "Show 1",
+      status: null,
+    });
+    await addItemRow({
+      userId: viewer.id,
+      hobbyId: tv,
+      externalId: "show1:s1",
+      title: "Season 1",
+      status: "completed",
+      parentItemId: parentId,
+    });
+    await addItemRow({
+      userId: viewer.id,
+      hobbyId: tv,
+      externalId: "show1:s2",
+      title: "Season 2",
+      status: "planned",
+      parentItemId: parentId,
+    });
+
+    const owned = await loadOwnedExternalIds(viewer.id, ["tv"]);
+
+    // Only the parent's externalId — what the trending feed surfaces — not the
+    // season children's "show1:s1"/"show1:s2".
+    expect(owned.tv).toEqual(["show1"]);
+  });
+
+  it("returns all-empty buckets when no slugs are requested", async () => {
+    const viewer = await createTestUser();
+    const movies = await getHobbyId("movies");
+    await addItemRow({ userId: viewer.id, hobbyId: movies, externalId: "m1", title: "m1" });
+
+    const owned = await loadOwnedExternalIds(viewer.id, []);
+    expect(owned).toEqual({ movies: [], tv: [], games: [], books: [] });
   });
 });
