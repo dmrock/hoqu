@@ -25,8 +25,7 @@
     "e2e:report": "playwright show-report"
   },
   "engines": {
-    "node": "22.x",
-    "pnpm": ">=11"
+    "node": "22.x"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.2",
