@@ -1,4 +1,4 @@
-import { loadGuildActivity } from "@/lib/activity-queries";
+import { loadGuildActivity, loadOwnedExternalIds } from "@/lib/activity-queries";
 import { ActivityFeed } from "./activity-feed";
 
 export async function GuildActivity({
@@ -10,10 +10,14 @@ export async function GuildActivity({
   viewerId: string;
   includeSelf: boolean;
 }) {
-  const data = await loadGuildActivity(guildId, viewerId, includeSelf);
+  const [data, ownedByHobby] = await Promise.all([
+    loadGuildActivity(guildId, viewerId, includeSelf),
+    loadOwnedExternalIds(viewerId, ["movies", "tv", "games", "books"]),
+  ]);
   return (
     <ActivityFeed
       data={data}
+      ownedByHobby={ownedByHobby}
       emptyHint="Nothing trending yet. Check back when members log items."
     />
   );
