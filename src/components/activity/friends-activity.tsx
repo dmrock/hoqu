@@ -1,4 +1,4 @@
-import { loadFriendsActivity } from "@/lib/activity-queries";
+import { loadFriendsActivity, loadOwnedExternalIds } from "@/lib/activity-queries";
 import { ActivityFeed } from "./activity-feed";
 
 export async function FriendsActivity({
@@ -8,10 +8,14 @@ export async function FriendsActivity({
   viewerId: string;
   includeSelf: boolean;
 }) {
-  const data = await loadFriendsActivity(viewerId, includeSelf);
+  const [data, ownedByHobby] = await Promise.all([
+    loadFriendsActivity(viewerId, includeSelf),
+    loadOwnedExternalIds(viewerId, ["movies", "tv", "games", "books"]),
+  ]);
   return (
     <ActivityFeed
       data={data}
+      ownedByHobby={ownedByHobby}
       emptyHint="Nothing trending yet. Add friends or wait for them to log items."
     />
   );

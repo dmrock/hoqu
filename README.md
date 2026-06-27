@@ -15,7 +15,7 @@ A hobby tracker where you log movies, TV shows, games, and books, earn points, u
 
 ### Prerequisites
 
-- Node.js 20+, pnpm 10+
+- Node.js 22 (see `.nvmrc` — run `nvm use`), pnpm 10+
 - A Neon Postgres database
 - An Upstash Redis instance
 - API credentials: Google OAuth, TMDB, RAWG
