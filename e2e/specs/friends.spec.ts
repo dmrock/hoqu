@@ -2,7 +2,7 @@ import { App } from "../app";
 import { expect, test } from "../fixtures/test";
 import { STORAGE_STATE, USER_A, USER_B } from "../fixtures/users";
 
-test("user A sends friend request, user B accepts, both see each other", async ({
+test("friend request flow: badges the addressee's nav, both see each other after accept", async ({
   page,
   app,
   browser,
@@ -13,15 +13,20 @@ test("user A sends friend request, user B accepts, both see each other", async (
   // Outgoing pending entry appears (link to userB's profile).
   await expect(app.friends.friendRowLink(USER_B.name)).toBeVisible();
 
-  // User B in a separate context.
+  // User B in a separate context: the pending request badges the Friends nav,
+  // visible on any authed page (here the dashboard).
   const contextB = await browser.newContext({ storageState: STORAGE_STATE.userB });
   const pageB = await contextB.newPage();
   const appB = new App(pageB);
-  await appB.friends.goto();
+  await appB.dashboard.goto();
+  await expect(appB.sidebar.friendRequestBadge).toHaveText("1");
 
-  // Incoming request from user A → accept.
+  // Incoming request from user A → accept. The badge clears without a manual
+  // reload because acceptFriendRequest revalidates "/friends" (the layout query).
+  await appB.friends.goto();
   await expect(appB.friends.friendRowLink(USER_A.name)).toBeVisible();
   await appB.friends.acceptFirstIncoming();
+  await expect(appB.sidebar.friendRequestBadge).toHaveCount(0);
 
   // Reload user A's page; the entry has moved to the accepted Friends section.
   await page.reload();

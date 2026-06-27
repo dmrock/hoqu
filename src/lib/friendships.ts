@@ -45,6 +45,18 @@ export async function getFriendshipStatus(
   return { status: "none", friendshipId: null };
 }
 
+/**
+ * Count the viewer's pending INCOMING requests (they are the addressee). Same
+ * "incoming = addressee + pending" semantics as getFriendshipStatus /
+ * loadFriendships, used to badge the Friends nav item.
+ */
+export async function countIncomingRequests(userId: string): Promise<number> {
+  return db.$count(
+    friendships,
+    and(eq(friendships.addresseeId, userId), eq(friendships.status, "pending")),
+  );
+}
+
 /** IDs of the viewer's accepted friends (checking both directions), viewer excluded. */
 export async function getAcceptedFriendIds(viewerId: string): Promise<string[]> {
   const rows = await db

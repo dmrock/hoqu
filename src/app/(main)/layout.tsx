@@ -7,6 +7,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
+import { countIncomingRequests } from "@/lib/friendships";
 
 export default async function MainLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -15,11 +16,14 @@ export default async function MainLayout({ children }: { children: React.ReactNo
   // Read live profile fields from the DB rather than relying on the JWT,
   // which only refreshes on sign-in. This keeps the avatar dropdown's Profile
   // link in sync if the username (or display name / image) changes.
-  const [profile] = await db
-    .select({ name: users.name, image: users.image, username: users.username })
-    .from(users)
-    .where(eq(users.id, session.user.id))
-    .limit(1);
+  const [[profile], pendingRequests] = await Promise.all([
+    db
+      .select({ name: users.name, image: users.image, username: users.username })
+      .from(users)
+      .where(eq(users.id, session.user.id))
+      .limit(1),
+    countIncomingRequests(session.user.id),
+  ]);
 
   const userProps = {
     email: session.user.email,
@@ -30,9 +34,9 @@ export default async function MainLayout({ children }: { children: React.ReactNo
 
   return (
     <div className="flex min-h-svh">
-      <Sidebar {...userProps} />
+      <Sidebar {...userProps} pendingRequests={pendingRequests} />
       <div className="flex min-w-0 flex-1 flex-col">
-        <Header {...userProps} />
+        <Header {...userProps} pendingRequests={pendingRequests} />
         <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 md:px-6">{children}</main>
         <footer className="mx-auto w-full max-w-7xl px-4 pb-6 md:px-6">
           <DataAttribution />

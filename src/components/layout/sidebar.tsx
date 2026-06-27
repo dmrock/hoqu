@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { NavBadge } from "./nav-badge";
 import { navGroups } from "./nav-items";
 import { SidebarUserMenu } from "./sidebar-user-menu";
 
@@ -14,9 +15,10 @@ type SidebarProps = {
   name: string | null;
   image: string | null;
   username: string | null;
+  pendingRequests: number;
 };
 
-export function Sidebar({ email, name, image, username }: SidebarProps) {
+export function Sidebar({ email, name, image, username, pendingRequests }: SidebarProps) {
   const [expanded, setExpanded] = useState(true);
   const pathname = usePathname();
 
@@ -61,13 +63,14 @@ export function Sidebar({ email, name, image, username }: SidebarProps) {
             {group.map((item) => {
               const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
               const Icon = item.icon;
+              const badgeCount = item.href === "/friends" ? pendingRequests : 0;
               return (
                 <li key={item.href}>
                   <Link
                     href={item.href}
                     title={expanded ? undefined : item.label}
                     className={cn(
-                      "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+                      "relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
                       active
                         ? "bg-sidebar-accent text-sidebar-accent-foreground"
                         : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
@@ -76,6 +79,7 @@ export function Sidebar({ email, name, image, username }: SidebarProps) {
                   >
                     <Icon className="size-5 shrink-0" />
                     {expanded && <span>{item.label}</span>}
+                    <NavBadge count={badgeCount} variant={expanded ? "count" : "dot"} />
                   </Link>
                 </li>
               );
