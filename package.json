@@ -24,6 +24,10 @@
     "e2e:ui": "playwright test --ui",
     "e2e:report": "playwright show-report"
   },
+  "engines": {
+    "node": "22.x",
+    "pnpm": ">=11"
+  },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.2",
     "@neondatabase/serverless": "^1.1.0",
