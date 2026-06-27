@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { NavBadge } from "./nav-badge";
 import { navGroups } from "./nav-items";
 import { SidebarUserMenu } from "./sidebar-user-menu";
 
@@ -15,9 +16,10 @@ type MobileDrawerProps = {
   name: string | null;
   image: string | null;
   username: string | null;
+  pendingRequests: number;
 };
 
-export function MobileDrawer({ email, name, image, username }: MobileDrawerProps) {
+export function MobileDrawer({ email, name, image, username, pendingRequests }: MobileDrawerProps) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -45,6 +47,7 @@ export function MobileDrawer({ email, name, image, username }: MobileDrawerProps
               {group.map((item) => {
                 const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
                 const Icon = item.icon;
+                const badgeCount = item.href === "/friends" ? pendingRequests : 0;
                 return (
                   <li key={item.href}>
                     <Link
@@ -59,6 +62,7 @@ export function MobileDrawer({ email, name, image, username }: MobileDrawerProps
                     >
                       <Icon className="size-5 shrink-0" />
                       <span>{item.label}</span>
+                      <NavBadge count={badgeCount} />
                     </Link>
                   </li>
                 );

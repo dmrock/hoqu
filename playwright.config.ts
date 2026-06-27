@@ -14,7 +14,8 @@ process.env.DATABASE_URL = process.env.E2E_DATABASE_URL;
 
 // Use a non-default port so a `pnpm dev` on :3000 (likely pointing at the
 // shared dev branch) doesn't get reused by Playwright via `reuseExistingServer`.
-const E2E_PORT = 3100;
+// Overridable via E2E_PORT when :3000 is free and you want to reuse a server there.
+const E2E_PORT = Number(process.env.E2E_PORT) || 3100;
 const baseURL = `http://localhost:${E2E_PORT}`;
 
 export default defineConfig({

@@ -9,6 +9,7 @@ import {
 } from "@/app/(main)/friends/actions";
 import { db } from "@/lib/db";
 import { friendships } from "@/lib/db/schema";
+import { countIncomingRequests } from "@/lib/friendships";
 import { setTestUserId } from "./helpers/auth-mock";
 import { createTestUser } from "./helpers/db-helpers";
 
@@ -139,5 +140,50 @@ describe("removeFriend", () => {
     const result = await removeFriend({ friendshipId: pending.id });
     expect(result.ok).toBe(true);
     expect(await loadFriendship(alice.id, bob.id)).toBeUndefined();
+  });
+});
+
+describe("countIncomingRequests", () => {
+  it("returns 0 when there are no incoming requests", async () => {
+    const bob = await createTestUser();
+    expect(await countIncomingRequests(bob.id)).toBe(0);
+  });
+
+  it("counts pending incoming requests only", async () => {
+    const alice = await createTestUser();
+    const carol = await createTestUser();
+    const bob = await createTestUser();
+
+    setTestUserId(alice.id);
+    await sendFriendRequest({ username: bob.username });
+    setTestUserId(carol.id);
+    await sendFriendRequest({ username: bob.username });
+
+    expect(await countIncomingRequests(bob.id)).toBe(2);
+  });
+
+  it("ignores pending outgoing requests", async () => {
+    const alice = await createTestUser();
+    const bob = await createTestUser();
+
+    // Bob is the requester here, so this is outgoing for him — not counted.
+    setTestUserId(bob.id);
+    await sendFriendRequest({ username: alice.username });
+
+    expect(await countIncomingRequests(bob.id)).toBe(0);
+  });
+
+  it("ignores accepted friendships", async () => {
+    const alice = await createTestUser();
+    const bob = await createTestUser();
+
+    setTestUserId(alice.id);
+    await sendFriendRequest({ username: bob.username });
+    const pending = await loadFriendship(alice.id, bob.id);
+    if (!pending) throw new Error("pending row missing");
+    setTestUserId(bob.id);
+    await acceptFriendRequest({ friendshipId: pending.id });
+
+    expect(await countIncomingRequests(bob.id)).toBe(0);
   });
 });
