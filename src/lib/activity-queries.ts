@@ -154,6 +154,33 @@ export async function loadTrending(userIds: string[]): Promise<TrendingByHobby> 
   return out;
 }
 
+/** Top-level item externalIds the viewer already owns, grouped by hobby. */
+export type OwnedByHobby = Record<HobbySlug, string[]>;
+
+/**
+ * The viewer's owned externalIds per hobby, used to flag/disable "already in your
+ * collection" entries when adding from a trending or new-releases feed. Only top-level
+ * rows count (`parentItemId` null), so multi-season TV maps to the show's externalId.
+ */
+export async function loadOwnedExternalIds(
+  userId: string,
+  slugs: HobbySlug[],
+): Promise<OwnedByHobby> {
+  const out: OwnedByHobby = { movies: [], tv: [], games: [], books: [] };
+  if (slugs.length === 0) return out;
+
+  const rows = await db
+    .select({ externalId: items.externalId, slug: hobbies.slug })
+    .from(items)
+    .innerJoin(hobbies, eq(items.hobbyId, hobbies.id))
+    .where(and(eq(items.userId, userId), isNull(items.parentItemId), inArray(hobbies.slug, slugs)));
+
+  for (const row of rows) {
+    out[row.slug as HobbySlug]?.push(row.externalId);
+  }
+  return out;
+}
+
 /** Trending among the viewer's accepted friends (plus the viewer when `includeSelf`). */
 export async function loadFriendsActivity(
   viewerId: string,
