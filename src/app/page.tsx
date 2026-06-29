@@ -1,16 +1,9 @@
+import { BarChart3, LayoutGrid, Lock, Trophy, Users } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  BarsSprite,
-  FriendsSprite,
-  HobbiesSprite,
-  LockSprite,
-  XpSprite,
-} from "@/components/landing/sprites";
 import { DataAttribution } from "@/components/layout/data-attribution";
 import { Button } from "@/components/ui/button";
 import { SITE_URL } from "@/lib/site";
-import { cn } from "@/lib/utils";
 
 // Title and description come from the root layout defaults; the landing is the site root.
 export const metadata: Metadata = {
@@ -80,7 +73,7 @@ export default function LandingPage() {
 
       <HowItWorks />
 
-      <FeatureRow flip={false} title="Weighted XP for every quest" visual={<PointsChips />}>
+      <FeatureRow title="Weighted XP for every quest" visual={<PointsChips />}>
         <p>
           Every movie, TV season, video game, and book you finish pays out experience points scaled
           by effort — beating a 60-hour RPG counts for more than a movie night.
@@ -88,67 +81,35 @@ export default function LandingPage() {
         <p>Honor system: we trust our adventurers to log their quests honestly.</p>
       </FeatureRow>
 
-      <FeatureRow
-        flip
-        title="Achievements worth hunting"
-        visual={
-          <SpritePanel>
-            <XpSprite className="size-16 sm:size-20" />
-          </SpritePanel>
-        }
-      >
-        <p>
+      <section className="grid gap-4 py-8 sm:grid-cols-2 md:py-12">
+        <FeatureCard
+          icon={<Trophy className="size-6 text-accent" />}
+          title="Achievements worth hunting"
+        >
           Unlock pixel badges as your log grows — from your first completed movie to rating ten
           titles to finishing something in all four hobbies. New unlocks pop up as toasts the moment
           you earn them.
-        </p>
-      </FeatureRow>
-
-      <FeatureRow
-        flip={false}
-        title="Friends & guilds"
-        visual={
-          <SpritePanel>
-            <FriendsSprite className="size-16 sm:size-20" />
-          </SpritePanel>
-        }
-      >
-        <p>
+        </FeatureCard>
+        <FeatureCard icon={<Users className="size-6 text-primary" />} title="Friends & guilds">
           Add friends and form a guild of up to 50 members with a shareable invite code. Each guild
           links straight to its own Discord server, so the chat lives where your party already hangs
           out.
-        </p>
-      </FeatureRow>
-
-      <FeatureRow
-        flip
-        title="Leaderboards without strangers"
-        visual={
-          <SpritePanel>
-            <BarsSprite className="size-16 sm:size-20" />
-          </SpritePanel>
-        }
-      >
-        <p>
+        </FeatureCard>
+        <FeatureCard
+          icon={<BarChart3 className="size-6 text-warning" />}
+          title="Leaderboards without strangers"
+        >
           Friends-only and guild-only leaderboards rank total XP and per-hobby completions. There is
           no global leaderboard — you only ever compete with people you actually know.
-        </p>
-      </FeatureRow>
-
-      <FeatureRow
-        flip={false}
-        title="Privacy on your terms"
-        visual={
-          <SpritePanel>
-            <LockSprite className="size-16 sm:size-20" />
-          </SpritePanel>
-        }
-      >
-        <p>
+        </FeatureCard>
+        <FeatureCard
+          icon={<Lock className="size-6 text-foreground" />}
+          title="Privacy on your terms"
+        >
           Decide who can see your profile: everyone, friends only, guildmates only, or just you.
           Your watchlist, game backlog, and reading log stay exactly as private as you want.
-        </p>
-      </FeatureRow>
+        </FeatureCard>
+      </section>
 
       <div className="flex justify-center pb-4">
         <Link
@@ -234,31 +195,41 @@ function Step({ n, title, children }: { n: string; title: string; children: Reac
 function FeatureRow({
   title,
   visual,
-  flip,
   children,
 }: {
   title: string;
   visual: React.ReactNode;
-  flip: boolean;
   children: React.ReactNode;
 }) {
   return (
     <section className="grid items-center gap-8 py-8 md:grid-cols-2 md:gap-12 md:py-12">
-      <div className={cn("space-y-4", flip && "md:order-2")}>
+      <div className="space-y-4">
         <h2 className="font-pixel text-sm leading-relaxed text-accent md:text-base">{title}</h2>
         <div className="space-y-3 text-sm leading-relaxed text-muted-foreground md:text-base">
           {children}
         </div>
       </div>
-      <div className={cn("flex justify-center", flip && "md:order-1")}>{visual}</div>
+      <div className="flex justify-center">{visual}</div>
     </section>
   );
 }
 
-function SpritePanel({ children }: { children: React.ReactNode }) {
+function FeatureCard({
+  icon,
+  title,
+  children,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="flex size-36 items-center justify-center rounded-2xl border border-border bg-card sm:size-44">
-      {children}
+    <div className="rounded-xl border border-border bg-card p-5 md:p-6">
+      <div className="flex size-12 items-center justify-center rounded-lg bg-background">
+        {icon}
+      </div>
+      <h3 className="mt-4 font-pixel text-xs leading-relaxed text-accent">{title}</h3>
+      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{children}</p>
     </div>
   );
 }
@@ -287,22 +258,22 @@ function FeatureGrid() {
   return (
     <div className="mx-auto grid w-full max-w-md grid-cols-2 gap-3 sm:gap-4">
       <FeatureTile
-        sprite={<HobbiesSprite className="size-7" />}
+        sprite={<LayoutGrid className="size-6 text-foreground" />}
         title="4 hobbies"
         description="Movies, TV, games, books"
       />
       <FeatureTile
-        sprite={<XpSprite className="size-7" />}
+        sprite={<Trophy className="size-6 text-accent" />}
         title="XP & achievements"
         description="Points for every quest, badges to unlock"
       />
       <FeatureTile
-        sprite={<FriendsSprite className="size-7" />}
+        sprite={<Users className="size-6 text-primary" />}
         title="Friends & guilds"
         description="Add friends, form parties of up to 50"
       />
       <FeatureTile
-        sprite={<BarsSprite className="size-7" />}
+        sprite={<BarChart3 className="size-6 text-warning" />}
         title="Leaderboards"
         description="Compare progress with friends and guildmates"
       />
