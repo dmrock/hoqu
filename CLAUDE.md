@@ -380,6 +380,8 @@ streak tiers`. Subject in the imperative, no trailing period, ≤72 chars.
 over what) and `## Test plan` (markdown checklist of what was verified).
 
 **Rules**:
+- **Always create a new feature branch off `main` before starting any work** (`feat/…`,
+  `fix/…`, `refactor/…`, etc. per the prefixes above). Never commit directly to `main`.
 - Create new commits rather than amending pushed ones.
 - Never `--no-verify`; fix the hook failure instead.
 - One logical change per commit when feasible (split docs/code if both touched).
