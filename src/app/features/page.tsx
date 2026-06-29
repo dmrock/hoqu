@@ -1,13 +1,18 @@
+import {
+  Command,
+  LayoutDashboard,
+  LayoutGrid,
+  Lock,
+  Medal,
+  Star,
+  TrendingUp,
+  Trophy,
+  Tv,
+  Users,
+  Zap,
+} from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  BarsSprite,
-  FriendsSprite,
-  HobbiesSprite,
-  LockSprite,
-  TrophySprite,
-  XpSprite,
-} from "@/components/landing/sprites";
 import { PublicShell } from "@/components/layout/public-shell";
 import { Button } from "@/components/ui/button";
 
@@ -34,7 +39,7 @@ export default function FeaturesPage() {
 
         <div className="mt-10 space-y-10">
           <Section
-            sprite={<HobbiesSprite className="size-6" />}
+            sprite={<LayoutGrid className="size-5 text-primary" />}
             title="Track four hobbies in one place"
           >
             <p>
@@ -67,7 +72,10 @@ export default function FeaturesPage() {
             </ul>
           </Section>
 
-          <Section sprite={<XpSprite className="size-6" />} title="Your rating and the world's">
+          <Section
+            sprite={<Star className="size-5 text-warning" />}
+            title="Your rating and the world's"
+          >
             <p>
               Next to your own score, each title shows its external rating so you always have a
               second opinion: the TMDB score for movies and TV shows, and the Metacritic score for
@@ -76,7 +84,7 @@ export default function FeaturesPage() {
             </p>
           </Section>
 
-          <Section sprite={<HobbiesSprite className="size-6" />} title="TV, season by season">
+          <Section sprite={<Tv className="size-5 text-accent" />} title="TV, season by season">
             <p>
               Multi-season shows aren&apos;t crammed into one row. A show expands into its
               individual seasons, each with its own status and rating, and HOQU rolls them up into a
@@ -85,7 +93,10 @@ export default function FeaturesPage() {
             </p>
           </Section>
 
-          <Section sprite={<XpSprite className="size-6" />} title="Weighted XP for every quest">
+          <Section
+            sprite={<Zap className="size-5 text-warning" />}
+            title="Weighted XP for every quest"
+          >
             <p>
               Finishing something pays out experience points scaled by effort, so a 60-hour RPG is
               worth more than a movie night. Your points are banked the moment an item is completed
@@ -107,7 +118,10 @@ export default function FeaturesPage() {
             </p>
           </Section>
 
-          <Section sprite={<TrophySprite className="size-6" />} title="Achievements worth hunting">
+          <Section
+            sprite={<Trophy className="size-5 text-accent" />}
+            title="Achievements worth hunting"
+          >
             <p>
               Pixel badges unlock as your collection grows, spanning every hobby plus social
               milestones — completing your first title, rating ten items, logging something in all
@@ -116,7 +130,10 @@ export default function FeaturesPage() {
             </p>
           </Section>
 
-          <Section sprite={<BarsSprite className="size-6" />} title="A dashboard that keeps score">
+          <Section
+            sprite={<LayoutDashboard className="size-5 text-primary" />}
+            title="A dashboard that keeps score"
+          >
             <p>
               Your dashboard shows total XP, items completed, items rated, and achievements at a
               glance, plus a per-hobby breakdown and your most recent unlocks. A New Releases strip
@@ -126,7 +143,7 @@ export default function FeaturesPage() {
           </Section>
 
           <Section
-            sprite={<FriendsSprite className="size-6" />}
+            sprite={<TrendingUp className="size-5 text-accent" />}
             title="See what your circle is into"
           >
             <p>
@@ -140,7 +157,7 @@ export default function FeaturesPage() {
             </p>
           </Section>
 
-          <Section sprite={<FriendsSprite className="size-6" />} title="Friends & guilds">
+          <Section sprite={<Users className="size-5 text-primary" />} title="Friends & guilds">
             <p>
               Send and accept friend requests to build your circle, then form a guild of up to 50
               members with a shareable invite code you can rotate at any time. Guilds carry roles —
@@ -150,7 +167,7 @@ export default function FeaturesPage() {
           </Section>
 
           <Section
-            sprite={<TrophySprite className="size-6" />}
+            sprite={<Medal className="size-5 text-warning" />}
             title="Leaderboards without strangers"
           >
             <p>
@@ -160,7 +177,10 @@ export default function FeaturesPage() {
             </p>
           </Section>
 
-          <Section sprite={<LockSprite className="size-6" />} title="Privacy on your terms">
+          <Section
+            sprite={<Lock className="size-5 text-foreground" />}
+            title="Privacy on your terms"
+          >
             <p>
               You decide who can see your profile with four visibility levels: public, friends only,
               guildmates only, or completely private. Your watchlist, game backlog, and reading log
@@ -168,7 +188,10 @@ export default function FeaturesPage() {
             </p>
           </Section>
 
-          <Section sprite={<HobbiesSprite className="size-6" />} title="Quick to use, easy to join">
+          <Section
+            sprite={<Command className="size-5 text-accent" />}
+            title="Quick to use, easy to join"
+          >
             <p>
               A{" "}
               <kbd className="rounded border border-border bg-muted px-1 font-mono text-xs">
