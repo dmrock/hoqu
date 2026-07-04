@@ -57,7 +57,7 @@ export type AddItemResult =
   | { ok: true; unlocks: AchievementUnlock[]; slotsLeft: number }
   | { ok: false; error: string; rateLimited?: boolean };
 export type RefreshShowResult =
-  | { ok: true; migrated: boolean; unlocks: AchievementUnlock[] }
+  | { ok: true; migrated: boolean; addedSeasons: number; unlocks: AchievementUnlock[] }
   | { ok: false; error: string };
 
 const ZERO_DELTA: CounterDelta = {
@@ -488,7 +488,6 @@ export async function refreshShow(input: { itemId: string }): Promise<RefreshSho
     items,
     and(eq(items.userId, userId), eq(items.parentItemId, itemId)),
   );
-  if (childCount > 0) return { ok: true, migrated: false, unlocks: [] };
 
   let details: Awaited<ReturnType<typeof getTvShow>>;
   try {
@@ -499,11 +498,62 @@ export async function refreshShow(input: { itemId: string }): Promise<RefreshSho
   }
 
   const fresh = Math.max(details.numberOfSeasons, details.seasons.length, 1);
+
+  if (childCount > 0) {
+    // Already multi-season: insert seasons TMDB has that we don't. Existing
+    // season rows are never touched, and new ones arrive as planned (0 points),
+    // so user counters don't move.
+    const children = await db
+      .select({ externalId: items.externalId })
+      .from(items)
+      .where(and(eq(items.userId, userId), eq(items.parentItemId, itemId)));
+    const tracked = new Set(children.map((c) => c.externalId));
+    const newSeasons = details.seasons
+      .filter((s) => !tracked.has(`${existing.externalId}:s${s.seasonNumber}`))
+      .sort((a, b) => a.seasonNumber - b.seasonNumber);
+
+    if (newSeasons.length === 0) {
+      if (fresh !== existing.seasonCount) {
+        await db.update(items).set({ seasonCount: fresh }).where(eq(items.id, itemId));
+      }
+      return { ok: true, migrated: false, addedSeasons: 0, unlocks: [] };
+    }
+
+    const newRows = newSeasons.map((season) =>
+      seasonRow({
+        id: randomUUID(),
+        userId,
+        hobbyId: existing.hobbyId,
+        parentItemId: itemId,
+        showExternalId: existing.externalId,
+        showImageUrl: existing.imageUrl,
+        season,
+        status: "planned",
+        userRating: null,
+        note: null,
+        wouldRevisit: false,
+        pointsAwarded: 0,
+      }),
+    );
+
+    await db.batch([
+      db.insert(items).values(newRows),
+      db
+        .update(items)
+        .set({ seasonCount: fresh, updatedAt: new Date() })
+        .where(eq(items.id, itemId)),
+    ]);
+
+    const unlocks = await checkAchievements(userId);
+    revalidatePath("/tv");
+    return { ok: true, migrated: false, addedSeasons: newRows.length, unlocks };
+  }
+
   if (fresh < 2 || details.seasons.length < 2) {
     if (fresh !== existing.seasonCount) {
       await db.update(items).set({ seasonCount: fresh }).where(eq(items.id, itemId));
     }
-    return { ok: true, migrated: false, unlocks: [] };
+    return { ok: true, migrated: false, addedSeasons: 0, unlocks: [] };
   }
 
   // Migrating flat -> multi-season. S1 inherits the show's exact state INCLUDING
@@ -550,5 +600,5 @@ export async function refreshShow(input: { itemId: string }): Promise<RefreshSho
 
   const unlocks = await checkAchievements(userId);
   revalidatePath("/tv");
-  return { ok: true, migrated: true, unlocks };
+  return { ok: true, migrated: true, addedSeasons: childRows.length, unlocks };
 }
