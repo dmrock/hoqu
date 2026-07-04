@@ -1,7 +1,8 @@
-import { and, eq } from "drizzle-orm";
-import { describe, expect, it } from "vitest";
+import { and, asc, eq, isNull } from "drizzle-orm";
+import { describe, expect, it, vi } from "vitest";
 import type { AddItemInput } from "@/app/(main)/items/actions";
-import { addItem, deleteItem, updateItem } from "@/app/(main)/items/actions";
+import { addItem, deleteItem, refreshShow, updateItem } from "@/app/(main)/items/actions";
+import { getTvShow, type TvShowDetails } from "@/lib/api/tmdb";
 import { db } from "@/lib/db";
 import { achievements, items, userAchievements } from "@/lib/db/schema";
 import { setTestUserId } from "./helpers/auth-mock";
@@ -200,6 +201,121 @@ describe("updateItem", () => {
       wouldRevisit: false,
     });
     expect((await fetchUser(user.id))?.itemsRated).toBe(0);
+  });
+});
+
+function tvDetails(seasonCount: number): TvShowDetails {
+  return {
+    numberOfSeasons: seasonCount,
+    seasons: Array.from({ length: seasonCount }, (_, i) => ({
+      seasonNumber: i + 1,
+      name: `Season ${i + 1}`,
+      airDate: `${2020 + i}-01-01`,
+      posterPath: null,
+      voteAverage: null,
+    })),
+  };
+}
+
+/** Adds a 2-season show (S1 completed + rated, S2 planned) and returns the parent row. */
+async function addTwoSeasonShow(userId: string) {
+  vi.mocked(getTvShow).mockResolvedValue(tvDetails(2));
+  const res = await addItem({
+    hobbySlug: "tv",
+    externalId: "500",
+    title: "Ongoing Show",
+    imageUrl: null,
+    year: 2020,
+    externalRating: 8.2,
+    status: "completed",
+    userRating: 9,
+    note: "S1 was great",
+    wouldRevisit: true,
+  });
+  if (!res.ok) throw new Error("setup failed");
+
+  const [parent] = await db
+    .select()
+    .from(items)
+    .where(and(eq(items.userId, userId), isNull(items.parentItemId)));
+  if (!parent) throw new Error("no parent row");
+  return parent;
+}
+
+describe("refreshShow", () => {
+  it("is a no-op when the multi-season show is already up to date", async () => {
+    const user = await createTestUser();
+    setTestUserId(user.id);
+    const parent = await addTwoSeasonShow(user.id);
+
+    const result = await refreshShow({ itemId: parent.id });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.migrated).toBe(false);
+      expect(result.addedSeasons).toBe(0);
+    }
+
+    const children = await db
+      .select()
+      .from(items)
+      .where(and(eq(items.userId, user.id), eq(items.parentItemId, parent.id)));
+    expect(children).toHaveLength(2);
+
+    const [refreshed] = await db.select().from(items).where(eq(items.id, parent.id));
+    expect(refreshed?.seasonCount).toBe(2);
+  });
+
+  it("inserts newly aired seasons as planned, preserving existing season state", async () => {
+    const user = await createTestUser();
+    setTestUserId(user.id);
+    const parent = await addTwoSeasonShow(user.id);
+
+    vi.mocked(getTvShow).mockResolvedValue(tvDetails(3));
+    const result = await refreshShow({ itemId: parent.id });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.migrated).toBe(false);
+      expect(result.addedSeasons).toBe(1);
+    }
+
+    const children = await db
+      .select()
+      .from(items)
+      .where(and(eq(items.userId, user.id), eq(items.parentItemId, parent.id)))
+      .orderBy(asc(items.seasonNumber));
+    expect(children.map((c) => c.externalId)).toEqual(["500:s1", "500:s2", "500:s3"]);
+
+    const [s1, s2, s3] = children;
+    expect(s1?.status).toBe("completed");
+    expect(s1?.userRating).toBe(9);
+    expect(s1?.note).toBe("S1 was great");
+    expect(s1?.pointsAwarded).toBe(5);
+    expect(s2?.status).toBe("planned");
+    expect(s3?.status).toBe("planned");
+    expect(s3?.pointsAwarded).toBe(0);
+    expect(s3?.userRating).toBeNull();
+    expect(s3?.note).toBeNull();
+
+    const [refreshed] = await db.select().from(items).where(eq(items.id, parent.id));
+    expect(refreshed?.seasonCount).toBe(3);
+  });
+
+  it("leaves total points and counters unchanged after adding a season", async () => {
+    const user = await createTestUser();
+    setTestUserId(user.id);
+    const parent = await addTwoSeasonShow(user.id);
+
+    const before = await fetchUser(user.id);
+    expect(before?.totalPoints).toBe(5);
+
+    vi.mocked(getTvShow).mockResolvedValue(tvDetails(3));
+    const result = await refreshShow({ itemId: parent.id });
+    expect(result.ok).toBe(true);
+
+    const after = await fetchUser(user.id);
+    expect(after?.totalPoints).toBe(5);
+    expect(after?.showsCompleted).toBe(1);
+    expect(after?.itemsRated).toBe(1);
   });
 });
 

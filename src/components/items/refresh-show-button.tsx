@@ -24,7 +24,7 @@ export function RefreshShowButton({ itemId }: { itemId: string }) {
         return;
       }
       notifyUnlocks(res.unlocks);
-      if (res.migrated) {
+      if (res.migrated || res.addedSeasons > 0) {
         const params = new URLSearchParams(searchParams.toString());
         const current = (params.get("expanded") ?? "").split(",").filter(Boolean);
         const set = new Set(current);
