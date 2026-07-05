@@ -1,15 +1,25 @@
 "use server";
 
-import { and, eq, ne, sql } from "drizzle-orm";
+import { and, asc, eq, ne, sql } from "drizzle-orm";
 import type { BatchItem } from "drizzle-orm/batch";
+import { alias } from "drizzle-orm/pg-core";
 import { headers } from "next/headers";
 import { z } from "zod";
 import { requireUserId, signOut } from "@/lib/auth";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { consumeToken, issueToken } from "@/lib/auth/tokens";
 import { db } from "@/lib/db";
-import { guildMembers, guilds, users } from "@/lib/db/schema";
+import {
+  achievements,
+  guildMembers,
+  guilds,
+  hobbies,
+  items,
+  userAchievements,
+  users,
+} from "@/lib/db/schema";
 import { sendEmailChangeEmail } from "@/lib/email/send";
+import type { DataExport } from "@/lib/export";
 import { originFrom } from "@/lib/request-url";
 
 const EMAIL_CHANGE_TTL_MINUTES = 60;
@@ -222,6 +232,88 @@ export async function deleteAccountAction(input: DeleteAccountInput): Promise<Ac
 
   await signOut({ redirectTo: "/" });
   return { ok: true };
+}
+
+export type ExportDataResult = { ok: true; data: DataExport } | { ok: false; error: string };
+
+/**
+ * Full snapshot of the user's logged data for download: every item row
+ * (including TV show parents and their season rows), profile counters and
+ * unlocked achievements. Read-only, so no rate limit — just the auth gate.
+ * Dates are serialized to ISO strings so the payload is plain JSON.
+ */
+export async function exportDataAction(): Promise<ExportDataResult> {
+  const session = await requireUserId();
+  if (!session.ok) return session;
+  const userId = session.userId;
+
+  const parentItems = alias(items, "parent_items");
+
+  const [profileRows, itemRows, achievementRows] = await Promise.all([
+    db
+      .select({
+        username: users.username,
+        totalPoints: users.totalPoints,
+        moviesCompleted: users.moviesCompleted,
+        showsCompleted: users.showsCompleted,
+        gamesCompleted: users.gamesCompleted,
+        booksCompleted: users.booksCompleted,
+        itemsRated: users.itemsRated,
+      })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1),
+    db
+      .select({
+        title: items.title,
+        hobby: hobbies.slug,
+        externalId: items.externalId,
+        status: items.status,
+        userRating: items.userRating,
+        note: items.note,
+        wouldRevisit: items.wouldRevisit,
+        year: items.year,
+        seasonNumber: items.seasonNumber,
+        seasonCount: items.seasonCount,
+        parentExternalId: parentItems.externalId,
+        parentTitle: parentItems.title,
+        completedAt: items.completedAt,
+        createdAt: items.createdAt,
+      })
+      .from(items)
+      .innerJoin(hobbies, eq(hobbies.id, items.hobbyId))
+      .leftJoin(parentItems, eq(parentItems.id, items.parentItemId))
+      .where(eq(items.userId, userId))
+      // Season externalIds are "{showId}:s{n}", so this keeps each show's
+      // seasons grouped right after their parent row.
+      .orderBy(asc(hobbies.slug), asc(items.externalId)),
+    db
+      .select({ slug: achievements.slug, unlockedAt: userAchievements.unlockedAt })
+      .from(userAchievements)
+      .innerJoin(achievements, eq(achievements.id, userAchievements.achievementId))
+      .where(eq(userAchievements.userId, userId))
+      .orderBy(asc(userAchievements.unlockedAt)),
+  ]);
+
+  const profile = profileRows[0];
+  if (!profile) return { ok: false, error: "Account not found" };
+
+  return {
+    ok: true,
+    data: {
+      exportedAt: new Date().toISOString(),
+      profile,
+      items: itemRows.map((row) => ({
+        ...row,
+        completedAt: row.completedAt?.toISOString() ?? null,
+        createdAt: row.createdAt.toISOString(),
+      })),
+      achievements: achievementRows.map((row) => ({
+        slug: row.slug,
+        unlockedAt: row.unlockedAt.toISOString(),
+      })),
+    },
+  };
 }
 
 async function emailTaken(email: string, exceptUserId: string): Promise<boolean> {
