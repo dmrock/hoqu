@@ -7,6 +7,7 @@ const LOGIN_PER_IP = 20;
 const REGISTER_PER_IP = 10;
 const FORGOT_PER_IP = 5;
 const FORGOT_PER_EMAIL = 3;
+const VERIFY_RESEND_PER_USER = 3;
 
 const addItemHourly = new Ratelimit({
   redis,
@@ -47,6 +48,13 @@ const forgotPerEmail = new Ratelimit({
   redis,
   limiter: Ratelimit.slidingWindow(FORGOT_PER_EMAIL, "1 h"),
   prefix: "ratelimit:auth:forgot:email",
+  analytics: false,
+});
+
+const verifyResendPerUser = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(VERIFY_RESEND_PER_USER, "1 h"),
+  prefix: "ratelimit:auth:verify-resend",
   analytics: false,
 });
 
@@ -93,6 +101,22 @@ export async function checkPasswordResetEmailLimit(email: string): Promise<AuthL
   if (process.env.NODE_ENV === "development") return { ok: true, resetAt: null };
   try {
     const result = await forgotPerEmail.limit(email);
+    return { ok: result.success, resetAt: result.success ? null : result.reset };
+  } catch (err) {
+    console.error("auth rate limit check failed (failing open)", err);
+    return { ok: true, resetAt: null };
+  }
+}
+
+/**
+ * Per-user window on verification-email resends (3 / hour) — the banner button
+ * would otherwise let a signed-in user relay spam through our sender. Same
+ * dev-skip + fail-open posture as the other auth limits.
+ */
+export async function checkVerifyResendLimit(userId: string): Promise<AuthLimitResult> {
+  if (process.env.NODE_ENV === "development") return { ok: true, resetAt: null };
+  try {
+    const result = await verifyResendPerUser.limit(userId);
     return { ok: result.success, resetAt: result.success ? null : result.reset };
   } catch (err) {
     console.error("auth rate limit check failed (failing open)", err);

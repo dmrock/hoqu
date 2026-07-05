@@ -8,6 +8,7 @@ import { z } from "zod";
 import { requireUserId, signOut } from "@/lib/auth";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { consumeToken, issueToken } from "@/lib/auth/tokens";
+import { sendVerificationLink } from "@/lib/auth/verification";
 import { db } from "@/lib/db";
 import {
   achievements,
@@ -20,6 +21,7 @@ import {
 } from "@/lib/db/schema";
 import { sendEmailChangeEmail } from "@/lib/email/send";
 import type { DataExport } from "@/lib/export";
+import { checkVerifyResendLimit } from "@/lib/rate-limit";
 import { originFrom } from "@/lib/request-url";
 
 const EMAIL_CHANGE_TTL_MINUTES = 60;
@@ -149,6 +151,41 @@ export async function confirmEmailChangeAction(token: string): Promise<ActionRes
     .update(users)
     .set({ email: consumed.newEmail, emailVerified: new Date(), updatedAt: new Date() })
     .where(eq(users.id, consumed.userId));
+
+  return { ok: true };
+}
+
+/**
+ * Re-send the signup verification link to the account's current address, for
+ * users who missed or lost the original email (surfaced by the layout banner).
+ */
+export async function resendVerificationEmailAction(): Promise<ActionResult> {
+  const session = await requireUserId();
+  if (!session.ok) return session;
+
+  const [user] = await db
+    .select({ email: users.email, emailVerified: users.emailVerified })
+    .from(users)
+    .where(eq(users.id, session.userId))
+    .limit(1);
+  if (!user) return { ok: false, error: "Account not found" };
+  if (user.emailVerified) return { ok: false, error: "Your email is already verified" };
+
+  const limit = await checkVerifyResendLimit(session.userId);
+  if (!limit.ok) {
+    const minutes = limit.resetAt
+      ? Math.max(1, Math.ceil((limit.resetAt - Date.now()) / 60_000))
+      : null;
+    return {
+      ok: false,
+      error: minutes
+        ? `Too many resend requests — try again in ~${minutes} min.`
+        : "Too many resend requests — try again later.",
+    };
+  }
+
+  const origin = originFrom(await headers());
+  await sendVerificationLink(session.userId, user.email, origin);
 
   return { ok: true };
 }
