@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ChangeEmailCard } from "@/components/settings/change-email-card";
 import { ChangePasswordCard } from "@/components/settings/change-password-card";
 import { DeleteAccountCard } from "@/components/settings/delete-account-card";
+import { ExportDataCard } from "@/components/settings/export-data-card";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
@@ -33,6 +34,7 @@ export default async function SettingsPage() {
 
       <ChangePasswordCard hasPassword={hasPassword} />
       <ChangeEmailCard currentEmail={user.email} hasPassword={hasPassword} />
+      <ExportDataCard />
       {user.username ? <DeleteAccountCard username={user.username} /> : null}
     </div>
   );
