@@ -1,5 +1,6 @@
 import {
   Command,
+  Download,
   LayoutDashboard,
   LayoutGrid,
   Lock,
@@ -185,6 +186,17 @@ export default function FeaturesPage() {
               You decide who can see your profile with four visibility levels: public, friends only,
               guildmates only, or completely private. Your watchlist, game backlog, and reading log
               stay exactly as visible as you want them.
+            </p>
+          </Section>
+
+          <Section
+            sprite={<Download className="size-5 text-primary" />}
+            title="Your data stays yours"
+          >
+            <p>
+              Everything you log is yours to take. Download your full collection — every item, your
+              stats, and your achievements — as JSON, or your items as a flat CSV, anytime from
+              Settings. No lock-in, no support ticket.
             </p>
           </Section>
 
