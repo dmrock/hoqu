@@ -78,6 +78,13 @@
       "when": 1781793664585,
       "tag": "0010_happy_captain_cross",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1783286343843,
+      "tag": "0011_email-verify-token-purpose",
+      "breakpoints": true
     }
   ]
 }
