@@ -10,6 +10,7 @@ const PUBLIC_PATHS = new Set([
   "/forgot-password",
   "/reset-password",
   "/confirm-email",
+  "/verify-email",
 ]);
 
 export function proxy(req: NextRequest) {

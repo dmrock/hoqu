@@ -1,5 +1,5 @@
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
@@ -31,6 +31,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       const username = await generateUniqueUsername(base);
       const displayName = user.name ?? user.email.split("@")[0] ?? "user";
       await db.update(users).set({ username, name: displayName }).where(eq(users.id, user.id));
+    },
+    // Auth.js creates OAuth users with emailVerified null regardless of what the
+    // provider profile says, so mirror Google's own verification here. Running on
+    // every sign-in (not just createUser) also backfills pre-existing Google
+    // accounts the next time they sign in.
+    signIn: async ({ user, account, profile }) => {
+      if (account?.provider !== "google" || !profile?.email_verified || !user.id) return;
+      await db
+        .update(users)
+        .set({ emailVerified: new Date() })
+        .where(and(eq(users.id, user.id), isNull(users.emailVerified)));
     },
   },
   providers: [
