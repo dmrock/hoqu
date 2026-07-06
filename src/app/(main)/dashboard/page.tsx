@@ -21,7 +21,6 @@ import {
 } from "@/components/dashboard/new-releases-section";
 import { achievementIcon } from "@/lib/achievement-icons";
 import { checkAchievements } from "@/lib/achievements";
-import { loadOwnedExternalIds } from "@/lib/activity-queries";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { achievements, userAchievements, users } from "@/lib/db/schema";
@@ -77,8 +76,6 @@ export default async function DashboardPage() {
     userAchievements,
     eq(userAchievements.userId, session.user.id),
   );
-
-  const ownedByHobby = await loadOwnedExternalIds(session.user.id, ["movies", "tv", "games"]);
 
   const hobbyCards: HobbyCard[] = [
     { slug: "movies", label: "Movies", icon: Clapperboard, count: user.moviesCompleted },
@@ -175,13 +172,13 @@ export default async function DashboardPage() {
       <section className="space-y-4">
         <h2 className="font-pixel text-sm text-muted-foreground uppercase">New releases</h2>
         <Suspense fallback={<NewReleasesSkeleton title="Now in theaters" />}>
-          <MoviesNewReleases ownedExternalIds={ownedByHobby.movies} />
+          <MoviesNewReleases viewerId={session.user.id} />
         </Suspense>
         <Suspense fallback={<NewReleasesSkeleton title="New episodes" />}>
-          <TvNewReleases ownedExternalIds={ownedByHobby.tv} />
+          <TvNewReleases viewerId={session.user.id} />
         </Suspense>
         <Suspense fallback={<NewReleasesSkeleton title="Just launched" />}>
-          <GamesNewReleases ownedExternalIds={ownedByHobby.games} />
+          <GamesNewReleases viewerId={session.user.id} />
         </Suspense>
       </section>
     </div>

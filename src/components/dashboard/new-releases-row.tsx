@@ -92,7 +92,6 @@ export function NewReleasesRow({
       )}
       <AddItemDialog
         hobbySlug={hobbySlug}
-        existingExternalIds={ownedExternalIds}
         initialSelection={selected}
         defaultStatus="planned"
         open={open}

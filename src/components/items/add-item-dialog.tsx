@@ -2,7 +2,7 @@
 
 import { Plus } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { addItem } from "@/app/(main)/items/actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,7 +31,6 @@ import type { HobbySlug, ItemStatus } from "@/lib/points";
 
 type Props = {
   hobbySlug: HobbySlug;
-  existingExternalIds: string[];
   /** When set, the dialog opens straight to the configure step and skips search. */
   initialSelection?: SearchResult | null;
   defaultStatus?: ItemStatus;
@@ -57,7 +56,6 @@ const HOBBY_SINGULAR: Record<HobbySlug, string> = {
 
 export function AddItemDialog({
   hobbySlug,
-  existingExternalIds,
   initialSelection = null,
   defaultStatus = "completed",
   open: openProp,
@@ -94,8 +92,6 @@ export function AddItemDialog({
       setStatus(defaultStatus);
     }
   }, [open, initialSelection, defaultStatus]);
-
-  const ownedSet = useMemo(() => new Set(existingExternalIds), [existingExternalIds]);
 
   useEffect(() => {
     const t = setTimeout(() => setDebounced(query.trim()), 300);
@@ -330,7 +326,7 @@ export function AddItemDialog({
                 <p className="text-sm text-muted-foreground">No results.</p>
               )}
               {results.map((r) => {
-                const owned = ownedSet.has(r.externalId);
+                const owned = r.owned === true;
                 return (
                   <button
                     key={r.externalId}

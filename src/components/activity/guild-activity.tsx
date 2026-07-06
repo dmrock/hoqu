@@ -1,4 +1,5 @@
-import { loadGuildActivity, loadOwnedExternalIds } from "@/lib/activity-queries";
+import { loadGuildActivity } from "@/lib/activity-queries";
+import { filterOwnedByHobby } from "@/lib/owned-items";
 import { ActivityFeed } from "./activity-feed";
 
 export async function GuildActivity({
@@ -10,10 +11,8 @@ export async function GuildActivity({
   viewerId: string;
   includeSelf: boolean;
 }) {
-  const [data, ownedByHobby] = await Promise.all([
-    loadGuildActivity(guildId, viewerId, includeSelf),
-    loadOwnedExternalIds(viewerId, ["movies", "tv", "games", "books"]),
-  ]);
+  const data = await loadGuildActivity(guildId, viewerId, includeSelf);
+  const ownedByHobby = await filterOwnedByHobby(viewerId, data);
   return (
     <ActivityFeed
       data={data}

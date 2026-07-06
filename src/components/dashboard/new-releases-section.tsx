@@ -1,12 +1,18 @@
 import { getRecentGames } from "@/lib/api/rawg";
 import { getNowPlayingMovies, getOnTheAirTvShows } from "@/lib/api/tmdb";
+import { filterOwnedExternalIds } from "@/lib/owned-items";
 import { NewReleasesRow } from "./new-releases-row";
 
-export async function MoviesNewReleases({ ownedExternalIds }: { ownedExternalIds: string[] }) {
+export async function MoviesNewReleases({ viewerId }: { viewerId: string }) {
   const items = await getNowPlayingMovies().catch((err) => {
     console.error("getNowPlayingMovies failed", err);
     return [];
   });
+  const ownedExternalIds = await filterOwnedExternalIds(
+    viewerId,
+    "movies",
+    items.map((i) => i.externalId),
+  );
   return (
     <NewReleasesRow
       title="Now in theaters"
@@ -18,11 +24,16 @@ export async function MoviesNewReleases({ ownedExternalIds }: { ownedExternalIds
   );
 }
 
-export async function TvNewReleases({ ownedExternalIds }: { ownedExternalIds: string[] }) {
+export async function TvNewReleases({ viewerId }: { viewerId: string }) {
   const items = await getOnTheAirTvShows().catch((err) => {
     console.error("getOnTheAirTvShows failed", err);
     return [];
   });
+  const ownedExternalIds = await filterOwnedExternalIds(
+    viewerId,
+    "tv",
+    items.map((i) => i.externalId),
+  );
   return (
     <NewReleasesRow
       title="New episodes"
@@ -34,11 +45,16 @@ export async function TvNewReleases({ ownedExternalIds }: { ownedExternalIds: st
   );
 }
 
-export async function GamesNewReleases({ ownedExternalIds }: { ownedExternalIds: string[] }) {
+export async function GamesNewReleases({ viewerId }: { viewerId: string }) {
   const items = await getRecentGames().catch((err) => {
     console.error("getRecentGames failed", err);
     return [];
   });
+  const ownedExternalIds = await filterOwnedExternalIds(
+    viewerId,
+    "games",
+    items.map((i) => i.externalId),
+  );
   return (
     <NewReleasesRow
       title="Just launched"

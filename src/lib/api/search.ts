@@ -6,6 +6,8 @@ export type SearchResult = {
   year: number | null;
   imageUrl: string | null;
   externalRating: number | null;
+  /** Set by the search API route: the signed-in user already owns this item. */
+  owned?: boolean;
 };
 
 export const searchQuerySchema = z.object({

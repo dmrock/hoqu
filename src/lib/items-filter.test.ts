@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { parseItemsFilter } from "./items-filter";
+import {
+  ITEMS_PAGE_SIZE,
+  pageCount,
+  pageForRank,
+  parseItemsFilter,
+  parsePageParam,
+} from "./items-filter";
 
 describe("parseItemsFilter", () => {
   it("defaults to all statuses, no revisit filter, recently-updated sort", () => {
@@ -43,5 +49,43 @@ describe("parseItemsFilter", () => {
   it("falls back to updated-desc for an invalid sort", () => {
     expect(parseItemsFilter({ sort: "bogus" }).sort).toBe("updated-desc");
     expect(parseItemsFilter({ sort: ["title-asc"] }).sort).toBe("updated-desc");
+  });
+});
+
+describe("parsePageParam", () => {
+  it("parses a positive integer page", () => {
+    expect(parsePageParam({ page: "3" })).toBe(3);
+  });
+
+  it("defaults to 1 when missing, non-numeric, fractional, zero, or negative", () => {
+    expect(parsePageParam({})).toBe(1);
+    expect(parsePageParam({ page: "abc" })).toBe(1);
+    expect(parsePageParam({ page: "2abc" })).toBe(1);
+    expect(parsePageParam({ page: "1.5" })).toBe(1);
+    expect(parsePageParam({ page: "0" })).toBe(1);
+    expect(parsePageParam({ page: "-2" })).toBe(1);
+    expect(parsePageParam({ page: ["2", "3"] })).toBe(1);
+  });
+});
+
+describe("pageCount", () => {
+  it("is 1 for an empty or partial first page", () => {
+    expect(pageCount(0)).toBe(1);
+    expect(pageCount(1)).toBe(1);
+    expect(pageCount(ITEMS_PAGE_SIZE)).toBe(1);
+  });
+
+  it("rounds up past exact page boundaries", () => {
+    expect(pageCount(ITEMS_PAGE_SIZE + 1)).toBe(2);
+    expect(pageCount(ITEMS_PAGE_SIZE * 3)).toBe(3);
+  });
+});
+
+describe("pageForRank", () => {
+  it("maps 1-based ranks onto pages", () => {
+    expect(pageForRank(1)).toBe(1);
+    expect(pageForRank(ITEMS_PAGE_SIZE)).toBe(1);
+    expect(pageForRank(ITEMS_PAGE_SIZE + 1)).toBe(2);
+    expect(pageForRank(ITEMS_PAGE_SIZE * 2 + 1)).toBe(3);
   });
 });

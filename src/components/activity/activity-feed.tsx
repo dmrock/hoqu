@@ -106,7 +106,6 @@ function TrendingRow({
       {addable ? (
         <AddItemDialog
           hobbySlug={hobbySlug}
-          existingExternalIds={ownedExternalIds ?? []}
           initialSelection={selected ? toSearchResult(selected) : null}
           defaultStatus="planned"
           open={open}
