@@ -8,7 +8,7 @@ import { db } from "@/lib/db";
 import { accounts, users, verificationTokens } from "@/lib/db/schema";
 import { authConfig } from "./config";
 import { verifyPassword } from "./password";
-import { generateUniqueUsername, slugifyEmail } from "./username";
+import { slugifyEmail, withUniqueUsername } from "./username";
 
 const credentialsSchema = z.object({
   // Lowercased to match registration, which normalizes emails on write.
@@ -27,10 +27,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   events: {
     createUser: async ({ user }) => {
       if (!user.id || !user.email) return;
-      const base = slugifyEmail(user.email);
-      const username = await generateUniqueUsername(base);
-      const displayName = user.name ?? user.email.split("@")[0] ?? "user";
-      await db.update(users).set({ username, name: displayName }).where(eq(users.id, user.id));
+      const { id, email } = user;
+      const displayName = user.name ?? email.split("@")[0] ?? "user";
+      await withUniqueUsername(slugifyEmail(email), (username) =>
+        db.update(users).set({ username, name: displayName }).where(eq(users.id, id)),
+      );
     },
     // Auth.js creates OAuth users with emailVerified null regardless of what the
     // provider profile says, so mirror Google's own verification here. Running on

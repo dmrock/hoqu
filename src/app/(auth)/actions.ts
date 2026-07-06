@@ -8,9 +8,10 @@ import { z } from "zod";
 import { signIn } from "@/lib/auth";
 import { hashPassword } from "@/lib/auth/password";
 import { consumeToken, issueToken } from "@/lib/auth/tokens";
-import { generateUniqueUsername, slugifyEmail } from "@/lib/auth/username";
+import { slugifyEmail, withUniqueUsername } from "@/lib/auth/username";
 import { sendVerificationLink } from "@/lib/auth/verification";
 import { db } from "@/lib/db";
+import { isUniqueViolation } from "@/lib/db/errors";
 import { users } from "@/lib/db/schema";
 import { sendPasswordResetEmail } from "@/lib/email/send";
 import { checkAuthLimit, checkPasswordResetEmailLimit } from "@/lib/rate-limit";
@@ -71,16 +72,24 @@ export async function registerAction(_prev: ActionState, formData: FormData): Pr
 
   const emailLocal = email.split("@")[0] ?? "user";
   const passwordHash = await hashPassword(password);
-  const username = await generateUniqueUsername(slugifyEmail(email));
-  const [created] = await db
-    .insert(users)
-    .values({
-      email,
-      name: emailLocal,
-      username,
-      passwordHash,
-    })
-    .returning({ id: users.id });
+
+  let created: { id: string } | undefined;
+  try {
+    created = await withUniqueUsername(slugifyEmail(email), async (username) => {
+      const [row] = await db
+        .insert(users)
+        .values({ email, name: emailLocal, username, passwordHash })
+        .returning({ id: users.id });
+      return row;
+    });
+  } catch (err) {
+    // The pre-check above can't see a concurrent signup, so the unique
+    // constraint is the real arbiter — map it to the same friendly error.
+    if (isUniqueViolation(err, "users_email_unique")) {
+      return { error: "An account with this email already exists", email: raw.email };
+    }
+    throw err;
+  }
 
   // Verification is best-effort: the account exists either way, and the banner's
   // resend button covers a failed send — so never block signup on it.
