@@ -43,11 +43,13 @@ vi.mock("@/lib/rate-limit", () => ({
   checkAddItemLimit: vi.fn(async () => ({ ok: true as const, slotsLeft: 50 })),
   checkAuthLimit: vi.fn(async () => ({ ok: true as const, resetAt: null })),
   checkPasswordResetEmailLimit: vi.fn(async () => ({ ok: true as const, resetAt: null })),
+  checkVerifyResendLimit: vi.fn(async () => ({ ok: true as const, resetAt: null })),
 }));
 
 vi.mock("@/lib/email/send", () => ({
   sendPasswordResetEmail: vi.fn(async () => true),
   sendEmailChangeEmail: vi.fn(async () => true),
+  sendVerificationEmail: vi.fn(async () => true),
 }));
 
 vi.mock("next/cache", async () => {

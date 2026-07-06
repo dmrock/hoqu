@@ -51,8 +51,8 @@ sprites, responsive sweep) is intentionally deferred — see `MEMORY.md`.
     Pure types/constants live in a sibling file with no DB imports — see
     `src/lib/leaderboards.ts` (pure) vs `src/lib/leaderboard-queries.ts` (DB).
 12. **Public vs. authed routes** (`src/proxy.ts`): `/`, `/features`, `/privacy`, `/terms`,
-    `/forgot-password`, `/reset-password`, and `/confirm-email` are public (the last three
-    are token-authorized recovery pages reachable while signed out). Every other
+    `/forgot-password`, `/reset-password`, `/confirm-email`, and `/verify-email` are public
+    (the last four are token-authorized recovery pages reachable while signed out). Every other
     non-`/login`/`/register` path requires a session and bounces unauthed users to
     `/login?from=…`. Authed users on `/`, `/login`, or `/register` get redirected to
     `/dashboard` so the landing/auth screens never render once signed in.
@@ -118,9 +118,9 @@ Source of truth: `src/lib/db/schema.ts`. The shapes below are summaries.
   (master/officer/member).
 - **achievements** — definition rows with `requirement: jsonb`. **user_achievements** records
   unlocks. Categories: general / movies / tv / games / books / social.
-- **auth_tokens** — single-use tokens for password reset + email change. Stores the
-  **SHA-256 hash** of the token (never the raw value), `purpose` enum, optional `newEmail`
-  (email_change only), `expiresAt`. Cascades on user delete. Helpers in
+- **auth_tokens** — single-use tokens for password reset, email change + signup email
+  verification. Stores the **SHA-256 hash** of the token (never the raw value), `purpose`
+  enum, optional `newEmail` (email_change only), `expiresAt`. Cascades on user delete. Helpers in
   `src/lib/auth/tokens.ts` (`issueToken`/`consumeToken`); pure hash/generate split into
   `tokens-crypto.ts` so they're unit-testable.
 
@@ -226,6 +226,13 @@ Self-service auth lives in `src/app/(main)/settings/` (authed) and the recovery 
 - **Change email** — verify-new-address flow: `requestEmailChangeAction` (credentials users
   only) emails a `/confirm-email?token=` link to the **new** address; the switch happens in
   `confirmEmailChangeAction` (token-authorized, not session-gated, with a uniqueness re-check).
+- **Verify email (signup)** — `registerAction` sends a 24-hour `/verify-email?token=` link
+  (best-effort — never blocks signup, and login is never gated on verification). Signed-in
+  users with `emailVerified` null get a dismissable-per-session banner in the (main) layout
+  with a resend action (3/hour per user, fail-open, `checkVerifyResendLimit`). Google
+  sign-ins get `emailVerified` stamped by the Auth.js `signIn` event — the adapter leaves it
+  null even for OAuth. Existing credentials users were left null on purpose (no backfill);
+  they verify via the banner.
 - **Delete account** — confirmed by typing the exact username. Resolves guild mastership
   first (promote senior member, or delete a sole-member guild) so no guild is orphaned, then
   deletes the user row — FK cascades clear items, friendships, memberships, achievements,
@@ -299,7 +306,8 @@ Source of truth is the actual repo. High-level shape:
 ```
 src/
 ├── app/page.tsx                        Public landing (`/`); authed users get bounced to /dashboard
-├── app/(auth)/                         Login, register, forgot/reset password, confirm-email
+├── app/(auth)/                         Login, register, forgot/reset password, confirm-email,
+│   │                                   verify-email
 │   │                                   (public; group layout sets robots noindex)
 ├── app/(main)/                         Authenticated routes (sidebar layout)
 │   ├── dashboard/

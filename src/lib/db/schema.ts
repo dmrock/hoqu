@@ -47,7 +47,11 @@ export const achievementCategoryEnum = pgEnum("achievement_category", [
   "social",
 ]);
 
-export const tokenPurposeEnum = pgEnum("token_purpose", ["password_reset", "email_change"]);
+export const tokenPurposeEnum = pgEnum("token_purpose", [
+  "password_reset",
+  "email_change",
+  "email_verify",
+]);
 
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),

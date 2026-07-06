@@ -39,6 +39,18 @@ export function sendPasswordResetEmail(to: string, url: string): Promise<boolean
   });
 }
 
+export function sendVerificationEmail(to: string, url: string): Promise<boolean> {
+  return sendEmail({
+    to,
+    subject: "Verify your HOQU email",
+    html: layout(
+      "Verify your email",
+      "Welcome to HOQU! Click below to confirm this address belongs to you. This link expires in 24 hours and can be used once. If you didn't create an account, you can ignore this email.",
+      { href: url, label: "Verify email" },
+    ),
+  });
+}
+
 export function sendEmailChangeEmail(to: string, url: string): Promise<boolean> {
   return sendEmail({
     to,

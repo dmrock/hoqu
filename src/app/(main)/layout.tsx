@@ -4,6 +4,7 @@ import { UnlockToaster } from "@/components/achievements/unlock-toaster";
 import { DataAttribution } from "@/components/layout/data-attribution";
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
+import { VerifyEmailBanner } from "@/components/layout/verify-email-banner";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
@@ -18,7 +19,12 @@ export default async function MainLayout({ children }: { children: React.ReactNo
   // link in sync if the username (or display name / image) changes.
   const [[profile], pendingRequests] = await Promise.all([
     db
-      .select({ name: users.name, image: users.image, username: users.username })
+      .select({
+        name: users.name,
+        image: users.image,
+        username: users.username,
+        emailVerified: users.emailVerified,
+      })
       .from(users)
       .where(eq(users.id, session.user.id))
       .limit(1),
@@ -37,6 +43,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
       <Sidebar {...userProps} pendingRequests={pendingRequests} />
       <div className="flex min-w-0 flex-1 flex-col">
         <Header {...userProps} pendingRequests={pendingRequests} />
+        {profile && !profile.emailVerified ? <VerifyEmailBanner email={userProps.email} /> : null}
         <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 md:px-6">{children}</main>
         <footer className="mx-auto w-full max-w-7xl px-4 pb-6 md:px-6">
           <DataAttribution />

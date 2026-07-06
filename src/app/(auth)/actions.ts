@@ -9,6 +9,7 @@ import { signIn } from "@/lib/auth";
 import { hashPassword } from "@/lib/auth/password";
 import { consumeToken, issueToken } from "@/lib/auth/tokens";
 import { generateUniqueUsername, slugifyEmail } from "@/lib/auth/username";
+import { sendVerificationLink } from "@/lib/auth/verification";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { sendPasswordResetEmail } from "@/lib/email/send";
@@ -71,12 +72,25 @@ export async function registerAction(_prev: ActionState, formData: FormData): Pr
   const emailLocal = email.split("@")[0] ?? "user";
   const passwordHash = await hashPassword(password);
   const username = await generateUniqueUsername(slugifyEmail(email));
-  await db.insert(users).values({
-    email,
-    name: emailLocal,
-    username,
-    passwordHash,
-  });
+  const [created] = await db
+    .insert(users)
+    .values({
+      email,
+      name: emailLocal,
+      username,
+      passwordHash,
+    })
+    .returning({ id: users.id });
+
+  // Verification is best-effort: the account exists either way, and the banner's
+  // resend button covers a failed send — so never block signup on it.
+  if (created) {
+    try {
+      await sendVerificationLink(created.id, email, originFrom(await headers()));
+    } catch (err) {
+      console.error("verification email failed at signup", err);
+    }
+  }
 
   try {
     await signIn("credentials", { email, password, redirect: false });
@@ -195,6 +209,26 @@ export async function resetPasswordAction(
   // the reset — acceptable for a hobby app; the password itself is now changed.
   const passwordHash = await hashPassword(parsed.data.password);
   await db.update(users).set({ passwordHash }).where(eq(users.id, consumed.userId));
+
+  return { ok: true };
+}
+
+export type VerifyEmailState = { ok: true } | { ok: false; error: string };
+
+/**
+ * Mark the account's email verified. Token-authorized rather than session-gated
+ * so the link works on a device that isn't signed in (same as confirm-email).
+ */
+export async function verifyEmailAction(token: string): Promise<VerifyEmailState> {
+  const consumed = await consumeToken(token, "email_verify");
+  if (!consumed) {
+    return { ok: false, error: "This verification link is invalid or has expired." };
+  }
+
+  await db
+    .update(users)
+    .set({ emailVerified: new Date(), updatedAt: new Date() })
+    .where(eq(users.id, consumed.userId));
 
   return { ok: true };
 }

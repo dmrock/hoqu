@@ -1,0 +1,1 @@
+ALTER TYPE "public"."token_purpose" ADD VALUE 'email_verify';
