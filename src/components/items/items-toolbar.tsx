@@ -27,6 +27,8 @@ export function ItemsToolbar({ filter }: { filter: ItemsFilter }) {
     (mutate: (params: URLSearchParams) => void) => {
       const params = new URLSearchParams(searchParams.toString());
       mutate(params);
+      // Any filter/sort change reshuffles the row set, so restart at page 1.
+      params.delete("page");
       const qs = params.toString();
       startTransition(() => {
         router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });

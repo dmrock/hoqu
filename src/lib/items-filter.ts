@@ -32,6 +32,27 @@ export type ItemsFilter = {
   sort: SortValue;
 };
 
+/** Top-level rows per hobby page; keeps the RSC payload/DOM size flat. */
+export const ITEMS_PAGE_SIZE = 50;
+
+export function parsePageParam(searchParams: {
+  [key: string]: string | string[] | undefined;
+}): number {
+  const raw = searchParams.page;
+  if (typeof raw !== "string") return 1;
+  const n = Number(raw);
+  return Number.isInteger(n) && n >= 1 ? n : 1;
+}
+
+export function pageCount(totalRows: number): number {
+  return Math.max(1, Math.ceil(totalRows / ITEMS_PAGE_SIZE));
+}
+
+/** Page containing the row at 1-based `rank` in the filtered ordering. */
+export function pageForRank(rank: number): number {
+  return Math.floor((rank - 1) / ITEMS_PAGE_SIZE) + 1;
+}
+
 export function parseItemsFilter(searchParams: {
   [key: string]: string | string[] | undefined;
 }): ItemsFilter {
