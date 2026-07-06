@@ -163,6 +163,23 @@ extend.
 - TTL 15 minutes.
 - Cache reads and writes wrap `try/catch` and never block the actual search request.
 
+## Hobby Page Pagination
+
+Hobby pages render 50 top-level rows per page (`ITEMS_PAGE_SIZE` in `src/lib/items-filter.ts`),
+driven by `?page=`, so payload/DOM stay flat as collections grow.
+
+- Two cheap counts (filtered + unfiltered) pick the empty state ("no items yet" vs "no
+  matches"), size the pager, and clamp out-of-range pages.
+- Every sort order ends on a stable `id` tiebreaker so LIMIT/OFFSET pages never shuffle ties.
+- A `?focus=` deep link (Cmd+K palette) resolves the row's page server-side (`row_number()`
+  window) and redirects to `?page=N&focus=…`, so `RowFocus`'s focus-param cleanup keeps the
+  user on that page.
+- Filter/sort changes in `ItemsToolbar` drop `?page=` (back to page 1).
+- Ownership of external items is never shipped wholesale: search proxies annotate each result
+  with `owned` for the signed-in user, and dashboards/feeds check only the displayed ids via
+  `filterOwnedExternalIds` (`src/lib/owned-items.ts`). It's a UX badge only — `addItem`
+  rejects duplicates server-side.
+
 ## Achievements
 
 `src/lib/achievements.ts` — registry-style evaluator keyed by `requirement.type`:
@@ -256,7 +273,8 @@ All external calls go through server-side proxies that protect API keys.
   `{ key, title, first_publish_year, cover_i }`. `externalRating` is null.
 
 Search behavior: client debounces 300ms, hits the proxy, the proxy `cachedSearch`-wraps the
-fetcher (15-min Redis TTL).
+fetcher (15-min Redis TTL), then annotates each result with `owned` for the signed-in user
+(after the cache — results are shared across users; fails open).
 
 Cross-tab safety: each hobby tab's add dialog calls only its own `/api/search/{hobby}` route,
 and the server action validates `hobbySlug` against the enum, so cross-adding is impossible.
