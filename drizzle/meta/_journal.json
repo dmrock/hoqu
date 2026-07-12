@@ -85,6 +85,13 @@
       "when": 1783286343843,
       "tag": "0011_email-verify-token-purpose",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1783871167571,
+      "tag": "0012_zippy_midnight",
+      "breakpoints": true
     }
   ]
 }

@@ -1,5 +1,5 @@
 import { and, eq } from "drizzle-orm";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   acceptFriendRequest,
   cancelFriendRequest,
@@ -8,8 +8,10 @@ import {
   sendFriendRequest,
 } from "@/app/(main)/friends/actions";
 import { db } from "@/lib/db";
+import { isUniqueViolation } from "@/lib/db/errors";
 import { friendships } from "@/lib/db/schema";
 import { countIncomingRequests } from "@/lib/friendships";
+import { checkFriendRequestLimit } from "@/lib/rate-limit";
 import { setTestUserId } from "./helpers/auth-mock";
 import { createTestUser } from "./helpers/db-helpers";
 
@@ -65,6 +67,58 @@ describe("sendFriendRequest", () => {
     setTestUserId(bob.id);
     const dupReverse = await sendFriendRequest({ username: alice.username });
     expect(dupReverse.ok).toBe(false);
+  });
+
+  it("rejects and inserts nothing when the sender is rate-limited", async () => {
+    const alice = await createTestUser();
+    const bob = await createTestUser();
+    setTestUserId(alice.id);
+
+    vi.mocked(checkFriendRequestLimit).mockResolvedValueOnce({
+      ok: false,
+      resetAt: Date.now() + 5 * 60_000,
+    });
+    const result = await sendFriendRequest({ username: bob.username });
+    expect(result).toEqual({
+      ok: false,
+      error: "Take a breather — you've hit the friend request limit. Back in ~5 min.",
+    });
+    expect(checkFriendRequestLimit).toHaveBeenCalledWith(alice.id);
+    expect(await loadFriendship(alice.id, bob.id)).toBeUndefined();
+  });
+
+  it("drops the reset estimate when the limiter has none", async () => {
+    const alice = await createTestUser();
+    const bob = await createTestUser();
+    setTestUserId(alice.id);
+
+    vi.mocked(checkFriendRequestLimit).mockResolvedValueOnce({ ok: false, resetAt: null });
+    const result = await sendFriendRequest({ username: bob.username });
+    expect(result).toEqual({
+      ok: false,
+      error: "Take a breather — you've hit the friend request limit.",
+    });
+  });
+
+  // The check-then-insert race (double-click, simultaneous A→B and B→A)
+  // surfaces as this driver error on the insert; assert the real shape so the
+  // catch in sendFriendRequest stays honest.
+  it("recognizes the driver error when an insert races past the pre-check", async () => {
+    const alice = await createTestUser();
+    const bob = await createTestUser();
+    await db
+      .insert(friendships)
+      .values({ requesterId: alice.id, addresseeId: bob.id, status: "pending" });
+
+    const err = await db
+      .insert(friendships)
+      .values({ requesterId: bob.id, addresseeId: alice.id, status: "pending" })
+      .then(
+        () => null,
+        (e: unknown) => e,
+      );
+
+    expect(isUniqueViolation(err, "friendships_pair_unique")).toBe(true);
   });
 });
 

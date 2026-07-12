@@ -15,6 +15,7 @@ import { isUniqueViolation } from "@/lib/db/errors";
 import { users } from "@/lib/db/schema";
 import { sendPasswordResetEmail } from "@/lib/email/send";
 import { checkAuthLimit, checkPasswordResetEmailLimit } from "@/lib/rate-limit";
+import { minutesUntilReset } from "@/lib/rate-limit-format";
 import { clientIpFrom } from "@/lib/request-ip";
 import { originFrom } from "@/lib/request-url";
 
@@ -35,7 +36,7 @@ const loginSchema = z.object({
 });
 
 function tooManyAttempts(resetAt: number | null): string {
-  const minutes = resetAt ? Math.max(1, Math.ceil((resetAt - Date.now()) / 60_000)) : null;
+  const minutes = minutesUntilReset(resetAt);
   return minutes
     ? `Too many attempts — try again in ~${minutes} min.`
     : "Too many attempts — try again later.";
