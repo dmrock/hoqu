@@ -112,7 +112,10 @@ Source of truth: `src/lib/db/schema.ts`. The shapes below are summaries.
   show-parent rows.
 - **friendships** — `requesterId`, `addresseeId`, `status` (pending/accepted/declined). We
   delete on decline/cancel/remove rather than write `declined`; the column exists for future
-  semantics.
+  semantics. A unique expression index (`friendships_pair_unique` on
+  `least(requesterId, addresseeId), greatest(…)`) enforces one row per user pair regardless
+  of direction; `sendFriendRequest` maps the unique violation from its check-then-insert
+  race to the friendly "already pending" error.
 - **guilds** — `name` (unique), `description`, `inviteCode` (unique 8-char, ambiguous chars
   stripped), `discordInviteUrl`, `maxMembers` (default 50). **guild_members** with role
   (master/officer/member).
@@ -154,6 +157,12 @@ extend.
 - Hard block when exhausted with a "back in ~X min" message.
 - **Fails open** — Redis unreachable returns `{ ok: true }` with full quota; anti-spam, not
   security.
+
+Friend requests: **20 / hour** per sender (`checkFriendRequestLimit`), checked before any DB
+work in `sendFriendRequest` — the slot is spent even when the target username doesn't exist,
+so bulk username probing costs quota too. Same fail-open + dev-skip posture as the auth
+limits. `minutesUntilReset` (`src/lib/rate-limit-format.ts`, pure) turns a limiter `resetAt`
+into the "~X min" copy everywhere.
 
 ## Search Cache (Upstash Redis)
 
