@@ -5,7 +5,10 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { isUniqueViolation } from "@/lib/db/errors";
 import { friendships, users } from "@/lib/db/schema";
+import { checkFriendRequestLimit } from "@/lib/rate-limit";
+import { minutesUntilReset } from "@/lib/rate-limit-format";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -31,6 +34,17 @@ export async function sendFriendRequest(input: { username: string }): Promise<Ac
   const userId = session.userId;
   const target = parsed.data.username;
 
+  // Before any DB work — the slot is spent even on "no such user", so bulk
+  // username probing costs quota too.
+  const limit = await checkFriendRequestLimit(userId);
+  if (!limit.ok) {
+    const minutes = minutesUntilReset(limit.resetAt);
+    const error = minutes
+      ? `Take a breather — you've hit the friend request limit. Back in ~${minutes} min.`
+      : "Take a breather — you've hit the friend request limit.";
+    return { ok: false, error };
+  }
+
   const [other] = await db
     .select({ id: users.id })
     .from(users)
@@ -54,11 +68,21 @@ export async function sendFriendRequest(input: { username: string }): Promise<Ac
     if (existing.status === "pending") return { ok: false, error: "Request already pending" };
   }
 
-  await db.insert(friendships).values({
-    requesterId: userId,
-    addresseeId: other.id,
-    status: "pending",
-  });
+  // The pre-check above can't see a row inserted between it and this insert
+  // (double-click, or simultaneous A→B and B→A). The pair unique index makes
+  // the loser surface here; map it to the same error the pre-check would give.
+  try {
+    await db.insert(friendships).values({
+      requesterId: userId,
+      addresseeId: other.id,
+      status: "pending",
+    });
+  } catch (err) {
+    if (isUniqueViolation(err, "friendships_pair_unique")) {
+      return { ok: false, error: "Request already pending" };
+    }
+    throw err;
+  }
 
   revalidatePath("/friends");
   revalidatePath(`/profile/${target}`);

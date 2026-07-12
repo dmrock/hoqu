@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   type AnyPgColumn,
   boolean,
@@ -11,6 +12,7 @@ import {
   text,
   timestamp,
   unique,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 
@@ -169,6 +171,13 @@ export const friendships = pgTable(
   (t) => [
     index("friendships_requester_idx").on(t.requesterId),
     index("friendships_addressee_idx").on(t.addresseeId),
+    // One row per user pair regardless of direction — the app treats A→B and
+    // B→A as the same relationship, so the check-then-insert in
+    // sendFriendRequest can't race into duplicates.
+    uniqueIndex("friendships_pair_unique").on(
+      sql`least(${t.requesterId}, ${t.addresseeId})`,
+      sql`greatest(${t.requesterId}, ${t.addresseeId})`,
+    ),
   ],
 );
 

@@ -16,6 +16,7 @@ import {
   snapshotPoints,
 } from "@/lib/points";
 import { checkAddItemLimit } from "@/lib/rate-limit";
+import { minutesUntilReset } from "@/lib/rate-limit-format";
 
 const TMDB_IMAGE_URL = "https://image.tmdb.org/t/p/w342";
 
@@ -170,9 +171,7 @@ export async function addItem(input: AddItemInput): Promise<AddItemResult> {
 
   const limit = await checkAddItemLimit(userId);
   if (!limit.ok) {
-    const minutes = limit.resetAt
-      ? Math.max(1, Math.ceil((limit.resetAt - Date.now()) / 60_000))
-      : null;
+    const minutes = minutesUntilReset(limit.resetAt);
     const error = minutes
       ? `Take a breather — you've hit the add limit. Back in ~${minutes} min.`
       : "Take a breather — you've hit the add limit.";

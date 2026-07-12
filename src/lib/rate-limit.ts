@@ -8,6 +8,7 @@ const REGISTER_PER_IP = 10;
 const FORGOT_PER_IP = 5;
 const FORGOT_PER_EMAIL = 3;
 const VERIFY_RESEND_PER_USER = 3;
+const FRIEND_REQUESTS_PER_USER = 20;
 
 const addItemHourly = new Ratelimit({
   redis,
@@ -58,11 +59,34 @@ const verifyResendPerUser = new Ratelimit({
   analytics: false,
 });
 
+const friendRequestPerUser = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(FRIEND_REQUESTS_PER_USER, "1 h"),
+  prefix: "ratelimit:friends:request",
+  analytics: false,
+});
+
 export type AuthLimitResult = {
   ok: boolean;
   /** Epoch ms when the window resets (only meaningful when ok=false). */
   resetAt: number | null;
 };
+
+/**
+ * Consume one slot from a single sliding window. Skipped in development —
+ * local dev and the e2e suite would trip the windows. Fails open on Redis
+ * errors: these limits slow abuse, they are not a lockout mechanism.
+ */
+async function checkWindow(limiter: Ratelimit, key: string): Promise<AuthLimitResult> {
+  if (process.env.NODE_ENV === "development") return { ok: true, resetAt: null };
+  try {
+    const result = await limiter.limit(key);
+    return { ok: result.success, resetAt: result.success ? null : result.reset };
+  } catch (err) {
+    console.error("rate limit check failed (failing open)", err);
+    return { ok: true, resetAt: null };
+  }
+}
 
 const authLimiters = {
   login: loginPerIp,
@@ -72,56 +96,40 @@ const authLimiters = {
 
 /**
  * Per-IP sliding windows on the credentials auth actions: login 20 / 10 min,
- * register 10 / hour, forgot-password 5 / hour. Skipped in development — local
- * dev and the e2e suite both hit the server from 127.0.0.1 and would trip the
- * windows. Fails open like the add-item limits: this slows credential stuffing
- * and signup spam, it is not a lockout mechanism.
+ * register 10 / hour, forgot-password 5 / hour.
  */
 export async function checkAuthLimit(
   kind: keyof typeof authLimiters,
   ip: string,
 ): Promise<AuthLimitResult> {
-  if (process.env.NODE_ENV === "development") return { ok: true, resetAt: null };
-  try {
-    const result = await authLimiters[kind].limit(ip);
-    return { ok: result.success, resetAt: result.success ? null : result.reset };
-  } catch (err) {
-    console.error("auth rate limit check failed (failing open)", err);
-    return { ok: true, resetAt: null };
-  }
+  return checkWindow(authLimiters[kind], ip);
 }
 
 /**
  * Per-mailbox window on password-reset requests (3 / hour), keyed by the target
  * email rather than the requester's IP — stops someone bombing one inbox with
- * reset emails from rotating IPs. Same dev-skip + fail-open posture as the
- * per-IP limits.
+ * reset emails from rotating IPs.
  */
 export async function checkPasswordResetEmailLimit(email: string): Promise<AuthLimitResult> {
-  if (process.env.NODE_ENV === "development") return { ok: true, resetAt: null };
-  try {
-    const result = await forgotPerEmail.limit(email);
-    return { ok: result.success, resetAt: result.success ? null : result.reset };
-  } catch (err) {
-    console.error("auth rate limit check failed (failing open)", err);
-    return { ok: true, resetAt: null };
-  }
+  return checkWindow(forgotPerEmail, email);
 }
 
 /**
  * Per-user window on verification-email resends (3 / hour) — the banner button
- * would otherwise let a signed-in user relay spam through our sender. Same
- * dev-skip + fail-open posture as the other auth limits.
+ * would otherwise let a signed-in user relay spam through our sender.
  */
 export async function checkVerifyResendLimit(userId: string): Promise<AuthLimitResult> {
-  if (process.env.NODE_ENV === "development") return { ok: true, resetAt: null };
-  try {
-    const result = await verifyResendPerUser.limit(userId);
-    return { ok: result.success, resetAt: result.success ? null : result.reset };
-  } catch (err) {
-    console.error("auth rate limit check failed (failing open)", err);
-    return { ok: true, resetAt: null };
-  }
+  return checkWindow(verifyResendPerUser, userId);
+}
+
+/**
+ * Per-sender window on friend requests (20 / hour) — caps how fast one user
+ * can fill strangers' pending lists, and makes probing for valid usernames
+ * through the "No user with that username" error expensive. The slot is
+ * consumed whether or not the target exists.
+ */
+export async function checkFriendRequestLimit(userId: string): Promise<AuthLimitResult> {
+  return checkWindow(friendRequestPerUser, userId);
 }
 
 export type AddItemLimitResult = {

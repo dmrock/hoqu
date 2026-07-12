@@ -44,6 +44,7 @@ vi.mock("@/lib/rate-limit", () => ({
   checkAuthLimit: vi.fn(async () => ({ ok: true as const, resetAt: null })),
   checkPasswordResetEmailLimit: vi.fn(async () => ({ ok: true as const, resetAt: null })),
   checkVerifyResendLimit: vi.fn(async () => ({ ok: true as const, resetAt: null })),
+  checkFriendRequestLimit: vi.fn(async () => ({ ok: true as const, resetAt: null })),
 }));
 
 vi.mock("@/lib/email/send", () => ({
