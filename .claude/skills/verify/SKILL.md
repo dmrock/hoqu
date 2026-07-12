@@ -26,9 +26,11 @@ AUTH_TRUST_HOST=true node_modules/.bin/next start -p 3101   # trustHost isn't se
 ## Test users without sending email
 
 Registering through the UI emails the address via Resend — don't register fake users through
-the form. Insert users directly (bcryptjs, cost 10) into the e2e branch and log in through
-`/login`; login sends nothing. The e2e DB is truncated at the start of every `playwright test`
-and integration run, so leftover rows are fine.
+the form when the server runs with `.env.local`'s real `RESEND_API_KEY` (the Playwright e2e
+server is safe: `playwright.config.ts` blanks the key in `webServer.env`, and the integration
+suite mocks `@/lib/email/send`). Insert users directly (bcryptjs, cost 10) into the e2e branch
+and log in through `/login`; login sends nothing. The e2e DB is truncated at the start of
+every `playwright test` and integration run, so leftover rows are fine.
 
 ## Driving
 

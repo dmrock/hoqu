@@ -22,6 +22,7 @@ import {
 import { sendEmailChangeEmail } from "@/lib/email/send";
 import type { DataExport } from "@/lib/export";
 import { checkVerifyResendLimit } from "@/lib/rate-limit";
+import { minutesUntilReset } from "@/lib/rate-limit-format";
 import { originFrom } from "@/lib/request-url";
 
 const EMAIL_CHANGE_TTL_MINUTES = 60;
@@ -173,9 +174,7 @@ export async function resendVerificationEmailAction(): Promise<ActionResult> {
 
   const limit = await checkVerifyResendLimit(session.userId);
   if (!limit.ok) {
-    const minutes = limit.resetAt
-      ? Math.max(1, Math.ceil((limit.resetAt - Date.now()) / 60_000))
-      : null;
+    const minutes = minutesUntilReset(limit.resetAt);
     return {
       ok: false,
       error: minutes
