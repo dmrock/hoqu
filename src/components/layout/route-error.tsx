@@ -3,13 +3,12 @@
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 
-export function RouteError({
-  error,
-  reset,
-}: {
+export type RouteErrorProps = {
   error: Error & { digest?: string };
   reset: () => void;
-}) {
+};
+
+export function RouteError({ error, reset }: RouteErrorProps) {
   useEffect(() => {
     // The server log has the full error; the client only ever sees the
     // digest, so nothing sensitive reaches the UI or the browser console.

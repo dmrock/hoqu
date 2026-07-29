@@ -13,23 +13,22 @@ function setProfileVisibility(username: string, visibility: "public" | "private"
 
 test("authed 404s render the themed page instead of the stock screen", async ({ page, app }) => {
   // A private profile must be indistinguishable from a username that was
-  // never registered, so existence can't be probed. Both render the themed
-  // 404 with the same HTTP status (200: the profile loading.tsx flushes the
-  // shell before notFound() throws, so the status is already committed).
-  // workers=1 means flipping userB's visibility can't race another spec;
-  // restored in finally either way.
+  // never registered, so existence can't be probed — same themed 404, same
+  // real HTTP 404 status (the profile route has no loading.tsx, so
+  // notFound() still fires before any bytes stream and the status commits
+  // correctly). workers=1 means flipping userB's visibility can't race
+  // another spec; restored in finally either way.
   await setProfileVisibility(USER_B.username, "private");
-  let privateStatus: number | undefined;
   try {
     const privateResponse = await page.goto(`/profile/${USER_B.username}`);
-    privateStatus = privateResponse?.status();
+    expect(privateResponse?.status()).toBe(404);
     await expect(app.notFound.heading).toBeVisible();
   } finally {
     await setProfileVisibility(USER_B.username, "public");
   }
 
   const unknownResponse = await page.goto("/profile/never-registered");
-  expect(unknownResponse?.status()).toBe(privateStatus);
+  expect(unknownResponse?.status()).toBe(404);
   await expect(app.notFound.heading).toBeVisible();
 
   // A bogus authed URL falls through the (main) catch-all into the same
