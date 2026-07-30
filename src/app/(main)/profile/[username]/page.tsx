@@ -40,6 +40,11 @@ const HOBBY_META: Record<HobbySlug, { label: string; icon: LucideIcon }> = {
 
 const HOBBY_ORDER: HobbySlug[] = ["movies", "tv", "games", "books"];
 
+// Deliberately no sibling loading.tsx: a route-level loading state wraps the
+// whole page in a Suspense boundary, which flushes (and commits the HTTP
+// status to 200) before the notFound() calls below ever run. That would
+// silently turn the privacy-driven 404 below into a 200, defeating the
+// "can't tell private from nonexistent" guarantee at the status-code level.
 export default async function ProfilePage({ params }: { params: Promise<{ username: string }> }) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
