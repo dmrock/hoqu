@@ -55,8 +55,11 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
 
-  integration-e2e:
-    name: Integration + E2E tests
+  # Integration and E2E each get their OWN ephemeral Neon branch so they can run
+  # concurrently: integration truncates every user table in `beforeEach`, which
+  # would wipe the e2e users mid-suite if the two shared one branch.
+  integration:
+    name: Integration tests
     runs-on: ubuntu-latest
     env:
       AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
@@ -82,7 +85,7 @@ jobs:
           project_id: ${{ secrets.NEON_PROJECT_ID }}
           api_key: ${{ secrets.NEON_API_KEY }}
           parent_branch: production
-          branch_name: ci-${{ github.run_id }}-${{ github.run_attempt }}
+          branch_name: ci-int-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Apply migrations
         run: pnpm db:migrate
@@ -93,6 +96,48 @@ jobs:
         run: pnpm test:integration
         env:
           E2E_DATABASE_URL: ${{ steps.neon.outputs.db_url_pooled }}
+
+      - name: Delete ephemeral Neon branch
+        if: always()
+        uses: neondatabase/delete-branch-action@v3
+        with:
+          project_id: ${{ secrets.NEON_PROJECT_ID }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+          branch: ${{ steps.neon.outputs.branch_id }}
+
+  e2e:
+    name: E2E tests
+    runs-on: ubuntu-latest
+    env:
+      AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+      TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+      RAWG_API_KEY: ${{ secrets.RAWG_API_KEY }}
+      UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
+      UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Create ephemeral Neon branch
+        id: neon
+        uses: neondatabase/create-branch-action@v6
+        with:
+          project_id: ${{ secrets.NEON_PROJECT_ID }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+          parent_branch: production
+          branch_name: ci-e2e-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Apply migrations
+        run: pnpm db:migrate
+        env:
+          DATABASE_URL: ${{ steps.neon.outputs.db_url_pooled }}
 
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
