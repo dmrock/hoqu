@@ -86,8 +86,19 @@ Three layers, three commands. `pnpm test:all` runs everything.
   end-to-end against the real e2e Neon branch (reuses `E2E_DATABASE_URL`). Setup at
   [tests/integration/setup.ts](tests/integration/setup.ts) loads env, stubs `@/lib/auth`
   (no Next bundler available outside Next) and `@/lib/rate-limit`, then truncates user-data
-  + reseeds hobbies/achievements per test. Tests use `setTestUserId(id)` to drive the auth
-  gate. Runs serially against one branch (no per-file branching).
+  per test. Tests use `setTestUserId(id)` to drive the auth gate.
+  - **Files run in parallel, one database per worker.** `E2E_DATABASE_URL` names the
+    *branch*; [tests/integration/global-setup.ts](tests/integration/global-setup.ts)
+    creates `hoqu_test_w1…wN` on it (N = `INTEGRATION_WORKERS`, default 4), migrates each
+    from `drizzle/`, and seeds hobbies + achievements once. The databases are reused across
+    runs; the per-test truncate never touches hobbies/achievements.
+  - Because the schema comes from `drizzle/`, a schema change needs a generated migration
+    before integration tests see it — pushing to the branch alone is not enough (that
+    still applies to the e2e suite, which uses `neondb` directly).
+  - A worker picks its database by claiming a lock file under `node_modules/.cache/`, not
+    by Vitest's worker ids — `VITEST_POOL_ID` collides across concurrent workers once the
+    unit and integration projects share a run. See
+    [tests/integration/helpers/worker-db.ts](tests/integration/helpers/worker-db.ts).
 - **E2E tests** (Playwright): `pnpm e2e` / `pnpm e2e:headed` / `pnpm e2e:ui`. POM with
   `PageHolder` base ([e2e/pages/base.ts](e2e/pages/base.ts)) and `getByRole` preferred.
   Spawns its own Next dev server on **:3100** against the e2e Neon branch.

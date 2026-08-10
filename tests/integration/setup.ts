@@ -1,14 +1,17 @@
 import dotenv from "dotenv";
 import { sql } from "drizzle-orm";
-import { beforeAll, beforeEach, vi } from "vitest";
+import { afterAll, beforeEach, vi } from "vitest";
+import { claimWorkerSlot, releaseWorkerSlot, workerDatabaseUrl } from "./helpers/worker-db";
 
-dotenv.config({ path: ".env.local" });
-dotenv.config({ path: ".env.test.local", override: true });
+dotenv.config({ path: ".env.local", quiet: true });
+dotenv.config({ path: ".env.test.local", override: true, quiet: true });
 
 if (!process.env.E2E_DATABASE_URL) {
   throw new Error("E2E_DATABASE_URL must be set in .env.test.local");
 }
-process.env.DATABASE_URL = process.env.E2E_DATABASE_URL;
+// Point this worker at its own database (provisioned in global-setup) before
+// anything imports `db` — the connection URL is read at module load.
+process.env.DATABASE_URL = workerDatabaseUrl(process.env.E2E_DATABASE_URL, await claimWorkerSlot());
 
 // Stub @/lib/auth entirely. Importing the real module would pull in next-auth,
 // which transitively imports `next/server` and only resolves under the Next
@@ -82,7 +85,6 @@ vi.mock("@/lib/api/tmdb", async () => {
 
 // Important: import app modules AFTER mocks are registered.
 const { db } = await import("@/lib/db");
-const { runSeed } = await import("@/lib/db/seed");
 const { setTestUserId } = await import("./helpers/auth-mock");
 
 async function truncateUserData() {
@@ -101,12 +103,12 @@ async function truncateUserData() {
   `);
 }
 
-beforeAll(async () => {
-  await truncateUserData();
-  await runSeed();
-});
-
+// Hobbies and achievements are seeded once per worker database in global-setup
+// and are never truncated, so each test only needs the user-data reset.
 beforeEach(async () => {
   await truncateUserData();
   setTestUserId(null);
 });
+
+// Hand the database back so a later file can take it.
+afterAll(releaseWorkerSlot);
