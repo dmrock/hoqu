@@ -287,9 +287,11 @@ export const ACHIEVEMENTS: SeedAchievement[] = [
   },
 ];
 
-export async function runSeed(): Promise<void> {
+// `target` lets the integration harness seed each per-worker database; app code
+// and the seed CLI use the default connection.
+export async function runSeed(target: typeof db = db): Promise<void> {
   console.log("Seeding hobbies…");
-  await db
+  await target
     .insert(hobbies)
     .values(HOBBIES)
     .onConflictDoUpdate({
@@ -302,7 +304,7 @@ export async function runSeed(): Promise<void> {
     });
 
   console.log("Seeding achievements…");
-  await db
+  await target
     .insert(achievements)
     .values(ACHIEVEMENTS)
     .onConflictDoUpdate({

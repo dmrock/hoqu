@@ -87,11 +87,8 @@ jobs:
           parent_branch: production
           branch_name: ci-int-${{ github.run_id }}-${{ github.run_attempt }}
 
-      - name: Apply migrations
-        run: pnpm db:migrate
-        env:
-          DATABASE_URL: ${{ steps.neon.outputs.db_url_pooled }}
-
+      # No migrate step: the suite's global-setup creates one database per
+      # worker on this branch and migrates each from scratch.
       - name: Run integration tests
         run: pnpm test:integration
         env:

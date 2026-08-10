@@ -20,12 +20,20 @@ export type TestUser = {
   name: string;
 };
 
+// bcrypt at cost 10 runs ~70ms in pure JS, and every fixture user shares the
+// same password — hash it once per worker instead of once per user.
+let cachedPasswordHash: Promise<string> | null = null;
+function testPasswordHash(): Promise<string> {
+  cachedPasswordHash ??= hashPassword(PASSWORD);
+  return cachedPasswordHash;
+}
+
 export async function createTestUser(overrides: CreateUserOverrides = {}): Promise<TestUser> {
   const id = randomUUID();
   const username = overrides.username ?? `int-${id.slice(0, 8)}`;
   const name = overrides.name ?? `Int ${id.slice(0, 4)}`;
   const email = `${username}@int.test`;
-  const passwordHash = await hashPassword(PASSWORD);
+  const passwordHash = await testPasswordHash();
 
   const [user] = await db
     .insert(users)
@@ -42,9 +50,17 @@ export async function createTestUser(overrides: CreateUserOverrides = {}): Promi
   return { id: user.id, email, username, name };
 }
 
+// The hobbies table is seeded once per worker database and is never truncated,
+// so these ids are stable for the life of the process.
+const hobbyIds = new Map<string, string>();
+
 export async function getHobbyId(slug: "movies" | "tv" | "games" | "books"): Promise<string> {
+  const cached = hobbyIds.get(slug);
+  if (cached) return cached;
+
   const [row] = await db.select({ id: hobbies.id }).from(hobbies).where(eq(hobbies.slug, slug));
   if (!row) throw new Error(`hobby ${slug} not seeded`);
+  hobbyIds.set(slug, row.id);
   return row.id;
 }
 
