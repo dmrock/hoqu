@@ -1,5 +1,6 @@
 import { newReleasesFixture } from "./new-releases-fixtures";
 import type { SearchResult } from "./search";
+import { BACKGROUND_TIMEOUT_MS, fetchJson, SEARCH_TIMEOUT_MS } from "./upstream";
 
 const TMDB_API_URL = "https://api.themoviedb.org/3";
 const TMDB_IMAGE_URL = "https://image.tmdb.org/t/p/w342";
@@ -55,14 +56,10 @@ export async function searchMovies(query: string): Promise<SearchResult[]> {
   const apiKey = process.env.TMDB_API_KEY;
   if (!apiKey) throw new Error("TMDB_API_KEY is not set");
 
-  const res = await fetch(tmdbSearchUrl("movie", query, apiKey), {
-    headers: { Accept: "application/json" },
+  const json = await fetchJson<{ results: TmdbMovie[] }>(tmdbSearchUrl("movie", query, apiKey), {
+    provider: "TMDB",
+    timeoutMs: SEARCH_TIMEOUT_MS,
   });
-  if (!res.ok) {
-    throw new Error(`TMDB search failed: ${res.status} ${res.statusText}`);
-  }
-
-  const json = (await res.json()) as { results: TmdbMovie[] };
   return json.results.slice(0, MAX_RESULTS).map(toMovieResult);
 }
 
@@ -78,15 +75,11 @@ export async function getNowPlayingMovies(): Promise<SearchResult[]> {
   url.searchParams.set("language", "en-US");
   url.searchParams.set("page", "1");
 
-  const res = await fetch(url, {
-    headers: { Accept: "application/json" },
+  const json = await fetchJson<{ results: TmdbMovie[] }>(url, {
+    provider: "TMDB",
+    timeoutMs: BACKGROUND_TIMEOUT_MS,
     next: { revalidate: 3600 },
   });
-  if (!res.ok) {
-    throw new Error(`TMDB now_playing failed: ${res.status} ${res.statusText}`);
-  }
-
-  const json = (await res.json()) as { results: TmdbMovie[] };
   return json.results.slice(0, MAX_RESULTS).map(toMovieResult);
 }
 
@@ -102,15 +95,11 @@ export async function getOnTheAirTvShows(): Promise<SearchResult[]> {
   url.searchParams.set("language", "en-US");
   url.searchParams.set("page", "1");
 
-  const res = await fetch(url, {
-    headers: { Accept: "application/json" },
+  const json = await fetchJson<{ results: TmdbTvShow[] }>(url, {
+    provider: "TMDB",
+    timeoutMs: BACKGROUND_TIMEOUT_MS,
     next: { revalidate: 3600 },
   });
-  if (!res.ok) {
-    throw new Error(`TMDB on_the_air failed: ${res.status} ${res.statusText}`);
-  }
-
-  const json = (await res.json()) as { results: TmdbTvShow[] };
   return json.results.slice(0, MAX_RESULTS).map(toTvResult);
 }
 
@@ -135,12 +124,7 @@ export async function getTvShow(externalId: string): Promise<TvShowDetails> {
   url.searchParams.set("api_key", apiKey);
   url.searchParams.set("language", "en-US");
 
-  const res = await fetch(url, { headers: { Accept: "application/json" } });
-  if (!res.ok) {
-    throw new Error(`TMDB show fetch failed: ${res.status} ${res.statusText}`);
-  }
-
-  const json = (await res.json()) as {
+  const json = await fetchJson<{
     number_of_seasons?: number;
     seasons?: Array<{
       season_number: number;
@@ -149,7 +133,7 @@ export async function getTvShow(externalId: string): Promise<TvShowDetails> {
       poster_path: string | null;
       vote_average?: number;
     }>;
-  };
+  }>(url, { provider: "TMDB", timeoutMs: SEARCH_TIMEOUT_MS });
 
   const seasons = (json.seasons ?? [])
     .filter((s) => s.season_number >= 1)
@@ -171,13 +155,9 @@ export async function searchTvShows(query: string): Promise<SearchResult[]> {
   const apiKey = process.env.TMDB_API_KEY;
   if (!apiKey) throw new Error("TMDB_API_KEY is not set");
 
-  const res = await fetch(tmdbSearchUrl("tv", query, apiKey), {
-    headers: { Accept: "application/json" },
+  const json = await fetchJson<{ results: TmdbTvShow[] }>(tmdbSearchUrl("tv", query, apiKey), {
+    provider: "TMDB",
+    timeoutMs: SEARCH_TIMEOUT_MS,
   });
-  if (!res.ok) {
-    throw new Error(`TMDB search failed: ${res.status} ${res.statusText}`);
-  }
-
-  const json = (await res.json()) as { results: TmdbTvShow[] };
   return json.results.slice(0, MAX_RESULTS).map(toTvResult);
 }

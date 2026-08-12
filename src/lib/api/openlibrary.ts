@@ -1,4 +1,5 @@
 import type { SearchResult } from "./search";
+import { fetchJson, SEARCH_TIMEOUT_MS } from "./upstream";
 
 const OPEN_LIBRARY_URL = "https://openlibrary.org/search.json";
 const COVER_URL = "https://covers.openlibrary.org/b/id";
@@ -33,13 +34,10 @@ export async function searchBooks(query: string): Promise<SearchResult[]> {
   url.searchParams.set("limit", String(MAX_RESULTS));
   url.searchParams.set("fields", "key,title,first_publish_year,cover_i");
 
-  const res = await fetch(url, {
-    headers: { Accept: "application/json", "User-Agent": USER_AGENT },
+  const json = await fetchJson<OpenLibraryResponse>(url, {
+    provider: "Open Library",
+    timeoutMs: SEARCH_TIMEOUT_MS,
+    headers: { "User-Agent": USER_AGENT },
   });
-  if (!res.ok) {
-    throw new Error(`Open Library search failed: ${res.status} ${res.statusText}`);
-  }
-
-  const json = (await res.json()) as OpenLibraryResponse;
   return json.docs.map(toBookResult).filter((r): r is SearchResult => r !== null);
 }
