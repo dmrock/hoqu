@@ -4,6 +4,7 @@ import { filterOwnedExternalIds } from "@/lib/owned-items";
 import type { HobbySlug } from "@/lib/points";
 import { cachedSearch } from "./cache";
 import { type SearchResponse, type SearchResult, searchQuerySchema } from "./search";
+import { UpstreamUnavailableError } from "./upstream";
 
 export function createSearchHandler(
   hobby: HobbySlug,
@@ -45,6 +46,12 @@ export function createSearchHandler(
       });
     } catch (err) {
       console.error("search handler failed", err);
+      if (err instanceof UpstreamUnavailableError) {
+        return NextResponse.json(
+          { data: null, error: `${err.provider} isn't responding. Try again in a moment.` },
+          { status: 503 },
+        );
+      }
       return NextResponse.json({ data: null, error: "Search failed" }, { status: 502 });
     }
   };

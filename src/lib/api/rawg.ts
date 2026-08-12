@@ -1,5 +1,6 @@
 import { newReleasesFixture } from "./new-releases-fixtures";
 import type { SearchResult } from "./search";
+import { BACKGROUND_TIMEOUT_MS, fetchJson, SEARCH_TIMEOUT_MS } from "./upstream";
 
 const RAWG_API_URL = "https://api.rawg.io/api";
 const MAX_RESULTS = 8;
@@ -35,12 +36,10 @@ export async function searchGames(query: string): Promise<SearchResult[]> {
   url.searchParams.set("search", query);
   url.searchParams.set("page_size", String(MAX_RESULTS));
 
-  const res = await fetch(url, { headers: { Accept: "application/json" } });
-  if (!res.ok) {
-    throw new Error(`RAWG search failed: ${res.status} ${res.statusText}`);
-  }
-
-  const json = (await res.json()) as RawgSearchResponse;
+  const json = await fetchJson<RawgSearchResponse>(url, {
+    provider: "RAWG",
+    timeoutMs: SEARCH_TIMEOUT_MS,
+  });
   return json.results.map(toGameResult);
 }
 
@@ -64,14 +63,10 @@ export async function getRecentGames(): Promise<SearchResult[]> {
   url.searchParams.set("ordering", "-added");
   url.searchParams.set("page_size", String(MAX_RESULTS));
 
-  const res = await fetch(url, {
-    headers: { Accept: "application/json" },
+  const json = await fetchJson<RawgSearchResponse>(url, {
+    provider: "RAWG",
+    timeoutMs: BACKGROUND_TIMEOUT_MS,
     next: { revalidate: 3600 },
   });
-  if (!res.ok) {
-    throw new Error(`RAWG recent failed: ${res.status} ${res.statusText}`);
-  }
-
-  const json = (await res.json()) as RawgSearchResponse;
   return json.results.map(toGameResult);
 }
