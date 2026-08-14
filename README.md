@@ -8,7 +8,7 @@ A hobby tracker where you log movies, TV shows, games, and books, earn points, u
 - **Database**: PostgreSQL (Neon) · Drizzle ORM
 - **Auth**: Auth.js v5 (email/password + Google OAuth)
 - **Cache + rate limiting**: Upstash Redis
-- **External catalogs**: TMDB (movies + TV) · RAWG (games) · Open Library (books)
+- **External catalogs**: TMDB (movies + TV) · IGDB (games) · Open Library (books)
 - **Animations**: Motion · **Lint/format**: Biome · **Hosting**: Vercel
 
 ## Getting started
@@ -18,7 +18,7 @@ A hobby tracker where you log movies, TV shows, games, and books, earn points, u
 - Node.js 22 (see `.nvmrc` — run `nvm use`), pnpm 10+
 - A Neon Postgres database
 - An Upstash Redis instance
-- API credentials: Google OAuth, TMDB, RAWG
+- API credentials: Google OAuth, TMDB, IGDB/Twitch
 
 ### Setup
 
@@ -36,7 +36,8 @@ A hobby tracker where you log movies, TV shows, games, and books, earn points, u
    AUTH_GOOGLE_ID=
    AUTH_GOOGLE_SECRET=
    TMDB_API_KEY=
-   RAWG_API_KEY=
+   IGDB_CLIENT_ID=
+   IGDB_CLIENT_SECRET=
    UPSTASH_REDIS_REST_URL=
    UPSTASH_REDIS_REST_TOKEN=
    ```

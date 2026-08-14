@@ -64,7 +64,8 @@ jobs:
     env:
       AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
       TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
-      RAWG_API_KEY: ${{ secrets.RAWG_API_KEY }}
+      IGDB_CLIENT_ID: ${{ secrets.IGDB_CLIENT_ID }}
+      IGDB_CLIENT_SECRET: ${{ secrets.IGDB_CLIENT_SECRET }}
       UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
       UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
     steps:
@@ -108,7 +109,8 @@ jobs:
     env:
       AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
       TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
-      RAWG_API_KEY: ${{ secrets.RAWG_API_KEY }}
+      IGDB_CLIENT_ID: ${{ secrets.IGDB_CLIENT_ID }}
+      IGDB_CLIENT_SECRET: ${{ secrets.IGDB_CLIENT_SECRET }}
       UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
       UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
     steps:

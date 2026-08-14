@@ -39,7 +39,7 @@ export default function PrivacyPage() {
             <p>
               HOQU stores data on Neon (PostgreSQL hosting) and Upstash (Redis for rate limiting and
               caching), and is deployed on Vercel. When you search for an item, HOQU queries TMDB,
-              RAWG, or Open Library from our server — we do not send your identity to those
+              IGDB, or Open Library from our server — we do not send your identity to those
               services. If you sign in with Google, Google handles the authentication and shares
               your basic profile (email, name, image) with us per their own policy.
             </p>

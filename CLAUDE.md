@@ -23,7 +23,7 @@ sprites, responsive sweep) is intentionally deferred — see `MEMORY.md`.
 - **Auth**: Auth.js v5 (NextAuth) — Email+password + Google OAuth
 - **Validation**: Zod
 - **Cache + rate limiting**: Upstash Redis (`@upstash/redis`, `@upstash/ratelimit`)
-- **External APIs**: TMDB (movies + TV), RAWG (games), Open Library (books)
+- **External APIs**: TMDB (movies + TV), IGDB (games), Open Library (books)
 - **Linting & Formatting**: Biome (no ESLint, no Prettier)
 - **Deployment**: Vercel
 
@@ -177,7 +177,7 @@ into the "~X min" copy everywhere.
 
 ## Search Cache (Upstash Redis)
 
-`src/lib/api/cache.ts` — wraps each search fetcher (TMDB / RAWG / Open Library):
+`src/lib/api/cache.ts` — wraps each search fetcher (TMDB / IGDB / Open Library):
 
 - Key pattern `search:{hobby}:{normalized_query}` (lowercase, trimmed).
 - TTL 15 minutes.
@@ -288,7 +288,14 @@ All external calls go through server-side proxies that protect API keys.
 - **TMDB TV**: `GET /api/search/tv?q={query}` → `/3/search/tv`. Same shape, `name` →
   `title`, `first_air_date` → `year`. Multi-season shows use `getTvShow(externalId)` to
   fetch the full season list at add time and on demand via the row's "refresh" button.
-- **RAWG**: `GET /api/search/games?q={query}`. Map: `{ id, name, released, background_image, metacritic }`.
+- **IGDB**: `GET /api/search/games?q={query}` → `POST /v4/games` with an Apicalypse body.
+  Map: `{ id, name, first_release_date (unix seconds), cover.image_id, total_rating }`.
+  Covers are built as `images.igdb.com/igdb/image/upload/t_cover_big/{image_id}.jpg` (portrait,
+  like TMDB posters). Auth is a Twitch client-credentials bearer token cached in Redis for its
+  reported `expires_in` (`src/lib/api/igdb-token.ts`) — never hardcode the lifetime, it differs
+  from IGDB's documented example. Queries filter `version_parent = null` to drop editions.
+  **Rate limit: 4 req/s, 8 concurrent.** IGDB is mid-migration from enums to tables; the fields
+  used here are unaffected, but check the rename list before adding genres or platforms.
 - **Open Library**: `GET /api/search/books?q={query}`. Map:
   `{ key, title, first_publish_year, cover_i }`. `externalRating` is null.
 
@@ -381,7 +388,7 @@ src/
 │   ├── auth/                           Auth.js config, password hashing, username slugify,
 │   │                                   tokens (reset/email-change) + pure tokens-crypto
 │   ├── email/                          Resend client (fails soft) + transactional templates
-│   ├── api/                            tmdb, rawg, openlibrary clients + search-handler + cache
+│   ├── api/                            tmdb, igdb (+token), openlibrary clients + search-handler + cache
 │   ├── points.ts                       Counter delta + snapshotPoints
 │   ├── achievements.ts                 Evaluator registry + checker
 │   ├── achievement-icons.ts            Slug → lucide icon map
@@ -440,7 +447,8 @@ AUTH_SECRET=                  openssl rand -base64 32
 AUTH_GOOGLE_ID=               Google Cloud Console OAuth client
 AUTH_GOOGLE_SECRET=
 TMDB_API_KEY=                 themoviedb.org
-RAWG_API_KEY=                 rawg.io
+IGDB_CLIENT_ID=               dev.twitch.tv — IGDB via Twitch OAuth
+IGDB_CLIENT_SECRET=
 UPSTASH_REDIS_REST_URL=       upstash.com
 UPSTASH_REDIS_REST_TOKEN=
 RESEND_API_KEY=               resend.com — transactional email (password reset, email change)

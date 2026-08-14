@@ -36,7 +36,7 @@ describe("cachedSearch", () => {
   });
 
   it("never caches a failed lookup", async () => {
-    const boom = new Error("RAWG unavailable: no response in 5000ms");
+    const boom = new Error("IGDB unavailable: no response in 5000ms");
 
     await expect(
       cachedSearch("games", "Halo", async () => {

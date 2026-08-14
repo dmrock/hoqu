@@ -75,11 +75,11 @@ describe("fetchJson", () => {
     // Real AbortSignal.timeout on a very short budget — this asserts the signal
     // is actually wired to the request, not merely constructed.
     const err = await rejection(
-      fetchJson("https://example.test/x", { provider: "RAWG", timeoutMs: 20 }),
+      fetchJson("https://example.test/x", { provider: "IGDB", timeoutMs: 20 }),
     );
 
     expect(err).toBeInstanceOf(UpstreamUnavailableError);
-    expect(err.provider).toBe("RAWG");
+    expect(err.provider).toBe("IGDB");
     expect(err.message).toContain("no response in 20ms");
   });
 
@@ -89,7 +89,7 @@ describe("fetchJson", () => {
     });
 
     const err = await rejection(
-      fetchJson("https://example.test/x", { provider: "RAWG", timeoutMs: 1000 }),
+      fetchJson("https://example.test/x", { provider: "IGDB", timeoutMs: 1000 }),
     );
 
     expect(err).toBeInstanceOf(UpstreamUnavailableError);
@@ -105,7 +105,7 @@ describe("fetchJson", () => {
     stubFetch(async () => jsonResponse({}, { status, statusText }));
 
     const err = await rejection(
-      fetchJson("https://example.test/x", { provider: "RAWG", timeoutMs: 1000 }),
+      fetchJson("https://example.test/x", { provider: "IGDB", timeoutMs: 1000 }),
     );
 
     expect(err).toBeInstanceOf(UpstreamUnavailableError);

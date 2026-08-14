@@ -28,6 +28,23 @@ export class UpstreamUnavailableError extends Error {
   }
 }
 
+/**
+ * The provider answered, but rejected the request (4xx). Distinct from
+ * {@link UpstreamUnavailableError} because retrying will not help — callers
+ * inspect {@link status} to recover from specific cases, e.g. re-authenticating
+ * on a 401 when a cached token was invalidated early.
+ */
+export class UpstreamResponseError extends Error {
+  constructor(
+    readonly provider: string,
+    readonly status: number,
+    statusText: string,
+  ) {
+    super(`${provider} request failed: ${status} ${statusText}`);
+    this.name = "UpstreamResponseError";
+  }
+}
+
 /** `AbortSignal.timeout()` rejects with TimeoutError; a caller-side abort gives AbortError. */
 function isAbortLike(err: unknown): err is Error {
   return err instanceof Error && (err.name === "TimeoutError" || err.name === "AbortError");
@@ -37,7 +54,15 @@ type FetchJsonOptions = {
   /** Human-readable provider name, used in error messages and logs. */
   provider: string;
   timeoutMs: number;
+  method?: "GET" | "POST";
+  body?: string;
   headers?: Record<string, string>;
+  /**
+   * Next only caches POST (and requests carrying an Authorization header) when
+   * caching is opted into explicitly, so a POST that wants `next.revalidate`
+   * must also pass `"force-cache"`.
+   */
+  cache?: RequestCache;
   next?: { revalidate: number };
 };
 
@@ -53,8 +78,11 @@ export async function fetchJson<T>(url: URL | string, opts: FetchJsonOptions): P
   let res: Response;
   try {
     res = await fetch(url, {
+      method: opts.method ?? "GET",
       headers: { Accept: "application/json", ...opts.headers },
       signal: AbortSignal.timeout(opts.timeoutMs),
+      ...(opts.body ? { body: opts.body } : {}),
+      ...(opts.cache ? { cache: opts.cache } : {}),
       ...(opts.next ? { next: opts.next } : {}),
     });
   } catch (err) {
@@ -70,7 +98,7 @@ export async function fetchJson<T>(url: URL | string, opts: FetchJsonOptions): P
     if (res.status === 429 || res.status >= 500) {
       throw new UpstreamUnavailableError(opts.provider, `${res.status} ${res.statusText}`);
     }
-    throw new Error(`${opts.provider} request failed: ${res.status} ${res.statusText}`);
+    throw new UpstreamResponseError(opts.provider, res.status, res.statusText);
   }
 
   try {
