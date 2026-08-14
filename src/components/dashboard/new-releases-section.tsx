@@ -1,4 +1,4 @@
-import { getRecentGames } from "@/lib/api/rawg";
+import { getRecentGames } from "@/lib/api/igdb";
 import { getNowPlayingMovies, getOnTheAirTvShows } from "@/lib/api/tmdb";
 import { filterOwnedExternalIds } from "@/lib/owned-items";
 import { NewReleasesRow } from "./new-releases-row";

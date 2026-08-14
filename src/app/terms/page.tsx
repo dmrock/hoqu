@@ -58,12 +58,12 @@ export default function TermsPage() {
               </a>
               ,{" "}
               <a
-                href="https://rawg.io/"
+                href="https://www.igdb.com/"
                 target="_blank"
                 rel="noreferrer noopener"
                 className="text-primary hover:underline"
               >
-                RAWG
+                IGDB
               </a>
               , and{" "}
               <a
@@ -75,7 +75,7 @@ export default function TermsPage() {
                 Open Library
               </a>{" "}
               and remains subject to their respective terms. Game data and images are provided by
-              RAWG.
+              IGDB.
             </p>
             <p>
               This product uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise

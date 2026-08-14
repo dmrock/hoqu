@@ -166,7 +166,7 @@ function HowItWorks() {
       </p>
       <ol className="mt-8 grid gap-4 md:grid-cols-3">
         <Step n="01" title="Search & add">
-          Find any movie, TV show, video game, or book with built-in search powered by TMDB, RAWG,
+          Find any movie, TV show, video game, or book with built-in search powered by TMDB, IGDB,
           and Open Library.
         </Step>
         <Step n="02" title="Log progress">

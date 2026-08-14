@@ -45,7 +45,7 @@ export default function FeaturesPage() {
           >
             <p>
               Add anything with built-in search: movies and TV shows come from TMDB, video games
-              from RAWG, and books from Open Library — no copy-pasting titles. Every item you add
+              from IGDB, and books from Open Library — no copy-pasting titles. Every item you add
               carries its own details:
             </p>
             <ul className="ml-4 list-disc space-y-1.5">

@@ -2,9 +2,9 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 // Catalog attribution shown on every surface that renders external catalog data.
-// RAWG's API terms require an active hyperlink to RAWG from every page its data
-// appears on; TMDB requires its logo displayed (kept smaller than the HOQU
-// wordmark) plus visible credit — the full non-endorsement notice lives on /terms.
+// TMDB requires its logo displayed (kept smaller than the HOQU wordmark) plus
+// visible credit — the full non-endorsement notice lives on /terms. IGDB is
+// credited under the Twitch Developer Services Agreement's attribution terms.
 // Keep this mounted in both the public shell and the authed layout.
 function Source({ href, children }: { href: string; children: React.ReactNode }) {
   return (
@@ -37,7 +37,7 @@ export function DataAttribution({ className }: { className?: string }) {
       />
       <p>
         Catalog data from <Source href="https://www.themoviedb.org/">TMDB</Source>,{" "}
-        <Source href="https://rawg.io/">RAWG</Source>, and{" "}
+        <Source href="https://www.igdb.com/">IGDB</Source>, and{" "}
         <Source href="https://openlibrary.org/">Open Library</Source>.
       </p>
     </div>

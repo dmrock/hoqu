@@ -65,7 +65,7 @@ export default defineConfig({
     timeout: 120_000,
     env: {
       DATABASE_URL: process.env.E2E_DATABASE_URL,
-      // Swap in deterministic new-releases data — TMDB/RAWG are server-side
+      // Swap in deterministic new-releases data — TMDB/IGDB are server-side
       // fetches Playwright's page.route can't intercept.
       E2E_NEW_RELEASES_FIXTURES: "1",
       // Force the email client into its no-op path so e2e never sends a real
