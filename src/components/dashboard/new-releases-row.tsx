@@ -9,18 +9,25 @@ import type { SearchResult } from "@/lib/api/search";
 import type { HobbySlug } from "@/lib/points";
 import { cn } from "@/lib/utils";
 
+/** Posters eagerly loaded when `eager` is set — enough to cover the narrowest
+ *  grid (3 across) plus the leading edge of a wide one. */
+const EAGER_COUNT = 4;
+
 export function NewReleasesRow({
   title,
   hobbySlug,
   items,
   ownedExternalIds,
   emptyHint,
+  eager = false,
 }: {
   title: string;
   hobbySlug: HobbySlug;
   items: SearchResult[];
   ownedExternalIds: string[];
   emptyHint: string;
+  /** Set on the row that renders above the fold; its lead posters win LCP. */
+  eager?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<SearchResult | null>(null);
@@ -37,7 +44,7 @@ export function NewReleasesRow({
         // Columns are tuned so a poster stays ~115-150px wide at every step,
         // and the 8 fetched items fill exactly one row from xl up.
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
-          {items.map((item) => {
+          {items.map((item, i) => {
             const isOwned = owned.has(item.externalId);
             return (
               <button
@@ -63,6 +70,7 @@ export function NewReleasesRow({
                       alt={item.title}
                       fill
                       sizes="(min-width: 640px) 160px, 33vw"
+                      loading={eager && i < EAGER_COUNT ? "eager" : undefined}
                       className="object-cover transition-transform duration-200 group-enabled:group-hover:scale-105"
                     />
                   ) : null}

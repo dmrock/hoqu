@@ -171,8 +171,10 @@ export default async function DashboardPage() {
 
       <section className="space-y-4">
         <h2 className="font-pixel text-sm text-muted-foreground uppercase">New releases</h2>
+        {/* First row on the page — its posters are the LCP candidate, so they
+            skip lazy loading. The rows below it stay lazy. */}
         <Suspense fallback={<NewReleasesSkeleton title="Now in theaters" />}>
-          <MoviesNewReleases viewerId={session.user.id} />
+          <MoviesNewReleases viewerId={session.user.id} eager />
         </Suspense>
         <Suspense fallback={<NewReleasesSkeleton title="New episodes" />}>
           <TvNewReleases viewerId={session.user.id} />

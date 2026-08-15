@@ -228,7 +228,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
           <p className="text-sm text-muted-foreground">Nothing completed yet.</p>
         ) : (
           <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
-            {recentlyCompletedRows.map((item) => (
+            {recentlyCompletedRows.map((item, i) => (
               <div key={item.id} className="w-28 shrink-0">
                 <div className="relative aspect-2/3 overflow-hidden rounded-lg bg-muted">
                   {item.imageUrl ? (
@@ -238,6 +238,8 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
                       fill
                       sizes="112px"
                       className="object-cover"
+                      // Highest row on the page carrying art — measures as LCP.
+                      loading={i < 4 ? "eager" : undefined}
                     />
                   ) : null}
                 </div>
