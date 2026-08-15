@@ -26,7 +26,7 @@ const STATUS_VARIANT: Record<ItemStatus, "default" | "secondary" | "outline" | "
 const EXTERNAL_RATING_LABEL: Record<HobbySlug, string> = {
   movies: "TMDB",
   tv: "TMDB",
-  games: "Metacritic",
+  games: "IGDB",
   books: "",
 };
 

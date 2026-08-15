@@ -79,9 +79,8 @@ export default function FeaturesPage() {
           >
             <p>
               Next to your own score, each title shows its external rating so you always have a
-              second opinion: the TMDB score for movies and TV shows, and the Metacritic score for
-              games. It&apos;s an easy way to decide what to play or watch next from your own
-              backlog.
+              second opinion: the TMDB score for movies and TV shows, and the IGDB score for games.
+              It&apos;s an easy way to decide what to play or watch next from your own backlog.
             </p>
           </Section>
 
