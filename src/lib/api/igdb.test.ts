@@ -66,13 +66,14 @@ describe("searchGames", () => {
 
     const [result] = await searchGames("halo");
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       externalId: "740",
       title: "Halo: Combat Evolved",
       year: 2001,
       imageUrl: "https://images.igdb.com/igdb/image/upload/t_cover_big/co2r2r.jpg",
-      externalRating: 85,
     });
+    // IGDB's 0-100 scale is stored out of 10 to match TMDB's.
+    expect(result.externalRating).toBeCloseTo(8.54, 5);
   });
 
   it("tolerates games with no cover, rating, or release date", async () => {

@@ -30,9 +30,10 @@ function toGameResult(g: IgdbGame): SearchResult {
     // IGDB dates are unix seconds, unlike TMDB's "YYYY-MM-DD" strings.
     year: g.first_release_date ? new Date(g.first_release_date * 1000).getUTCFullYear() : null,
     imageUrl: g.cover?.image_id ? `${IGDB_IMAGE_URL}/t_cover_big/${g.cover.image_id}.jpg` : null,
-    // `total_rating` blends critic and user scores into a 0-100 float. Round it:
-    // the column is a display snapshot, and game scores read as whole numbers.
-    externalRating: typeof g.total_rating === "number" ? Math.round(g.total_rating) : null,
+    // `total_rating` blends critic and user scores on IGDB's 0-100 scale. Store
+    // it out of 10 so a single ★ scale covers every hobby: TMDB already supplies
+    // 0-10, and the two appear side by side in the same collection.
+    externalRating: typeof g.total_rating === "number" ? g.total_rating / 10 : null,
   };
 }
 

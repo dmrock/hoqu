@@ -42,7 +42,7 @@ const GAMES: SearchResult[] = [
     title: "Fixture Game One",
     year: 2026,
     imageUrl: null,
-    externalRating: 85,
+    externalRating: 8.5,
   },
 ];
 
