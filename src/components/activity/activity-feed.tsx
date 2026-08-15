@@ -113,7 +113,6 @@ function TrendingRow({
             setOpen(next);
             if (!next) setSelected(null);
           }}
-          trigger={null}
         />
       ) : null}
     </section>

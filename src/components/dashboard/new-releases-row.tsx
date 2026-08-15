@@ -34,9 +34,9 @@ export function NewReleasesRow({
       {items.length === 0 ? (
         <p className="text-sm text-muted-foreground">{emptyHint}</p>
       ) : (
-        // overflow-x-auto implicitly clips overflow-y, so the hover ring on each
-        // poster needs symmetric breathing room on every side, not just bottom.
-        <div className="-m-1 flex gap-3 overflow-x-auto p-1 pb-2">
+        // Columns are tuned so a poster stays ~115-150px wide at every step,
+        // and the 8 fetched items fill exactly one row from xl up.
+        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
           {items.map((item) => {
             const isOwned = owned.has(item.externalId);
             return (
@@ -49,7 +49,7 @@ export function NewReleasesRow({
                   setOpen(true);
                 }}
                 aria-label={`Add ${item.title} to collection`}
-                className="group w-28 shrink-0 cursor-pointer text-left transition-opacity disabled:cursor-not-allowed disabled:opacity-60"
+                className="group min-w-0 cursor-pointer text-left transition-opacity disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <div
                   className={cn(
@@ -62,7 +62,7 @@ export function NewReleasesRow({
                       src={item.imageUrl}
                       alt={item.title}
                       fill
-                      sizes="112px"
+                      sizes="(min-width: 640px) 160px, 33vw"
                       className="object-cover transition-transform duration-200 group-enabled:group-hover:scale-105"
                     />
                   ) : null}
@@ -99,7 +99,6 @@ export function NewReleasesRow({
           setOpen(next);
           if (!next) setSelected(null);
         }}
-        trigger={null}
       />
     </section>
   );
@@ -111,12 +110,12 @@ export function NewReleasesSkeleton({ title }: { title: string }) {
       <h3 className="border-l-2 border-accent pl-2 font-mono text-xs text-foreground uppercase tracking-wider">
         {title}
       </h3>
-      <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
-        {Array.from({ length: 6 }, (_, i) => (
+      <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
+        {Array.from({ length: 8 }, (_, i) => (
           // biome-ignore lint/suspicious/noArrayIndexKey: skeleton placeholders
-          <div key={i} className="w-28 shrink-0 animate-pulse">
+          <div key={i} className="animate-pulse">
             <div className="aspect-2/3 rounded-lg bg-muted" />
-            <div className="mt-1 h-3 w-20 rounded bg-muted" />
+            <div className="mt-1 h-3 w-20 max-w-full rounded bg-muted" />
           </div>
         ))}
       </div>

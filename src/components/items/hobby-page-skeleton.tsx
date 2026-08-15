@@ -4,16 +4,14 @@
 export function HobbyPageSkeleton({ title }: { title: string }) {
   return (
     <div className="animate-pulse space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="font-pixel text-2xl">{title}</h1>
-        <div className="h-9 w-20 rounded-md bg-muted" />
+      <h1 className="font-pixel text-2xl">{title}</h1>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <div className="h-7 w-64 max-w-full rounded-md bg-muted" />
+        <div className="h-8 w-24 rounded-md bg-muted" />
+        <div className="h-8 w-36 rounded-md bg-muted" />
+        <div className="h-9 w-full rounded-md bg-muted sm:ml-auto sm:w-20" />
       </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="h-9 w-64 max-w-full rounded-md bg-muted" />
-        <div className="h-9 w-24 rounded-md bg-muted" />
-        <div className="h-9 w-24 rounded-md bg-muted" />
-      </div>
-      <div className="hidden overflow-hidden rounded-xl border border-border md:block">
+      <div className="hidden overflow-hidden rounded-xl border border-border lg:block">
         <div className="h-9 bg-muted/40" />
         {Array.from({ length: 8 }, (_, i) => (
           // biome-ignore lint/suspicious/noArrayIndexKey: skeleton placeholders
@@ -28,7 +26,7 @@ export function HobbyPageSkeleton({ title }: { title: string }) {
           </div>
         ))}
       </div>
-      <div className="space-y-2 md:hidden">
+      <div className="space-y-2 lg:hidden">
         {Array.from({ length: 5 }, (_, i) => (
           // biome-ignore lint/suspicious/noArrayIndexKey: skeleton placeholders
           <div key={i} className="flex gap-3 rounded-xl border border-border bg-card p-3">

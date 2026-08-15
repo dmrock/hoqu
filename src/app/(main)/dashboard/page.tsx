@@ -94,13 +94,13 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-pixel text-2xl">Welcome, {user.name ?? "adventurer"}</h1>
+        <h1 className="break-words font-pixel text-2xl">Welcome, {user.name ?? "adventurer"}</h1>
         <p className="text-sm text-muted-foreground">
           We trust our adventurers to log their quests honestly.
         </p>
       </div>
 
-      <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {stats.map((s) => (
           <div key={s.label} className="rounded-xl border border-border bg-card p-4">
             <div className="flex items-center justify-between text-muted-foreground">
@@ -116,7 +116,7 @@ export default async function DashboardPage() {
 
       <section className="space-y-3">
         <h2 className="font-pixel text-sm text-muted-foreground uppercase">By hobby</h2>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {hobbyCards.map((c) => (
             <Link
               key={c.slug}
@@ -147,13 +147,13 @@ export default async function DashboardPage() {
             No achievements yet. Complete items to start unlocking.
           </p>
         ) : (
-          <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             {recentUnlocks.map((u) => {
               const Icon = achievementIcon(u.icon);
               return (
                 <div
                   key={`${u.name}-${u.unlockedAt.toISOString()}`}
-                  className="flex w-56 shrink-0 items-start gap-3 rounded-xl border border-border bg-card p-3"
+                  className="flex items-start gap-3 rounded-xl border border-border bg-card p-3"
                 >
                   <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
                     <Icon className="size-5" />

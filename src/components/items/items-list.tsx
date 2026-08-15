@@ -45,14 +45,18 @@ function formatRating(value: number): string {
   return Number.isInteger(value) ? String(value) : value.toFixed(1);
 }
 
+/**
+ * `note`: "reserve" keeps a blank line when there's no note so table rows stay
+ * a uniform height; "inline" collapses it, which is what the stacked cards want.
+ */
 function TitleBlock({
   item,
   hobbySlug,
-  showNote = true,
+  note = "reserve",
 }: {
   item: ItemRow;
   hobbySlug: HobbySlug;
-  showNote?: boolean;
+  note?: "reserve" | "inline" | "none";
 }) {
   const ratingLabel = EXTERNAL_RATING_LABEL[hobbySlug];
   return (
@@ -73,7 +77,7 @@ function TitleBlock({
           </span>
         ) : null}
       </div>
-      {showNote ? (
+      {note === "none" || (note === "inline" && !item.note) ? null : (
         <p
           className={cn(
             "mt-1 truncate font-mono text-xs",
@@ -83,7 +87,7 @@ function TitleBlock({
         >
           {item.note ?? "—"}
         </p>
-      ) : null}
+      )}
     </div>
   );
 }
@@ -135,17 +139,21 @@ export function ItemsList({
 }) {
   return (
     <>
-      <div className="hidden overflow-x-auto rounded-xl border border-border md:block">
-        <table className="w-full table-fixed text-sm">
+      {/* Cards until lg, not md: at exactly 768px the expanded sidebar leaves
+          ~480px of content, and the fixed columns alone need more than that.
+          min-w keeps the title column from collapsing at the low end of lg —
+          the container scrolls instead. */}
+      <div className="hidden overflow-x-auto rounded-xl border border-border lg:block">
+        <table className="w-full min-w-[45rem] table-fixed text-sm">
           <thead className="bg-muted/40 text-left text-xs text-muted-foreground uppercase">
             <tr>
-              <th className="w-16 px-3 py-2"></th>
+              <th className="w-14 px-3 py-2"></th>
               <th className="px-3 py-2">Title</th>
               <th className="w-24 px-3 py-2">Your rate</th>
-              <th className="w-24 px-3 py-2">Added</th>
+              <th className="w-20 px-3 py-2">Added</th>
               <th className="w-32 px-3 py-2">Status</th>
               <th className="w-20 px-3 py-2">Again?</th>
-              <th className="w-28 px-3 py-2"></th>
+              <th className="w-24 px-3 py-2"></th>
             </tr>
           </thead>
           <tbody>
@@ -161,7 +169,7 @@ export function ItemsList({
                       <td className="px-3 py-2">
                         <div className="flex items-start gap-1">
                           <ExpandToggle itemId={item.id} expanded={isOpen} />
-                          <TitleBlock item={item} hobbySlug={hobbySlug} showNote={false} />
+                          <TitleBlock item={item} hobbySlug={hobbySlug} note="none" />
                         </div>
                       </td>
                       <td className="px-3 py-2">
@@ -252,7 +260,7 @@ export function ItemsList({
         </table>
       </div>
 
-      <div className="space-y-2 md:hidden">
+      <div className="space-y-2 lg:hidden">
         {items.map((item) => {
           if (item.kind === "show_parent") {
             const isOpen = expanded.has(item.id);
@@ -268,7 +276,7 @@ export function ItemsList({
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-start gap-1">
                         <ExpandToggle itemId={item.id} expanded={isOpen} />
-                        <TitleBlock item={item} hobbySlug={hobbySlug} showNote={false} />
+                        <TitleBlock item={item} hobbySlug={hobbySlug} note="none" />
                       </div>
                       <div className="flex items-center gap-1">
                         <RefreshShowButton itemId={item.id} />
@@ -299,7 +307,7 @@ export function ItemsList({
                         <Poster src={child.imageUrl} alt={child.title} size={40} />
                         <div className="min-w-0 flex-1 space-y-1">
                           <div className="flex items-start justify-between gap-2">
-                            <TitleBlock item={child} hobbySlug={hobbySlug} />
+                            <TitleBlock item={child} hobbySlug={hobbySlug} note="inline" />
                             <ItemRowActions item={child} />
                           </div>
                           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
@@ -335,7 +343,7 @@ export function ItemsList({
               <Poster src={item.imageUrl} alt={item.title} size={56} />
               <div className="min-w-0 flex-1 space-y-1">
                 <div className="flex items-start justify-between gap-2">
-                  <TitleBlock item={item} hobbySlug={hobbySlug} />
+                  <TitleBlock item={item} hobbySlug={hobbySlug} note="inline" />
                   <div className="flex items-center gap-1">
                     {isFlatTv ? <RefreshShowButton itemId={item.id} /> : null}
                     <ItemRowActions item={item} />

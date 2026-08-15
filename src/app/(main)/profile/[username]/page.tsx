@@ -171,7 +171,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
           <AvatarFallback>{initials}</AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1">
-          <h1 className="font-pixel text-2xl">{profile.name ?? profile.username}</h1>
+          <h1 className="break-words font-pixel text-2xl">{profile.name ?? profile.username}</h1>
           <p className="font-mono text-sm text-muted-foreground">
             @{profile.username} · joined {joined}
           </p>
@@ -190,7 +190,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
         ) : null}
       </section>
 
-      <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {stats.map((s) => (
           <div key={s.label} className="rounded-xl border border-border bg-card p-4">
             <div className="flex items-center justify-between text-muted-foreground">
@@ -204,7 +204,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
 
       <section className="space-y-3">
         <h2 className="font-pixel text-sm text-muted-foreground uppercase">By hobby</h2>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {hobbyCards.map((c) => (
             <div
               key={c.slug}

@@ -27,7 +27,7 @@ export default async function GuildSettingsPage({ params }: { params: Promise<{ 
             Back
           </Link>
         </Button>
-        <h1 className="font-pixel text-2xl">Settings · {ctx.guild.name}</h1>
+        <h1 className="break-words font-pixel text-2xl">Settings · {ctx.guild.name}</h1>
       </div>
 
       <section className="space-y-3 rounded-xl border border-border bg-card p-5">

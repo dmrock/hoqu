@@ -13,7 +13,6 @@ import {
 } from "@/lib/items-filter";
 import type { HobbySlug, ItemStatus } from "@/lib/points";
 import type { ItemKind, ItemRow } from "@/types/item";
-import { AddItemDialog } from "./add-item-dialog";
 import { ItemsList } from "./items-list";
 import { ItemsPagination } from "./items-pagination";
 import { ItemsToolbar } from "./items-toolbar";
@@ -262,11 +261,8 @@ export async function HobbyPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="font-pixel text-2xl">{title}</h1>
-        <AddItemDialog hobbySlug={hobbySlug} />
-      </div>
-      <ItemsToolbar filter={filter} />
+      <h1 className="font-pixel text-2xl">{title}</h1>
+      <ItemsToolbar filter={filter} hobbySlug={hobbySlug} />
       {totalCount === 0 ? (
         <p className="text-muted-foreground">
           No {title.toLowerCase()} yet. Click Add to search and log your first.

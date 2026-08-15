@@ -11,7 +11,7 @@ export default function DashboardLoading() {
         <div className="h-4 w-80 max-w-full rounded bg-muted" />
       </div>
 
-      <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {STAT_LABELS.map((label) => (
           <div key={label} className="animate-pulse rounded-xl border border-border bg-card p-4">
             <div className="flex items-center justify-between text-muted-foreground">
@@ -25,7 +25,7 @@ export default function DashboardLoading() {
 
       <section className="space-y-3">
         <h2 className="font-pixel text-sm text-muted-foreground uppercase">By hobby</h2>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {HOBBY_LABELS.map((label) => (
             <div
               key={label}
@@ -43,16 +43,16 @@ export default function DashboardLoading() {
 
       <section className="space-y-3">
         <h2 className="font-pixel text-sm text-muted-foreground uppercase">Recently unlocked</h2>
-        <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
-          {[0, 1, 2, 3].map((card) => (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          {[0, 1, 2, 3, 4].map((card) => (
             <div
               key={card}
-              className="flex w-56 shrink-0 animate-pulse items-start gap-3 rounded-xl border border-border bg-card p-3"
+              className="flex animate-pulse items-start gap-3 rounded-xl border border-border bg-card p-3"
             >
               <div className="size-10 shrink-0 rounded-lg bg-muted" />
               <div className="min-w-0 flex-1 space-y-2 py-0.5">
-                <div className="h-4 w-28 rounded bg-muted" />
-                <div className="h-3 w-36 rounded bg-muted" />
+                <div className="h-4 w-28 max-w-full rounded bg-muted" />
+                <div className="h-3 w-36 max-w-full rounded bg-muted" />
               </div>
             </div>
           ))}
