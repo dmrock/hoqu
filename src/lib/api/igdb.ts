@@ -30,9 +30,8 @@ function toGameResult(g: IgdbGame): SearchResult {
     // IGDB dates are unix seconds, unlike TMDB's "YYYY-MM-DD" strings.
     year: g.first_release_date ? new Date(g.first_release_date * 1000).getUTCFullYear() : null,
     imageUrl: g.cover?.image_id ? `${IGDB_IMAGE_URL}/t_cover_big/${g.cover.image_id}.jpg` : null,
-    // `total_rating` blends critic and user scores on a 0-100 float; RAWG's
-    // `metacritic` was a critic-only integer. Round so the stored snapshot keeps
-    // the same shape as every other provider's.
+    // `total_rating` blends critic and user scores into a 0-100 float. Round it:
+    // the column is a display snapshot, and game scores read as whole numbers.
     externalRating: typeof g.total_rating === "number" ? Math.round(g.total_rating) : null,
   };
 }
@@ -93,9 +92,8 @@ export async function getRecentGames(): Promise<SearchResult[]> {
   const now = Math.floor(Date.now() / 1000);
   const since = now - RECENT_WINDOW_SECONDS;
 
-  // Popularity proxy: how many people have rated it. RAWG's `-added` counted
-  // users who had logged the game; `total_rating_count` is the closest analogue
-  // that keeps unrated shovelware out of the row.
+  // Popularity proxy: how many people have rated it at all. Keeps unrated
+  // shovelware out of the row without narrowing the recency window.
   const body =
     `${FIELDS} where first_release_date >= ${since} & first_release_date <= ${now} ` +
     `& version_parent = null & total_rating_count != null; ` +

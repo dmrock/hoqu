@@ -4,8 +4,6 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "image.tmdb.org" },
-      // Legacy covers on game rows added before the IGDB migration.
-      { protocol: "https", hostname: "media.rawg.io" },
       { protocol: "https", hostname: "images.igdb.com" },
       { protocol: "https", hostname: "covers.openlibrary.org" },
     ],
