@@ -115,7 +115,7 @@ export default async function DashboardPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="font-pixel text-sm text-muted-foreground uppercase">By hobby</h2>
+        <h2 className="font-pixel text-sm text-muted-foreground uppercase">Quest log</h2>
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {hobbyCards.map((c) => (
             <Link
@@ -137,7 +137,7 @@ export default async function DashboardPage() {
 
       <section className="space-y-3">
         <div className="flex items-baseline justify-between gap-3">
-          <h2 className="font-pixel text-sm text-muted-foreground uppercase">Recently unlocked</h2>
+          <h2 className="font-pixel text-sm text-muted-foreground uppercase">Latest unlocks</h2>
           <Link href="/achievements" className="text-xs text-primary hover:underline">
             View all
           </Link>

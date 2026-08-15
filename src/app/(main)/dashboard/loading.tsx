@@ -24,7 +24,7 @@ export default function DashboardLoading() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="font-pixel text-sm text-muted-foreground uppercase">By hobby</h2>
+        <h2 className="font-pixel text-sm text-muted-foreground uppercase">Quest log</h2>
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {HOBBY_LABELS.map((label) => (
             <div
@@ -42,7 +42,7 @@ export default function DashboardLoading() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="font-pixel text-sm text-muted-foreground uppercase">Recently unlocked</h2>
+        <h2 className="font-pixel text-sm text-muted-foreground uppercase">Latest unlocks</h2>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {[0, 1, 2, 3, 4].map((card) => (
             <div
