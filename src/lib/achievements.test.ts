@@ -112,8 +112,7 @@ describe("evaluateRequirement — all_hobbies", () => {
         booksCompleted: 1,
       },
     );
-    expect(result.satisfied).toBe(true);
-    expect(result.current).toBe(1);
+    expect(result).toEqual({ satisfied: true, current: 4, target: 4, unit: "hobbies" });
   });
 
   it("not satisfied if any hobby is below the minimum", () => {
@@ -122,7 +121,29 @@ describe("evaluateRequirement — all_hobbies", () => {
       { ...baseCounters, moviesCompleted: 5, showsCompleted: 0 },
     );
     expect(result.satisfied).toBe(false);
-    expect(result.current).toBe(0);
+  });
+
+  it("progress counts hobbies that cleared the bar, not items", () => {
+    const result = evaluateRequirement(
+      { type: "all_hobbies", min_per_hobby: 5 },
+      {
+        ...baseCounters,
+        moviesCompleted: 5,
+        showsCompleted: 13,
+        gamesCompleted: 2,
+        booksCompleted: 1,
+      },
+    );
+    expect(result).toEqual({ satisfied: false, current: 2, target: 4, unit: "hobbies" });
+  });
+
+  it("a hobby far past the minimum still counts once", () => {
+    const result = evaluateRequirement(
+      { type: "all_hobbies", min_per_hobby: 25 },
+      { ...baseCounters, showsCompleted: 900 },
+    );
+    expect(result.current).toBe(1);
+    expect(result.target).toBe(4);
   });
 
   it("logged mode uses loggedByHobby instead of completed counts", () => {
@@ -142,7 +163,15 @@ describe("evaluateRequirement — all_hobbies", () => {
       { type: "all_hobbies", min_per_hobby: 2, hobbies: ["movies", "books"] },
       { ...baseCounters, moviesCompleted: 2, booksCompleted: 2, gamesCompleted: 0 },
     );
-    expect(result.satisfied).toBe(true);
+    expect(result).toEqual({ satisfied: true, current: 2, target: 2, unit: "hobbies" });
+  });
+
+  it("a single-hobby list reads in the singular", () => {
+    const result = evaluateRequirement(
+      { type: "all_hobbies", min_per_hobby: 1, hobbies: ["books"] },
+      baseCounters,
+    );
+    expect(result).toEqual({ satisfied: false, current: 0, target: 1, unit: "hobby" });
   });
 
   it("empty hobby list yields not-satisfied", () => {

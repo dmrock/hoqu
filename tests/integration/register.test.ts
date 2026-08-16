@@ -79,7 +79,7 @@ describe("registration unique-violation handling", () => {
   });
 
   it("suffixes the username when the email local part is already taken", async () => {
-    // Success path ends in redirect("/dashboard"), which throws NEXT_REDIRECT.
+    // Success path ends in redirect("/explore"), which throws NEXT_REDIRECT.
     await expect(registerAction(null, registerForm("dup@int.test"))).rejects.toThrow();
     await expect(registerAction(null, registerForm("dup@second.test"))).rejects.toThrow();
 

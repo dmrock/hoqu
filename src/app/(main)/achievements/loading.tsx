@@ -1,3 +1,8 @@
+/** Matches the seeded shape of the real page (7 categories × 4 achievements),
+ *  so the grid doesn't reflow when the data lands. */
+const CATEGORIES = 7;
+const CARDS_PER_CATEGORY = 4;
+
 export default function AchievementsLoading() {
   return (
     <div className="space-y-8">
@@ -6,23 +11,25 @@ export default function AchievementsLoading() {
         <div className="h-4 w-28 rounded skeleton" />
       </div>
 
-      {[8, 4].map((cards, section) => (
+      {Array.from({ length: CATEGORIES }, (_, section) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: skeleton placeholders
         <section key={section} className="space-y-3">
           <div className="h-4 w-24 rounded skeleton" />
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {Array.from({ length: cards }, (_, i) => (
+          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {Array.from({ length: CARDS_PER_CATEGORY }, (_, i) => (
               // biome-ignore lint/suspicious/noArrayIndexKey: skeleton placeholders
-              <div key={i} className="flex gap-3 rounded-xl border border-border bg-card p-3">
+              <li key={i} className="flex gap-3 rounded-xl border border-border bg-card p-3">
                 <div className="size-12 shrink-0 rounded-lg skeleton" />
-                <div className="min-w-0 flex-1 space-y-2 py-0.5">
-                  <div className="h-4 w-24 rounded skeleton" />
-                  <div className="h-3 w-full rounded skeleton" />
-                  <div className="h-1.5 w-full rounded-full skeleton" />
+                <div className="min-w-0 flex-1 space-y-1">
+                  <div className="h-5 w-28 rounded skeleton" />
+                  <div className="h-4 w-full rounded skeleton" />
+                  {/* Square, like PixelProgress — the real bar has no radius. */}
+                  <div className="h-2 w-full skeleton" />
+                  <div className="h-4 w-12 rounded skeleton" />
                 </div>
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
         </section>
       ))}
     </div>
