@@ -10,7 +10,12 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
-      // Canonical host: 308 the www duplicate to the apex so Google indexes one host.
+      // Canonical host: 308 the www duplicate to the apex so Google indexes one
+      // host. In production this never fires — Vercel's domain-level redirect
+      // answers www at the edge (its 308 carries a `refresh` header and no
+      // `x-matched-path`), so the request never reaches Next. Kept as the
+      // fallback that preserves the canonical host if that domain config is
+      // ever removed.
       {
         source: "/:path*",
         has: [{ type: "host", value: "www.hoqu.dev" }],
