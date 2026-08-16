@@ -103,7 +103,8 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
       .innerJoin(hobbies, eq(items.hobbyId, hobbies.id))
       .where(and(eq(items.userId, profile.id), eq(items.status, "completed")))
       .orderBy(desc(items.completedAt))
-      .limit(5),
+      // Matches the 8-across poster grid, so the row fills at xl.
+      .limit(8),
     db
       .select({
         icon: achievements.icon,
@@ -218,7 +219,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
         {recentlyCompletedRows.length === 0 ? (
           <p className="text-sm text-muted-foreground">Nothing completed yet.</p>
         ) : (
-          <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-5">
+          <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
             {recentlyCompletedRows.map((item, i) => (
               <div key={item.id} className="min-w-0">
                 <div className="relative aspect-2/3 overflow-hidden rounded-lg bg-muted">
@@ -227,7 +228,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
                       src={item.imageUrl}
                       alt={item.title}
                       fill
-                      sizes="(min-width: 640px) 200px, 33vw"
+                      sizes="(min-width: 640px) 160px, 33vw"
                       className="object-cover"
                       // Highest row on the page carrying art — measures as LCP.
                       loading={i < 4 ? "eager" : undefined}
