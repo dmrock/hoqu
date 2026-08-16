@@ -168,6 +168,40 @@
   animation: row-focus-pulse 1.8s ease-in-out;
 }
 
+/* Skeleton shimmer. Drop-in for `animate-pulse` on placeholder blocks: a
+   highlight sweeps across the muted fill instead of the whole block dimming,
+   which reads as loading rather than as disabled content. */
+@keyframes skeleton-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton {
+  background-color: var(--muted);
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in oklab, var(--foreground) 7%, transparent) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+  .row-focus-pulse {
+    animation: none;
+    outline: 2px solid var(--primary);
+  }
+}
+
 /* Neutralize browser autofill styling so inputs match the dark theme. The fill
    uses --card to match an input's rendered background (bg-input/30 over the
    page), not --background, which looked flat/too dark on autofilled fields. */

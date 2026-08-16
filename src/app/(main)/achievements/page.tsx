@@ -1,6 +1,6 @@
 import { asc, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
-import { achievementIcon } from "@/lib/achievement-icons";
+import { AchievementCard } from "@/components/achievements/achievement-card";
 import {
   checkAchievements,
   type EvaluationResult,
@@ -10,7 +10,6 @@ import {
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { achievements, userAchievements } from "@/lib/db/schema";
-import { cn } from "@/lib/utils";
 
 const CATEGORY_LABEL: Record<string, string> = {
   general: "General",
@@ -111,57 +110,21 @@ export default async function AchievementsPage() {
                 {CATEGORY_LABEL[category] ?? category}
               </h2>
               <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                {items.map((item) => {
-                  const Icon = achievementIcon(item.icon);
-                  const pct =
-                    item.progress.target > 0
-                      ? Math.min(
-                          100,
-                          Math.round((item.progress.current / item.progress.target) * 100),
-                        )
-                      : 0;
-                  return (
-                    <li
-                      key={item.id}
-                      className={cn(
-                        "flex gap-3 rounded-xl border border-border bg-card p-3 transition-colors",
-                        item.unlocked ? "" : "opacity-60",
-                      )}
-                    >
-                      <div
-                        className={cn(
-                          "flex size-12 shrink-0 items-center justify-center rounded-lg",
-                          item.unlocked
-                            ? "bg-accent text-accent-foreground"
-                            : "bg-muted text-muted-foreground",
-                        )}
-                      >
-                        <Icon className="size-6" />
-                      </div>
-                      <div className="min-w-0 flex-1 space-y-1">
-                        <p className="font-medium leading-tight">{item.name}</p>
-                        <p className="text-xs text-muted-foreground">{item.description}</p>
-                        {item.unlocked ? (
-                          <p className="font-mono text-xs text-accent">
-                            Unlocked
-                            {item.unlockedAt
-                              ? ` ${new Date(item.unlockedAt).toLocaleDateString()}`
-                              : ""}
-                          </p>
-                        ) : (
-                          <div className="space-y-1">
-                            <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-                              <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
-                            </div>
-                            <p className="font-mono text-xs text-muted-foreground">
-                              {item.progress.current} / {item.progress.target}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </li>
-                  );
-                })}
+                {items.map((item, i) => (
+                  <AchievementCard
+                    key={item.id}
+                    index={i}
+                    item={{
+                      id: item.id,
+                      icon: item.icon,
+                      name: item.name,
+                      description: item.description,
+                      unlocked: item.unlocked,
+                      unlockedAt: item.unlockedAt ? new Date(item.unlockedAt).toISOString() : null,
+                      progress: item.progress,
+                    }}
+                  />
+                ))}
               </ul>
             </section>
           );

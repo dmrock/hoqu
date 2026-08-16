@@ -8,7 +8,7 @@ import { getAcceptedFriendIds } from "./friendships";
 import type { HobbySlug } from "./points";
 
 const WINDOW_DAYS = 30;
-const PER_CATEGORY = 3;
+const PER_CATEGORY = 4;
 const HOBBY_SLUGS: HobbySlug[] = ["movies", "tv", "games", "books"];
 // Statuses that count as "active". `planned` (wishlist) and `dropped` (abandoned)
 // are not trending. Show-parent rows carry a null status and are handled separately.

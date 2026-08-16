@@ -218,16 +218,16 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
         {recentlyCompletedRows.length === 0 ? (
           <p className="text-sm text-muted-foreground">Nothing completed yet.</p>
         ) : (
-          <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
+          <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-5">
             {recentlyCompletedRows.map((item, i) => (
-              <div key={item.id} className="w-28 shrink-0">
+              <div key={item.id} className="min-w-0">
                 <div className="relative aspect-2/3 overflow-hidden rounded-lg bg-muted">
                   {item.imageUrl ? (
                     <Image
                       src={item.imageUrl}
                       alt={item.title}
                       fill
-                      sizes="112px"
+                      sizes="(min-width: 640px) 200px, 33vw"
                       className="object-cover"
                       // Highest row on the page carrying art — measures as LCP.
                       loading={i < 4 ? "eager" : undefined}

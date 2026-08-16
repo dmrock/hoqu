@@ -406,7 +406,7 @@ describe("loadFriendsActivity", () => {
     expect(data.movies.map((m) => m.externalId)).toEqual(["IP", "C"]);
   });
 
-  it("caps each category at 3 items", async () => {
+  it("caps each category at 4 items", async () => {
     const viewer = await createTestUser();
     const friend = await createTestUser();
     await befriend(viewer.id, friend.id);
@@ -423,9 +423,9 @@ describe("loadFriendsActivity", () => {
     }
 
     const data = await loadFriendsActivity(viewer.id, false);
-    expect(data.movies).toHaveLength(3);
-    // Only the three highest-rated survive (m5/m4/m3); m1 falls off.
-    expect(data.movies.map((m) => m.externalId)).toEqual(["m5", "m4", "m3"]);
+    expect(data.movies).toHaveLength(4);
+    // Only the four highest-rated survive (m5..m2); m1 falls off.
+    expect(data.movies.map((m) => m.externalId)).toEqual(["m5", "m4", "m3", "m2"]);
   });
 });
 

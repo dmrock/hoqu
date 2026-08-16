@@ -37,15 +37,20 @@ export default async function SettingsPage() {
         <p className="text-sm text-muted-foreground">Manage your account.</p>
       </div>
 
-      <EditProfileCard
-        initialName={user.name ?? ""}
-        initialUsername={user.username ?? ""}
-        initialVisibility={user.profileVisibility as ProfileVisibility}
-      />
-      <ChangePasswordCard hasPassword={hasPassword} />
-      <ChangeEmailCard currentEmail={user.email} hasPassword={hasPassword} />
-      <ExportDataCard />
-      {user.username ? <DeleteAccountCard username={user.username} /> : null}
+      {/* Multi-column rather than a grid: the cards differ a lot in height, and
+          columns pack them without a short card leaving a hole beside a tall
+          one. Only splits at xl, below which a single column is wide enough. */}
+      <div className="columns-1 gap-6 xl:columns-2 [&>*]:mb-6 [&>*]:break-inside-avoid">
+        <EditProfileCard
+          initialName={user.name ?? ""}
+          initialUsername={user.username ?? ""}
+          initialVisibility={user.profileVisibility as ProfileVisibility}
+        />
+        <ChangePasswordCard hasPassword={hasPassword} />
+        <ChangeEmailCard currentEmail={user.email} hasPassword={hasPassword} />
+        <ExportDataCard />
+        {user.username ? <DeleteAccountCard username={user.username} /> : null}
+      </div>
     </div>
   );
 }

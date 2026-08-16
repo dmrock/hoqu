@@ -66,9 +66,7 @@ export function EditProfileCard({
       <p className="mt-2 text-sm text-muted-foreground">
         How you appear to other adventurers, and who can see your profile.
       </p>
-      {/* Capped like the sibling cards' max-w-sm forms: the card spans the page
-          but the fields keep a readable measure. */}
-      <form onSubmit={handleSubmit} className="mt-4 max-w-2xl space-y-4">
+      <form onSubmit={handleSubmit} className="mt-4 space-y-4">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="name">Display name</Label>

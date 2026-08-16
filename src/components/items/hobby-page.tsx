@@ -1,5 +1,6 @@
 import { and, asc, desc, eq, gte, inArray, isNull, or, type SQL, sql } from "drizzle-orm";
 import { redirect } from "next/navigation";
+import { FadeIn } from "@/components/ui/fade-in";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { hobbies, items } from "@/lib/db/schema";
@@ -271,7 +272,9 @@ export async function HobbyPage({
         <p className="text-muted-foreground">No {title.toLowerCase()} match the current filters.</p>
       ) : (
         <>
-          <ItemsList items={userItems} hobbySlug={hobbySlug} expanded={expanded} />
+          <FadeIn>
+            <ItemsList items={userItems} hobbySlug={hobbySlug} expanded={expanded} />
+          </FadeIn>
           <ItemsPagination
             page={page}
             totalPages={totalPages}
