@@ -77,7 +77,7 @@ export function NewReleasesRow({
                   {isOwned ? (
                     <Badge
                       variant="secondary"
-                      className="absolute top-1 left-1 text-[10px] uppercase tracking-wider"
+                      className="absolute right-1 bottom-1 text-[10px] uppercase tracking-wider"
                     >
                       Owned
                     </Badge>
