@@ -120,7 +120,7 @@ Source of truth: `src/lib/db/schema.ts`. The shapes below are summaries.
   status, rating, note, "again?" flag, plus a `pointsAwarded` snapshot (see Points System).
   TV multi-season shows use a self-referential `parentItemId` to link seasons under a parent
   show row; `seasonNumber` and `seasonCount` describe the structure. Status is nullable on
-  show-parent rows.
+  show-parent rows. See TV Seasons.
 - **friendships** — `requesterId`, `addresseeId`, `status` (pending/accepted/declined). We
   delete on decline/cancel/remove rather than write `declined`; the column exists for future
   semantics. A unique expression index (`friendships_pair_unique` on
@@ -158,6 +158,34 @@ extend.
   current `hobbies.points_per_item` and recomputes `users.total_points`. Run it after
   changing weights or whenever counters drift.
 - **Honor system** — UI message: "We trust our adventurers to log their quests honestly".
+
+## TV Seasons
+
+A TV add fetches `getTvShow` and, when TMDB both reports ≥2 seasons **and** lists them
+(`resolveSeasons` in `src/app/(main)/items/actions.ts` — it reports one without the other
+often enough to matter), splits the show into a non-counting parent row plus one row per
+season. Anything else stays a flat row. Every season row counts on its own, so a completed
+5-season show is 5 × 5 = 25 points and 5 `showsCompleted` — counters are always summed per
+season row, never derived from S1 alone.
+
+Two ways to set the same values across every season instead of one at a time:
+
+- **At add time** — `addItem` takes `applyToAllSeasons`. Off (the default), only S1 inherits
+  the user's status/rating/note/"again?" and S2..SN start `planned`; on, every season
+  inherits them. The add dialog offers it only for multi-season shows, looking the count up
+  through `getShowSeasonCount` — season counts live on TMDB's detail endpoint, so they can't
+  ride along on search results.
+- **Afterwards** — `updateShowSeasons`, behind the pencil on the show row
+  (`components/items/edit-show-seasons.tsx`). Every field is optional and **absent means
+  leave it alone**, so a rating can be applied across a show without flattening the statuses
+  of seasons not watched yet; the dialog makes each field opt-in to match. Applying a status
+  gives every season the same snapshot, so the write is a single UPDATE, and
+  `coalesce(completed_at, now())` keeps each season's original completion date.
+
+`updateItem` still refuses show-parent rows ("Edit individual seasons instead") — a parent
+carries no status of its own. `refreshShow` inserts newly aired seasons as `planned`, and
+migrates a flat row to multi-season once TMDB catches up, handing S1 the flat row's exact
+`pointsAwarded` snapshot so the counters net to zero.
 
 ## Anti-Spam (Upstash Redis)
 
@@ -287,7 +315,8 @@ All external calls go through server-side proxies that protect API keys.
   Map: `{ externalId, title, year (release_date), imageUrl (poster), externalRating (vote_average) }`.
 - **TMDB TV**: `GET /api/search/tv?q={query}` → `/3/search/tv`. Same shape, `name` →
   `title`, `first_air_date` → `year`. Multi-season shows use `getTvShow(externalId)` to
-  fetch the full season list at add time and on demand via the row's "refresh" button.
+  fetch the full season list at add time, when the add dialog needs a season count, and on
+  demand via the row's "refresh" button. See TV Seasons.
 - **IGDB**: `GET /api/search/games?q={query}` → `POST /v4/games` with an Apicalypse body.
   Map: `{ id, name, first_release_date (unix seconds), cover.image_id, total_rating }`.
   Covers are built as `images.igdb.com/igdb/image/upload/t_cover_big/{image_id}.jpg` (portrait,
@@ -377,7 +406,8 @@ src/
 │   ├── ui/                             shadcn primitives (button, dialog, dropdown, etc.)
 │   ├── layout/                         Sidebar, Header, MobileDrawer, SidebarUserMenu
 │   ├── items/                          Hobby table, toolbar, add dialog, row actions,
-│   │                                   row-focus (scroll + pulse for ?focus= deep links)
+│   │                                   all-seasons bulk editor, row-focus (scroll + pulse
+│   │                                   for ?focus= deep links)
 │   ├── dashboard/                      New-releases section + skeleton
 │   ├── achievements/                   UnlockToaster
 │   ├── settings/                       Change-password / change-email / delete-account cards
