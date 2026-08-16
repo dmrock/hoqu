@@ -5,7 +5,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { type AchievementUnlock, checkAchievements } from "@/lib/achievements";
-import { getTvShow, type TvSeason } from "@/lib/api/tmdb";
+import { getTvShow, type TvSeason, type TvShowDetails } from "@/lib/api/tmdb";
 import { requireUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { hobbies, items, users } from "@/lib/db/schema";
@@ -36,6 +36,8 @@ const addItemSchema = z.object({
   userRating: ratingSchema,
   note: noteSchema,
   wouldRevisit: z.boolean().default(false),
+  /** TV only: give every season the same status/rating/note instead of just S1. */
+  applyToAllSeasons: z.boolean().default(false),
 });
 
 const updateItemSchema = z.object({
@@ -48,6 +50,7 @@ const updateItemSchema = z.object({
 
 const deleteItemSchema = z.object({ itemId: z.uuid() });
 const refreshShowSchema = z.object({ itemId: z.uuid() });
+const showSeasonCountSchema = z.object({ externalId: z.string().min(1) });
 
 export type AddItemInput = z.input<typeof addItemSchema>;
 export type UpdateItemInput = z.input<typeof updateItemSchema>;
@@ -59,6 +62,9 @@ export type AddItemResult =
   | { ok: false; error: string; rateLimited?: boolean };
 export type RefreshShowResult =
   | { ok: true; migrated: boolean; addedSeasons: number; unlocks: AchievementUnlock[] }
+  | { ok: false; error: string };
+export type ShowSeasonCountResult =
+  | { ok: true; seasonCount: number }
   | { ok: false; error: string };
 
 const ZERO_DELTA: CounterDelta = {
@@ -117,6 +123,15 @@ function counterUpdateSet(delta: CounterDelta) {
     showsCompleted: sql`${users.showsCompleted} + ${delta.showsCompleted}`,
     itemsRated: sql`${users.itemsRated} + ${delta.itemsRated}`,
   };
+}
+
+/**
+ * TMDB sometimes reports a season count without listing the seasons (and vice
+ * versa), so both have to clear 2 before we split a show into per-season rows.
+ */
+function resolveSeasons(details: TvShowDetails): { seasonCount: number; multiSeason: boolean } {
+  const seasonCount = Math.max(details.numberOfSeasons, details.seasons.length, 1);
+  return { seasonCount, multiSeason: seasonCount >= 2 && details.seasons.length >= 2 };
 }
 
 function seasonRow(args: {
@@ -200,18 +215,19 @@ export async function addItem(input: AddItemInput): Promise<AddItemResult> {
 
   let seasonCount = 1;
   let seasons: TvSeason[] = [];
+  let isMultiSeason = false;
   if (data.hobbySlug === "tv") {
     try {
       const details = await getTvShow(data.externalId);
-      seasonCount = Math.max(details.numberOfSeasons, details.seasons.length, 1);
+      const resolved = resolveSeasons(details);
+      seasonCount = resolved.seasonCount;
+      isMultiSeason = resolved.multiSeason;
       seasons = details.seasons;
     } catch (err) {
       console.error("getTvShow failed during addItem", err);
       return { ok: false, error: "Could not load show details" };
     }
   }
-
-  const isMultiSeason = data.hobbySlug === "tv" && seasonCount >= 2 && seasons.length >= 2;
 
   if (!isMultiSeason) {
     const newPointsAwarded = snapshotPoints({
@@ -257,8 +273,10 @@ export async function addItem(input: AddItemInput): Promise<AddItemResult> {
     };
   }
 
-  // Multi-season TV: parent row is non-counting; S1 inherits the user's input,
-  // S2..SN start as planned. Only S1's snapshot contributes to total points.
+  // Multi-season TV: the parent row is non-counting. S1 inherits the user's
+  // input and S2..SN start as planned — unless "apply to all seasons" is on,
+  // which hands every season the same input so a finished long-running show
+  // doesn't have to be rated season by season.
   const showId = randomUUID();
   const showRow = {
     id: showId,
@@ -282,8 +300,9 @@ export async function addItem(input: AddItemInput): Promise<AddItemResult> {
 
   const sortedSeasons = [...seasons].sort((a, b) => a.seasonNumber - b.seasonNumber);
   const childRows = sortedSeasons.map((season) => {
-    const isFirst = season.seasonNumber === sortedSeasons[0].seasonNumber;
-    const status = isFirst ? data.status : ("planned" as ItemStatus);
+    const inherits =
+      data.applyToAllSeasons || season.seasonNumber === sortedSeasons[0].seasonNumber;
+    const status = inherits ? data.status : ("planned" as ItemStatus);
     return seasonRow({
       id: randomUUID(),
       userId,
@@ -293,26 +312,31 @@ export async function addItem(input: AddItemInput): Promise<AddItemResult> {
       showImageUrl: data.imageUrl,
       season,
       status,
-      userRating: isFirst ? data.userRating : null,
-      note: isFirst ? data.note : null,
-      wouldRevisit: isFirst ? data.wouldRevisit : false,
+      userRating: inherits ? data.userRating : null,
+      note: inherits ? data.note : null,
+      wouldRevisit: inherits ? data.wouldRevisit : false,
       pointsAwarded: snapshotPoints({ status, pointsPerItem: hobby.pointsPerItem }),
     });
   });
 
-  const s1NewPoints = snapshotPoints({
-    status: data.status,
-    pointsPerItem: hobby.pointsPerItem,
-  });
-  const delta = computeCounterDelta({
-    oldStatus: null,
-    newStatus: data.status,
-    oldRating: null,
-    newRating: data.userRating,
-    oldPointsAwarded: 0,
-    newPointsAwarded: s1NewPoints,
-    hobbySlug: "tv",
-  });
+  // Each season is its own counting row, so the user delta is the sum over all
+  // of them — with "apply to all" off, S2..SN contribute nothing.
+  const delta = childRows.reduce(
+    (acc, row) =>
+      addDelta(
+        acc,
+        computeCounterDelta({
+          oldStatus: null,
+          newStatus: row.status,
+          oldRating: null,
+          newRating: row.userRating,
+          oldPointsAwarded: 0,
+          newPointsAwarded: row.pointsAwarded,
+          hobbySlug: "tv",
+        }),
+      ),
+    ZERO_DELTA,
+  );
 
   await db.batch([
     db.insert(items).values(showRow),
@@ -496,7 +520,7 @@ export async function refreshShow(input: { itemId: string }): Promise<RefreshSho
     return { ok: false, error: "Could not load show details" };
   }
 
-  const fresh = Math.max(details.numberOfSeasons, details.seasons.length, 1);
+  const { seasonCount: fresh, multiSeason } = resolveSeasons(details);
 
   if (childCount > 0) {
     // Already multi-season: insert seasons TMDB has that we don't. Existing
@@ -548,7 +572,7 @@ export async function refreshShow(input: { itemId: string }): Promise<RefreshSho
     return { ok: true, migrated: false, addedSeasons: newRows.length, unlocks };
   }
 
-  if (fresh < 2 || details.seasons.length < 2) {
+  if (!multiSeason) {
     if (fresh !== existing.seasonCount) {
       await db.update(items).set({ seasonCount: fresh }).where(eq(items.id, itemId));
     }
@@ -600,4 +624,28 @@ export async function refreshShow(input: { itemId: string }): Promise<RefreshSho
   const unlocks = await checkAchievements(userId);
   revalidatePath("/tv");
   return { ok: true, migrated: true, addedSeasons: childRows.length, unlocks };
+}
+
+/**
+ * How many season rows `addItem` would create for a show, so the add dialog can
+ * offer "apply to all seasons" with a real number. Returns 1 for anything that
+ * stays a flat row — there is nothing to spread a rating across.
+ */
+export async function getShowSeasonCount(input: {
+  externalId: string;
+}): Promise<ShowSeasonCountResult> {
+  const session = await requireUserId();
+  if (!session.ok) return session;
+
+  const parsed = showSeasonCountSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "Invalid input" };
+
+  try {
+    const details = await getTvShow(parsed.data.externalId);
+    const { multiSeason } = resolveSeasons(details);
+    return { ok: true, seasonCount: multiSeason ? details.seasons.length : 1 };
+  } catch (err) {
+    console.error("getTvShow failed during getShowSeasonCount", err);
+    return { ok: false, error: "Could not load show details" };
+  }
 }

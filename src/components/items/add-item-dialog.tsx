@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState, useTransition } from "react";
-import { addItem } from "@/app/(main)/items/actions";
+import { addItem, getShowSeasonCount } from "@/app/(main)/items/actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -79,6 +79,8 @@ export function AddItemDialog({
   const [userRating, setUserRating] = useState<string>("none");
   const [note, setNote] = useState("");
   const [wouldRevisit, setWouldRevisit] = useState(false);
+  const [seasonCount, setSeasonCount] = useState(1);
+  const [applyToAllSeasons, setApplyToAllSeasons] = useState(false);
   const [submitting, startTransition] = useTransition();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [slotsLeft, setSlotsLeft] = useState<number | null>(null);
@@ -143,6 +145,24 @@ export function AddItemDialog({
     };
   }, [debounced, hobbySlug, selected]);
 
+  // Season count only exists on the show detail endpoint, so it can't ride
+  // along on search results — look it up once the user has picked a show.
+  // A failed lookup falls back to 1, which just hides the option; the add
+  // itself still works.
+  useEffect(() => {
+    setSeasonCount(1);
+    setApplyToAllSeasons(false);
+    if (hobbySlug !== "tv" || !selected) return;
+
+    let cancelled = false;
+    getShowSeasonCount({ externalId: selected.externalId }).then((res) => {
+      if (!cancelled && res.ok) setSeasonCount(res.seasonCount);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [hobbySlug, selected]);
+
   function reset() {
     setQuery("");
     setDebounced("");
@@ -153,6 +173,7 @@ export function AddItemDialog({
     setUserRating("none");
     setNote("");
     setWouldRevisit(false);
+    setApplyToAllSeasons(false);
     setSubmitError(null);
   }
 
@@ -177,6 +198,7 @@ export function AddItemDialog({
         userRating: userRating === "none" ? null : Number(userRating),
         note: note.trim() ? note.trim() : null,
         wouldRevisit,
+        applyToAllSeasons,
       });
       if (res.ok) {
         notifyUnlocks(res.unlocks);
@@ -274,6 +296,22 @@ export function AddItemDialog({
               />
               Again?
             </label>
+            {seasonCount >= 2 ? (
+              <label className="flex gap-2 rounded-lg border border-border bg-muted/20 p-3 text-sm">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 self-start"
+                  checked={applyToAllSeasons}
+                  onChange={(e) => setApplyToAllSeasons(e.target.checked)}
+                />
+                <span>
+                  Apply to all {seasonCount} seasons
+                  <span className="mt-0.5 block text-xs text-muted-foreground">
+                    Every season gets this status, rating and note. Edit any season afterwards.
+                  </span>
+                </span>
+              </label>
+            ) : null}
             {submitError ? <p className="text-sm text-destructive">{submitError}</p> : null}
             <DialogFooter>
               <Button

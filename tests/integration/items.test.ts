@@ -1,7 +1,13 @@
 import { and, asc, eq, isNull } from "drizzle-orm";
 import { describe, expect, it, vi } from "vitest";
 import type { AddItemInput } from "@/app/(main)/items/actions";
-import { addItem, deleteItem, refreshShow, updateItem } from "@/app/(main)/items/actions";
+import {
+  addItem,
+  deleteItem,
+  getShowSeasonCount,
+  refreshShow,
+  updateItem,
+} from "@/app/(main)/items/actions";
 import { getTvShow, type TvShowDetails } from "@/lib/api/tmdb";
 import { db } from "@/lib/db";
 import { achievements, items, userAchievements } from "@/lib/db/schema";
@@ -241,6 +247,128 @@ async function addTwoSeasonShow(userId: string) {
   if (!parent) throw new Error("no parent row");
   return parent;
 }
+
+describe("addItem — multi-season TV", () => {
+  it("only lets S1 inherit the user's input by default", async () => {
+    const user = await createTestUser();
+    setTestUserId(user.id);
+    const parent = await addTwoSeasonShow(user.id);
+
+    const children = await db
+      .select()
+      .from(items)
+      .where(and(eq(items.userId, user.id), eq(items.parentItemId, parent.id)))
+      .orderBy(asc(items.seasonNumber));
+
+    expect(children.map((c) => c.status)).toEqual(["completed", "planned"]);
+    expect(children.map((c) => c.userRating)).toEqual([9, null]);
+
+    const u = await fetchUser(user.id);
+    expect(u?.totalPoints).toBe(5);
+    expect(u?.showsCompleted).toBe(1);
+    expect(u?.itemsRated).toBe(1);
+  });
+
+  it("applyToAllSeasons gives every season the same status, rating and note", async () => {
+    const user = await createTestUser();
+    setTestUserId(user.id);
+    vi.mocked(getTvShow).mockResolvedValue(tvDetails(4));
+
+    const res = await addItem({
+      hobbySlug: "tv",
+      externalId: "600",
+      title: "Finished Show",
+      imageUrl: null,
+      year: 2018,
+      externalRating: 9.1,
+      status: "completed",
+      userRating: 8,
+      note: "All of it",
+      wouldRevisit: true,
+      applyToAllSeasons: true,
+    });
+    expect(res.ok).toBe(true);
+
+    const [parent] = await db
+      .select()
+      .from(items)
+      .where(and(eq(items.userId, user.id), isNull(items.parentItemId)));
+    if (!parent) throw new Error("no parent row");
+
+    const children = await db
+      .select()
+      .from(items)
+      .where(and(eq(items.userId, user.id), eq(items.parentItemId, parent.id)))
+      .orderBy(asc(items.seasonNumber));
+    expect(children).toHaveLength(4);
+    for (const child of children) {
+      expect(child.status).toBe("completed");
+      expect(child.userRating).toBe(8);
+      expect(child.note).toBe("All of it");
+      expect(child.wouldRevisit).toBe(true);
+      expect(child.pointsAwarded).toBe(5);
+    }
+
+    // The parent stays non-counting; every season counts on its own.
+    expect(parent.pointsAwarded).toBe(0);
+    expect(parent.status).toBeNull();
+
+    const u = await fetchUser(user.id);
+    expect(u?.totalPoints).toBe(20);
+    expect(u?.showsCompleted).toBe(4);
+    expect(u?.itemsRated).toBe(4);
+  });
+
+  it("applyToAllSeasons does not award points for a non-completed status", async () => {
+    const user = await createTestUser();
+    setTestUserId(user.id);
+    vi.mocked(getTvShow).mockResolvedValue(tvDetails(3));
+
+    await addItem({
+      hobbySlug: "tv",
+      externalId: "601",
+      title: "Planned Show",
+      imageUrl: null,
+      year: 2021,
+      externalRating: null,
+      status: "planned",
+      userRating: null,
+      note: null,
+      wouldRevisit: false,
+      applyToAllSeasons: true,
+    });
+
+    const u = await fetchUser(user.id);
+    expect(u?.totalPoints).toBe(0);
+    expect(u?.showsCompleted).toBe(0);
+  });
+});
+
+describe("getShowSeasonCount", () => {
+  it("reports the number of season rows a multi-season add would create", async () => {
+    const user = await createTestUser();
+    setTestUserId(user.id);
+    vi.mocked(getTvShow).mockResolvedValue(tvDetails(6));
+
+    const res = await getShowSeasonCount({ externalId: "700" });
+    expect(res).toEqual({ ok: true, seasonCount: 6 });
+  });
+
+  it("reports 1 for a show that stays a flat row", async () => {
+    const user = await createTestUser();
+    setTestUserId(user.id);
+    vi.mocked(getTvShow).mockResolvedValue(tvDetails(1));
+
+    const res = await getShowSeasonCount({ externalId: "701" });
+    expect(res).toEqual({ ok: true, seasonCount: 1 });
+  });
+
+  it("rejects when the auth gate fails", async () => {
+    setTestUserId(null);
+    const res = await getShowSeasonCount({ externalId: "702" });
+    expect(res.ok).toBe(false);
+  });
+});
 
 describe("refreshShow", () => {
   it("is a no-op when the multi-season show is already up to date", async () => {
