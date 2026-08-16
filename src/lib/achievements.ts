@@ -30,6 +30,9 @@ export type EvaluationResult = {
   satisfied: boolean;
   current: number;
   target: number;
+  /** What `current`/`target` count, when it isn't the obvious "items" — an
+   *  "in every hobby" requirement counts hobbies, not items. */
+  unit?: string;
 };
 
 const HOBBY_COUNTER: Record<string, keyof UserCounters> = {
@@ -76,16 +79,22 @@ const evaluators: {
     }
     return { satisfied: current >= target, current, target };
   },
+  // Progress counts hobbies that already clear the bar, not items: "1 / 25"
+  // next to "Complete 25+ in every hobby" reads as hobbies and can't be told
+  // apart from a per-item count.
   all_hobbies: (req, c) => {
     const hobbyList = req.hobbies ?? DEFAULT_ALL_HOBBIES;
-    const target = req.min_per_hobby;
     const mode = req.mode ?? "completed";
     const counts = hobbyList.map((h) =>
       mode === "logged" ? (c.loggedByHobby[h] ?? 0) : completedCount(c, h),
     );
-    const min = counts.length > 0 ? Math.min(...counts) : 0;
-    const satisfied = counts.length > 0 && counts.every((n) => n >= target);
-    return { satisfied, current: min, target };
+    const cleared = counts.filter((n) => n >= req.min_per_hobby).length;
+    return {
+      satisfied: counts.length > 0 && cleared === counts.length,
+      current: cleared,
+      target: counts.length,
+      unit: counts.length === 1 ? "hobby" : "hobbies",
+    };
   },
   items_rated: (req, c) => {
     const target = req.count;

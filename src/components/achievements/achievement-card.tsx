@@ -17,7 +17,7 @@ export type AchievementCardData = {
   description: string;
   unlocked: boolean;
   unlockedAt: string | null;
-  progress: { current: number; target: number };
+  progress: { current: number; target: number; unit?: string };
 };
 
 export function AchievementCard({ item, index }: { item: AchievementCardData; index: number }) {
@@ -59,6 +59,7 @@ export function AchievementCard({ item, index }: { item: AchievementCardData; in
             <PixelProgress value={item.progress.current} target={item.progress.target} />
             <p className="font-mono text-xs text-muted-foreground">
               {item.progress.current} / {item.progress.target}
+              {item.progress.unit ? ` ${item.progress.unit}` : ""}
             </p>
           </div>
         )}
