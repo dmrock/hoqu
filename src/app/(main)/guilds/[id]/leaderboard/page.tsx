@@ -40,7 +40,7 @@ export default async function GuildLeaderboardPage({
             Back
           </Link>
         </Button>
-        <h1 className="font-pixel text-2xl">Leaderboard · {ctx.guild.name}</h1>
+        <h1 className="break-words font-pixel text-2xl">Leaderboard · {ctx.guild.name}</h1>
       </div>
 
       <LeaderboardScopeTabs active={scope} />

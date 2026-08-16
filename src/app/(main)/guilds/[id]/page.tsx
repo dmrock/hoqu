@@ -51,20 +51,24 @@ export default async function GuildDetailPage({
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <section className="flex items-start gap-4 rounded-xl border border-border bg-card p-5">
-        <div className="flex size-14 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-          <Shield className="size-7" />
+      {/* The three actions need ~335px side by side, so below sm they drop
+          under the identity block and wrap among themselves. */}
+      <section className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5 sm:flex-row sm:items-start">
+        <div className="flex min-w-0 flex-1 items-start gap-4">
+          <div className="flex size-14 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+            <Shield className="size-7" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h1 className="break-words font-pixel text-2xl">{guild.name}</h1>
+            <p className="text-xs text-muted-foreground">
+              {members.length} / {guild.maxMembers} members
+            </p>
+            {guild.description ? (
+              <p className="mt-2 text-sm text-muted-foreground">{guild.description}</p>
+            ) : null}
+          </div>
         </div>
-        <div className="min-w-0 flex-1">
-          <h1 className="font-pixel text-2xl">{guild.name}</h1>
-          <p className="text-xs text-muted-foreground">
-            {members.length} / {guild.maxMembers} members
-          </p>
-          {guild.description ? (
-            <p className="mt-2 text-sm text-muted-foreground">{guild.description}</p>
-          ) : null}
-        </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" size="sm" asChild>
             <Link href={`/guilds/${guild.id}/leaderboard`}>
               <Trophy />

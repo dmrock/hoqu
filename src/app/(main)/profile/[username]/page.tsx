@@ -171,7 +171,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
           <AvatarFallback>{initials}</AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1">
-          <h1 className="font-pixel text-2xl">{profile.name ?? profile.username}</h1>
+          <h1 className="break-words font-pixel text-2xl">{profile.name ?? profile.username}</h1>
           <p className="font-mono text-sm text-muted-foreground">
             @{profile.username} · joined {joined}
           </p>
@@ -190,7 +190,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
         ) : null}
       </section>
 
-      <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {stats.map((s) => (
           <div key={s.label} className="rounded-xl border border-border bg-card p-4">
             <div className="flex items-center justify-between text-muted-foreground">
@@ -203,8 +203,8 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
       </section>
 
       <section className="space-y-3">
-        <h2 className="font-pixel text-sm text-muted-foreground uppercase">By hobby</h2>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <h2 className="font-pixel text-sm text-muted-foreground uppercase">Quest log</h2>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {hobbyCards.map((c) => (
             <div
               key={c.slug}
@@ -228,7 +228,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
           <p className="text-sm text-muted-foreground">Nothing completed yet.</p>
         ) : (
           <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
-            {recentlyCompletedRows.map((item) => (
+            {recentlyCompletedRows.map((item, i) => (
               <div key={item.id} className="w-28 shrink-0">
                 <div className="relative aspect-2/3 overflow-hidden rounded-lg bg-muted">
                   {item.imageUrl ? (
@@ -238,6 +238,8 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
                       fill
                       sizes="112px"
                       className="object-cover"
+                      // Highest row on the page carrying art — measures as LCP.
+                      loading={i < 4 ? "eager" : undefined}
                     />
                   ) : null}
                 </div>

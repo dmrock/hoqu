@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowDownUp, RotateCw } from "lucide-react";
+import { ArrowDownUp, Plus, RotateCw } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useTransition } from "react";
 import { Button } from "@/components/ui/button";
@@ -14,10 +14,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { type ItemsFilter, SORT_OPTIONS, type SortValue, STATUS_OPTIONS } from "@/lib/items-filter";
-import type { ItemStatus } from "@/lib/points";
+import type { HobbySlug, ItemStatus } from "@/lib/points";
 import { cn } from "@/lib/utils";
+import { AddItemDialog } from "./add-item-dialog";
 
-export function ItemsToolbar({ filter }: { filter: ItemsFilter }) {
+export function ItemsToolbar({ filter, hobbySlug }: { filter: ItemsFilter; hobbySlug: HobbySlug }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -72,10 +73,12 @@ export function ItemsToolbar({ filter }: { filter: ItemsFilter }) {
       className="flex flex-wrap items-center gap-x-4 gap-y-2"
       data-pending={pending || undefined}
     >
+      {/* The five tabs are wider than a 375px viewport, so the strip scrolls
+          rather than clipping the tabs past the fold out of reach. */}
       <div
         role="tablist"
         aria-label="Filter by status"
-        className="inline-flex h-7 items-center overflow-hidden rounded-md border border-border bg-muted/40"
+        className="flex h-7 max-w-full items-center overflow-x-auto rounded-md border border-border bg-muted/40 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {tabs.map((t) => {
           const active = activeStatus === t.value;
@@ -87,7 +90,7 @@ export function ItemsToolbar({ filter }: { filter: ItemsFilter }) {
               aria-selected={active}
               onClick={() => selectStatus(t.value)}
               className={cn(
-                "h-full px-3 text-[0.8rem] transition-colors",
+                "h-full shrink-0 whitespace-nowrap px-3 text-[0.8rem] transition-colors",
                 active
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -133,6 +136,18 @@ export function ItemsToolbar({ filter }: { filter: ItemsFilter }) {
             </DropdownMenuRadioGroup>
           </DropdownMenuContent>
         </DropdownMenu>
+      </div>
+
+      <div className="w-full sm:ml-auto sm:w-auto">
+        <AddItemDialog
+          hobbySlug={hobbySlug}
+          trigger={
+            <Button className="w-full sm:w-auto">
+              <Plus />
+              Add
+            </Button>
+          }
+        />
       </div>
     </div>
   );

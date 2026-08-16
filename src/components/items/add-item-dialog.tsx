@@ -1,6 +1,5 @@
 "use client";
 
-import { Plus } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState, useTransition } from "react";
 import { addItem } from "@/app/(main)/items/actions";
@@ -36,7 +35,7 @@ type Props = {
   defaultStatus?: ItemStatus;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-  /** Pass `null` to suppress the built-in "Add" trigger button. */
+  /** Omit for dialogs opened from outside via the `open` prop. */
   trigger?: React.ReactNode;
 };
 
@@ -189,19 +188,9 @@ export function AddItemDialog({
     });
   }
 
-  const triggerNode =
-    trigger === undefined ? (
-      <Button>
-        <Plus />
-        Add
-      </Button>
-    ) : (
-      trigger
-    );
-
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      {triggerNode ? <DialogTrigger asChild>{triggerNode}</DialogTrigger> : null}
+      {trigger ? <DialogTrigger asChild>{trigger}</DialogTrigger> : null}
       <DialogContent className="max-w-lg">
         {slotsLeft !== null && slotsLeft <= 20 ? (
           <p className="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-warning">

@@ -113,7 +113,6 @@ function TrendingRow({
             setOpen(next);
             if (!next) setSelected(null);
           }}
-          trigger={null}
         />
       ) : null}
     </section>
@@ -169,10 +168,12 @@ function TrendingCard({
           {item.combinedRate.toFixed(1)}
         </Badge>
       ) : null}
+      {/* Bottom corner, not top-right: the rating badge already claims the top
+          row, and the two together are wider than a 112px poster. */}
       {addable && owned ? (
         <Badge
           variant="secondary"
-          className="absolute top-1 right-1 text-[10px] uppercase tracking-wider"
+          className="absolute right-1 bottom-1 text-[10px] uppercase tracking-wider"
         >
           Owned
         </Badge>

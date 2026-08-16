@@ -109,7 +109,7 @@ export default async function FriendsPage({
       ) : null}
 
       <section className="space-y-3">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
           <h2 className="font-pixel text-sm text-muted-foreground uppercase">
             Trending with friends
           </h2>

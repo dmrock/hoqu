@@ -3,7 +3,13 @@ import { getNowPlayingMovies, getOnTheAirTvShows } from "@/lib/api/tmdb";
 import { filterOwnedExternalIds } from "@/lib/owned-items";
 import { NewReleasesRow } from "./new-releases-row";
 
-export async function MoviesNewReleases({ viewerId }: { viewerId: string }) {
+export async function MoviesNewReleases({
+  viewerId,
+  eager,
+}: {
+  viewerId: string;
+  eager?: boolean;
+}) {
   const items = await getNowPlayingMovies().catch((err) => {
     console.error("getNowPlayingMovies failed", err);
     return [];
@@ -20,6 +26,7 @@ export async function MoviesNewReleases({ viewerId }: { viewerId: string }) {
       items={items}
       ownedExternalIds={ownedExternalIds}
       emptyHint="Couldn't load."
+      eager={eager}
     />
   );
 }
