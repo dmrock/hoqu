@@ -1,7 +1,7 @@
 import {
   Command,
+  Compass,
   Download,
-  LayoutDashboard,
   LayoutGrid,
   Lock,
   Medal,
@@ -130,15 +130,12 @@ export default function FeaturesPage() {
             </p>
           </Section>
 
-          <Section
-            sprite={<LayoutDashboard className="size-5 text-primary" />}
-            title="A dashboard that keeps score"
-          >
+          <Section sprite={<Compass className="size-5 text-primary" />} title="Explore what's next">
             <p>
-              Your dashboard shows total XP, items completed, items rated, and achievements at a
-              glance, plus a per-hobby breakdown and your most recent unlocks. A New Releases strip
-              surfaces what&apos;s now in theaters, newly aired, and just launched — and flags
-              anything already in your list.
+              Explore picks up what you left unfinished and puts a New Releases strip underneath —
+              what&apos;s now in theaters, newly aired, and just launched — flagging anything
+              already in your list. Your totals, per-hobby breakdown and most recent unlocks live on
+              your profile, which is also what visitors see.
             </p>
           </Section>
 

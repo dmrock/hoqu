@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { UnlockToaster } from "@/components/achievements/unlock-toaster";
 import { DataAttribution } from "@/components/layout/data-attribution";
 import { Header } from "@/components/layout/header";
+import { MotionProvider } from "@/components/layout/motion-provider";
 import { Sidebar } from "@/components/layout/sidebar";
 import { VerifyEmailBanner } from "@/components/layout/verify-email-banner";
 import { auth } from "@/lib/auth";
@@ -39,17 +40,19 @@ export default async function MainLayout({ children }: { children: React.ReactNo
   };
 
   return (
-    <div className="flex min-h-svh">
-      <Sidebar {...userProps} pendingRequests={pendingRequests} />
-      <div className="flex min-w-0 flex-1 flex-col">
-        <Header {...userProps} pendingRequests={pendingRequests} />
-        {profile && !profile.emailVerified ? <VerifyEmailBanner email={userProps.email} /> : null}
-        <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 md:px-6">{children}</main>
-        <footer className="mx-auto w-full max-w-7xl px-4 pb-6 md:px-6">
-          <DataAttribution />
-        </footer>
+    <MotionProvider>
+      <div className="flex min-h-svh">
+        <Sidebar {...userProps} pendingRequests={pendingRequests} />
+        <div className="flex min-w-0 flex-1 flex-col">
+          <Header {...userProps} pendingRequests={pendingRequests} />
+          {profile && !profile.emailVerified ? <VerifyEmailBanner email={userProps.email} /> : null}
+          <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 md:px-6">{children}</main>
+          <footer className="mx-auto w-full max-w-7xl px-4 pb-6 md:px-6">
+            <DataAttribution />
+          </footer>
+        </div>
+        <UnlockToaster />
       </div>
-      <UnlockToaster />
-    </div>
+    </MotionProvider>
   );
 }

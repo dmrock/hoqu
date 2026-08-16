@@ -20,7 +20,7 @@ const CATEGORIES: { slug: HobbySlug; label: string }[] = [
 
 // Each category renders this many fixed slots so cards never reflow: a new item
 // drops into the next placeholder's exact position instead of shifting siblings.
-const SLOTS = [0, 1, 2];
+const SLOTS = [0, 1, 2, 3];
 
 // Trending carries the friends' average rating, not the external catalog rating,
 // so the item we hand to the add dialog has no externalRating to seed.
@@ -85,7 +85,7 @@ function TrendingRow({
       <h3 className="border-l-2 border-accent pl-2 font-mono text-xs text-foreground uppercase tracking-wider">
         {label}
       </h3>
-      <div className="-m-1 flex gap-3 overflow-x-auto p-1 pb-2">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-4">
         {SLOTS.map((i) => {
           const item = items[i];
           if (!item) return <EmptyCard key={`empty-${i}`} />;
@@ -121,7 +121,7 @@ function TrendingRow({
 
 function EmptyCard() {
   return (
-    <div className="w-28 shrink-0">
+    <div className="min-w-0">
       <div className="flex aspect-2/3 items-center justify-center rounded-lg border border-dashed border-border bg-muted/20 text-muted-foreground">
         <CircleDashed className="size-6 opacity-40" />
       </div>
@@ -155,7 +155,7 @@ function TrendingCard({
           src={item.imageUrl}
           alt={item.title}
           fill
-          sizes="112px"
+          sizes="(min-width: 640px) 180px, 45vw"
           className={cn(
             "object-cover transition-transform duration-200",
             interactive && "group-hover:scale-105",
@@ -207,7 +207,7 @@ function TrendingCard({
         type="button"
         onClick={onAdd}
         aria-label={`Add ${item.title} to collection`}
-        className="group w-28 shrink-0 cursor-pointer text-left"
+        className="group min-w-0 cursor-pointer text-left"
       >
         {poster}
         {meta}
@@ -216,7 +216,7 @@ function TrendingCard({
   }
 
   return (
-    <div className={cn("w-28 shrink-0", addable && owned && "opacity-60")}>
+    <div className={cn("min-w-0", addable && owned && "opacity-60")}>
       {poster}
       {meta}
     </div>

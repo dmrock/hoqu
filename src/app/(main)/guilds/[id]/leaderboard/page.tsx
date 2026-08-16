@@ -32,7 +32,7 @@ export default async function GuildLeaderboardPage({
   const rows = sortLeaderboard(rawRows, scope);
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="sm" asChild>
           <Link href={`/guilds/${ctx.guild.id}`}>

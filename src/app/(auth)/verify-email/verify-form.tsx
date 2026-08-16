@@ -24,7 +24,7 @@ export function VerifyEmailForm({ token }: { token: string }) {
           Thanks — your email is confirmed. Enjoy your quests!
         </p>
         <Button asChild className="w-full">
-          <Link href="/dashboard">Go to HOQU</Link>
+          <Link href="/explore">Go to HOQU</Link>
         </Button>
       </div>
     );

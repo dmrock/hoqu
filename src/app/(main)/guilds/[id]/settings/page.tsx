@@ -19,7 +19,7 @@ export default async function GuildSettingsPage({ params }: { params: Promise<{ 
   const isMaster = ctx.viewerRole === "master";
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="sm" asChild>
           <Link href={`/guilds/${ctx.guild.id}`}>

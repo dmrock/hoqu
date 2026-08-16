@@ -32,7 +32,7 @@ test.describe("account settings", () => {
 });
 
 test("settings is reachable from the sidebar profile menu", async ({ app, page }) => {
-  await app.dashboard.goto();
+  await app.explore.goto();
   await app.sidebar.profileMenuButton.click();
   await page.getByRole("menuitem", { name: "Settings" }).click();
   await expect(page).toHaveURL(/\/settings$/);

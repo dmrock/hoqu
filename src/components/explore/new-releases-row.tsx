@@ -121,9 +121,9 @@ export function NewReleasesSkeleton({ title }: { title: string }) {
       <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
         {Array.from({ length: 8 }, (_, i) => (
           // biome-ignore lint/suspicious/noArrayIndexKey: skeleton placeholders
-          <div key={i} className="animate-pulse">
-            <div className="aspect-2/3 rounded-lg bg-muted" />
-            <div className="mt-1 h-3 w-20 max-w-full rounded bg-muted" />
+          <div key={i}>
+            <div className="skeleton aspect-2/3 rounded-lg" />
+            <div className="skeleton mt-1 h-3 w-20 max-w-full rounded" />
           </div>
         ))}
       </div>

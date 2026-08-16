@@ -70,7 +70,7 @@ export default async function FriendsPage({
   const friends = entries.filter((e) => e.status === "friends");
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
+    <div className="space-y-8">
       <div className="flex items-center justify-between gap-3">
         <h1 className="font-pixel text-2xl">Friends</h1>
         <Button variant="outline" size="sm" asChild>

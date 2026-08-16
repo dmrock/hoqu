@@ -11,15 +11,16 @@ import {
   Zap,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { achievementIcon } from "@/lib/achievement-icons";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { hobbies, items, userAchievements, users } from "@/lib/db/schema";
+import { achievements, hobbies, items, userAchievements, users } from "@/lib/db/schema";
 import { getFriendshipStatus } from "@/lib/friendships";
 import { shareGuild } from "@/lib/guilds";
 import type { HobbySlug } from "@/lib/points";
-import { EditProfileForm } from "./edit-profile-form";
 import { FriendStatusButton } from "./friend-status-button";
 
 type ProfileVisibility = "public" | "friends_only" | "guild_only" | "private";
@@ -88,7 +89,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
     if (!sharesGuild) notFound();
   }
 
-  const [totalUnlocked, recentlyCompletedRows, inProgressRows] = await Promise.all([
+  const [totalUnlocked, recentlyCompletedRows, recentUnlocks] = await Promise.all([
     db.$count(userAchievements, eq(userAchievements.userId, profile.id)),
     db
       .select({
@@ -102,30 +103,21 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
       .innerJoin(hobbies, eq(items.hobbyId, hobbies.id))
       .where(and(eq(items.userId, profile.id), eq(items.status, "completed")))
       .orderBy(desc(items.completedAt))
-      .limit(5),
+      // Matches the 8-across poster grid, so the row fills at xl.
+      .limit(8),
     db
       .select({
-        id: items.id,
-        title: items.title,
-        imageUrl: items.imageUrl,
-        updatedAt: items.updatedAt,
-        hobbySlug: hobbies.slug,
+        icon: achievements.icon,
+        name: achievements.name,
+        description: achievements.description,
+        unlockedAt: userAchievements.unlockedAt,
       })
-      .from(items)
-      .innerJoin(hobbies, eq(items.hobbyId, hobbies.id))
-      .where(and(eq(items.userId, profile.id), eq(items.status, "in_progress")))
-      .orderBy(desc(items.updatedAt))
-      .limit(50),
+      .from(userAchievements)
+      .innerJoin(achievements, eq(userAchievements.achievementId, achievements.id))
+      .where(eq(userAchievements.userId, profile.id))
+      .orderBy(desc(userAchievements.unlockedAt))
+      .limit(4),
   ]);
-
-  // Group in-progress items by hobby and keep only the freshest per hobby.
-  const inProgressByHobby = new Map<string, (typeof inProgressRows)[number]>();
-  for (const row of inProgressRows) {
-    if (!inProgressByHobby.has(row.hobbySlug)) inProgressByHobby.set(row.hobbySlug, row);
-  }
-  const inProgressList = HOBBY_ORDER.map((slug) => inProgressByHobby.get(slug)).filter(
-    (row): row is (typeof inProgressRows)[number] => row != null,
-  );
 
   const totalCompleted =
     profile.moviesCompleted +
@@ -162,7 +154,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
   const friendName = profile.name ?? profile.username ?? undefined;
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8">
+    <div className="space-y-8">
       <section className="flex items-center gap-4 rounded-xl border border-border bg-card p-5">
         <Avatar className="size-16">
           {profile.image ? (
@@ -227,16 +219,16 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
         {recentlyCompletedRows.length === 0 ? (
           <p className="text-sm text-muted-foreground">Nothing completed yet.</p>
         ) : (
-          <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
+          <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
             {recentlyCompletedRows.map((item, i) => (
-              <div key={item.id} className="w-28 shrink-0">
+              <div key={item.id} className="min-w-0">
                 <div className="relative aspect-2/3 overflow-hidden rounded-lg bg-muted">
                   {item.imageUrl ? (
                     <Image
                       src={item.imageUrl}
                       alt={item.title}
                       fill
-                      sizes="112px"
+                      sizes="(min-width: 640px) 160px, 33vw"
                       className="object-cover"
                       // Highest row on the page carrying art — measures as LCP.
                       loading={i < 4 ? "eager" : undefined}
@@ -256,48 +248,38 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
       </section>
 
       <section className="space-y-3">
-        <h2 className="font-pixel text-sm text-muted-foreground uppercase">In progress</h2>
-        {inProgressList.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nothing in progress.</p>
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 className="font-pixel text-sm text-muted-foreground uppercase">Latest unlocks</h2>
+          {isOwner ? (
+            <Link href="/achievements" className="text-xs text-primary hover:underline">
+              View all
+            </Link>
+          ) : null}
+        </div>
+        {recentUnlocks.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No achievements yet.</p>
         ) : (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {inProgressList.map((item) => (
-              <div key={item.id} className="flex gap-3 rounded-xl border border-border bg-card p-3">
-                <div className="relative h-20 w-14 shrink-0 overflow-hidden rounded bg-muted">
-                  {item.imageUrl ? (
-                    <Image
-                      src={item.imageUrl}
-                      alt={item.title}
-                      fill
-                      sizes="56px"
-                      className="object-cover"
-                    />
-                  ) : null}
+            {recentUnlocks.map((u) => {
+              const Icon = achievementIcon(u.icon);
+              return (
+                <div
+                  key={`${u.name}-${u.unlockedAt.toISOString()}`}
+                  className="flex items-start gap-3 rounded-xl border border-border bg-card p-3"
+                >
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
+                    <Icon className="size-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium">{u.name}</p>
+                    <p className="truncate text-xs text-muted-foreground">{u.description}</p>
+                  </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="font-mono text-[10px] text-muted-foreground uppercase">
-                    {HOBBY_META[item.hobbySlug as HobbySlug]?.label ?? item.hobbySlug}
-                  </p>
-                  <p className="truncate text-sm font-medium" title={item.title}>
-                    {item.title}
-                  </p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>
-
-      {isOwner ? (
-        <section className="space-y-3 rounded-xl border border-border bg-card p-5">
-          <h2 className="font-pixel text-sm text-muted-foreground uppercase">Edit profile</h2>
-          <EditProfileForm
-            initialName={profile.name ?? ""}
-            initialUsername={profile.username ?? ""}
-            initialVisibility={visibility}
-          />
-        </section>
-      ) : null}
     </div>
   );
 }

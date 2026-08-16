@@ -1,8 +1,8 @@
 import {
   BookOpen,
   Clapperboard,
+  Compass,
   Gamepad2,
-  LayoutDashboard,
   type LucideIcon,
   Shield,
   Tv,
@@ -20,7 +20,7 @@ export type NavItem = {
  * separated from the next by a horizontal divider in the sidebar / drawer.
  */
 export const navGroups: NavItem[][] = [
-  [{ href: "/dashboard", label: "Dashboard", icon: LayoutDashboard }],
+  [{ href: "/explore", label: "Explore", icon: Compass }],
   [
     { href: "/movies", label: "Movies", icon: Clapperboard },
     { href: "/tv", label: "TV Shows", icon: Tv },

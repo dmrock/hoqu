@@ -10,7 +10,7 @@
 -- How to run: paste into Neon SQL Editor (production branch) or
 -- psql against the prod connection string. Run AFTER the evaluator
 -- fix is deployed, so checkAchievements re-inserts legitimate unlocks
--- on next dashboard / achievements page visit for qualifying users.
+-- on next explore / achievements page visit for qualifying users.
 --
 -- Idempotent: re-running is a no-op once rows are gone.
 -- Safe: only deletes user_achievements rows that fail the new check;

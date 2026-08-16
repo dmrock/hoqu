@@ -5,7 +5,7 @@
 export const SEARCH_TIMEOUT_MS = 5_000;
 
 /**
- * Dashboard "new releases" rows. Server-rendered inside `<Suspense>` behind a
+ * Explore "new releases" rows. Server-rendered inside `<Suspense>` behind a
  * `revalidate` window, so nobody is blocked on the result and a slower upstream
  * is worth waiting out.
  */

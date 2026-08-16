@@ -2,11 +2,11 @@ import { expect } from "@playwright/test";
 import { AddItemDialog } from "./add-item-dialog";
 import { PageHolder } from "./base";
 
-export class DashboardPage extends PageHolder {
+export class ExplorePage extends PageHolder {
   readonly heading = this.page.getByRole("heading", { level: 1, name: /^Welcome,/ });
 
   async goto() {
-    await this.page.goto("/dashboard");
+    await this.page.goto("/explore");
     await expect(this.heading).toBeVisible();
   }
 

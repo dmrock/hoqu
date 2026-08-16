@@ -38,6 +38,6 @@ test("authed 404s render the themed page instead of the stock screen", async ({ 
   await expect(app.notFound.heading).toBeVisible();
   await expect(page.getByRole("complementary")).toBeVisible();
 
-  await app.notFound.backToDashboard.click();
-  await expect(page).toHaveURL(/\/dashboard$/);
+  await app.notFound.backToExplore.click();
+  await expect(page).toHaveURL(/\/explore$/);
 });

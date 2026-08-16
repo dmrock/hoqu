@@ -18,7 +18,7 @@ export default function NotFound() {
         This page doesn't exist — or it's hidden from your party.
       </p>
       <Button asChild>
-        <Link href="/dashboard">Back to dashboard</Link>
+        <Link href="/explore">Back to Explore</Link>
       </Button>
     </div>
   );

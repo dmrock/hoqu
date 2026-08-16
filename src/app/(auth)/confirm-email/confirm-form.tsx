@@ -24,7 +24,7 @@ export function ConfirmEmailForm({ token }: { token: string }) {
           Your account email has been updated. Use it next time you sign in.
         </p>
         <Button asChild className="w-full">
-          <Link href="/dashboard">Go to HOQU</Link>
+          <Link href="/explore">Go to HOQU</Link>
         </Button>
       </div>
     );
