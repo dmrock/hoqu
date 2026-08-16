@@ -37,7 +37,7 @@ function verifyTokenCount(userId: string) {
 
 describe("registerAction verification", () => {
   it("creates the account unverified, issues a token and emails the link", async () => {
-    // Success path ends in redirect("/dashboard"), which throws NEXT_REDIRECT.
+    // Success path ends in redirect("/explore"), which throws NEXT_REDIRECT.
     await expect(registerAction(null, registerForm("fresh@int.test"))).rejects.toThrow();
 
     const [user] = await db

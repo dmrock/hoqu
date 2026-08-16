@@ -55,7 +55,7 @@ sprites, responsive sweep) is intentionally deferred — see `MEMORY.md`.
     (the last four are token-authorized recovery pages reachable while signed out). Every other
     non-`/login`/`/register` path requires a session and bounces unauthed users to
     `/login?from=…`. Authed users on `/`, `/login`, or `/register` get redirected to
-    `/dashboard` so the landing/auth screens never render once signed in.
+    `/explore` so the landing/auth screens never render once signed in.
 
 ## Workflow Rules
 
@@ -224,7 +224,7 @@ driven by `?page=`, so payload/DOM stay flat as collections grow.
   user on that page.
 - Filter/sort changes in `ItemsToolbar` drop `?page=` (back to page 1).
 - Ownership of external items is never shipped wholesale: search proxies annotate each result
-  with `owned` for the signed-in user, and dashboards/feeds check only the displayed ids via
+  with `owned` for the signed-in user, and Explore/feeds check only the displayed ids via
   `filterOwnedExternalIds` (`src/lib/owned-items.ts`). It's a UX badge only — `addItem`
   rejects duplicates server-side.
 
@@ -242,7 +242,7 @@ driven by `?page=`, so payload/DOM stay flat as collections grow.
   `evaluators` map. No DB migration.
 - Adding new achievements = add a row to the seed array; the seed script upserts.
 - `checkAchievements(userId)` is called after every counter-changing action (`addItem`,
-  `updateItem`, `deleteItem`, `refreshShow`) and on `/achievements` and `/dashboard` page
+  `updateItem`, `deleteItem`, `refreshShow`) and on `/achievements` and `/explore` page
   visits (idempotent — only inserts unearned).
 - Server actions return `unlocks: AchievementUnlock[]`. Client components dispatch
   `notifyUnlocks(res.unlocks)` on success; the `<UnlockToaster>` mounted in the (main)
@@ -379,12 +379,12 @@ Source of truth is the actual repo. High-level shape:
 
 ```
 src/
-├── app/page.tsx                        Public landing (`/`); authed users get bounced to /dashboard
+├── app/page.tsx                        Public landing (`/`); authed users get bounced to /explore
 ├── app/(auth)/                         Login, register, forgot/reset password, confirm-email,
 │   │                                   verify-email
 │   │                                   (public; group layout sets robots noindex)
 ├── app/(main)/                         Authenticated routes (sidebar layout)
-│   ├── dashboard/
+│   ├── explore/                        Post-login home: stats, continue-watching, new releases
 │   ├── settings/                       Account: change password, change email, delete account
 │   ├── movies/  tv/  games/  books/    Hobby pages (use HobbyPage from components/items)
 │   ├── achievements/                   Locked + unlocked grid
@@ -408,8 +408,9 @@ src/
 │   ├── items/                          Hobby table, toolbar, add dialog, row actions,
 │   │                                   all-seasons bulk editor, row-focus (scroll + pulse
 │   │                                   for ?focus= deep links)
-│   ├── dashboard/                      New-releases section + skeleton
-│   ├── achievements/                   UnlockToaster
+│   ├── explore/                        Continue row + new-releases section/rows
+│   ├── activity/                       Friend/guild activity feed + skeleton
+│   ├── achievements/                   Achievement card + UnlockToaster
 │   ├── settings/                       Change-password / change-email / delete-account cards
 │   ├── search/                         Cmd+K command palette (header trigger + dialog)
 │   └── leaderboard/                    ScopeTabs + Table
