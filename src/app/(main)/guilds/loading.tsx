@@ -1,6 +1,6 @@
 export default function GuildsLoading() {
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
+    <div className="space-y-8">
       <h1 className="font-pixel text-2xl">Guilds</h1>
 
       <section className="space-y-3 rounded-xl border border-border bg-card p-5">

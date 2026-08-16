@@ -8,7 +8,7 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: [
         "/api/",
-        "/dashboard",
+        "/explore",
         "/movies",
         "/tv",
         "/games",

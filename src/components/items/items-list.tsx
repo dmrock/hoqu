@@ -48,15 +48,18 @@ function formatRating(value: number): string {
 /**
  * `note`: "reserve" keeps a blank line when there's no note so table rows stay
  * a uniform height; "inline" collapses it, which is what the stacked cards want.
+ * `showYear`: off in the table, where the Released column already carries it.
  */
 function TitleBlock({
   item,
   hobbySlug,
   note = "reserve",
+  showYear = true,
 }: {
   item: ItemRow;
   hobbySlug: HobbySlug;
   note?: "reserve" | "inline" | "none";
+  showYear?: boolean;
 }) {
   const ratingLabel = EXTERNAL_RATING_LABEL[hobbySlug];
   return (
@@ -65,7 +68,7 @@ function TitleBlock({
         {item.title}
       </p>
       <div className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
-        {item.year ? (
+        {showYear && item.year ? (
           <span>
             {item.year}
             {item.externalRating != null ? "," : ""}
@@ -144,11 +147,12 @@ export function ItemsList({
           min-w keeps the title column from collapsing at the low end of lg —
           the container scrolls instead. */}
       <div className="hidden overflow-x-auto rounded-xl border border-border lg:block">
-        <table className="w-full min-w-[45rem] table-fixed text-sm">
+        <table className="w-full min-w-[44rem] table-fixed text-sm">
           <thead className="bg-muted/40 text-left text-xs text-muted-foreground uppercase">
             <tr>
               <th className="w-14 px-3 py-2"></th>
               <th className="px-3 py-2">Title</th>
+              <th className="w-24 px-3 py-2">Released</th>
               <th className="w-24 px-3 py-2">Your rate</th>
               <th className="w-20 px-3 py-2">Added</th>
               <th className="w-32 px-3 py-2">Status</th>
@@ -169,9 +173,15 @@ export function ItemsList({
                       <td className="px-3 py-2">
                         <div className="flex items-start gap-1">
                           <ExpandToggle itemId={item.id} expanded={isOpen} />
-                          <TitleBlock item={item} hobbySlug={hobbySlug} note="none" />
+                          <TitleBlock
+                            item={item}
+                            hobbySlug={hobbySlug}
+                            note="none"
+                            showYear={false}
+                          />
                         </div>
                       </td>
+                      <td className="px-3 py-2 text-muted-foreground">{item.year ?? "—"}</td>
                       <td className="px-3 py-2">
                         <RatingCell value={aggregateRating(item.children)} />
                       </td>
@@ -200,8 +210,9 @@ export function ItemsList({
                               <Poster src={child.imageUrl} alt={child.title} size={32} />
                             </td>
                             <td className="px-3 py-2 pl-2">
-                              <TitleBlock item={child} hobbySlug={hobbySlug} />
+                              <TitleBlock item={child} hobbySlug={hobbySlug} showYear={false} />
                             </td>
+                            <td className="px-3 py-2 text-muted-foreground">{child.year ?? "—"}</td>
                             <td className="px-3 py-2">
                               <RatingCell value={child.userRating} />
                             </td>
@@ -235,8 +246,9 @@ export function ItemsList({
                     <Poster src={item.imageUrl} alt={item.title} size={40} />
                   </td>
                   <td className="px-3 py-2">
-                    <TitleBlock item={item} hobbySlug={hobbySlug} />
+                    <TitleBlock item={item} hobbySlug={hobbySlug} showYear={false} />
                   </td>
+                  <td className="px-3 py-2 text-muted-foreground">{item.year ?? "—"}</td>
                   <td className="px-3 py-2">
                     <RatingCell value={item.userRating} />
                   </td>

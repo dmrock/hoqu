@@ -15,7 +15,7 @@ export default async function VerifyEmailPage({
         <p className="text-sm text-muted-foreground">
           This verification link is missing its token.
         </p>
-        <Link href="/dashboard" className="text-sm text-primary hover:text-primary-hover underline">
+        <Link href="/explore" className="text-sm text-primary hover:text-primary-hover underline">
           Back to HOQU
         </Link>
       </div>

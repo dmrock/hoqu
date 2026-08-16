@@ -36,7 +36,7 @@ export function Sidebar({ email, name, image, username, pendingRequests }: Sideb
         )}
       >
         {expanded && (
-          <Link href="/dashboard" className="font-pixel text-sm text-primary">
+          <Link href="/explore" className="font-pixel text-sm text-primary">
             HOQU
           </Link>
         )}

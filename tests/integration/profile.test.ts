@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { updateProfile } from "@/app/(main)/profile/[username]/actions";
+import { updateProfile } from "@/app/(main)/settings/actions";
 import { getFriendshipStatus } from "@/lib/friendships";
 import { shareGuild } from "@/lib/guilds";
 import { setTestUserId } from "./helpers/auth-mock";

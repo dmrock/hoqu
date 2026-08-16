@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test";
-import { DashboardPage } from "./pages/dashboard.page";
+import { ExplorePage } from "./pages/explore.page";
 import { FriendsPage } from "./pages/friends.page";
 import { GuildDetailPage } from "./pages/guild-detail.page";
 import { GuildsPage } from "./pages/guilds.page";
@@ -17,7 +17,7 @@ import { Sidebar } from "./pages/sidebar";
  * `new App(pageB)`.
  */
 export class App {
-  readonly dashboard: DashboardPage;
+  readonly explore: ExplorePage;
   readonly friends: FriendsPage;
   readonly guildDetail: GuildDetailPage;
   readonly guilds: GuildsPage;
@@ -30,7 +30,7 @@ export class App {
   readonly sidebar: Sidebar;
 
   constructor(readonly page: Page) {
-    this.dashboard = new DashboardPage(page);
+    this.explore = new ExplorePage(page);
     this.friends = new FriendsPage(page);
     this.guildDetail = new GuildDetailPage(page);
     this.guilds = new GuildsPage(page);

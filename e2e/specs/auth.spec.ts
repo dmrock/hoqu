@@ -11,22 +11,22 @@ test("user can register, sign out, and sign back in", async ({ page, app }) => {
   await app.register.goto();
   await app.register.register(email, USER_PASSWORD);
 
-  await app.dashboard.waitForLoaded();
+  await app.explore.waitForLoaded();
   // Name on the welcome heading defaults to the email local part on first register.
-  await app.dashboard.expectWelcome(localPart);
+  await app.explore.expectWelcome(localPart);
 
   // Sign out via the sidebar profile menu.
   // Auth.js sign-out POST + /login compile have flaked at the default 5s on
   // CI runners; bump just this assertion's timeout so we don't have to raise
-  // it globally. Same story for the post-sign-in /dashboard redirect below.
+  // it globally. Same story for the post-sign-in /explore redirect below.
   await app.sidebar.signOut();
   await expect(page).toHaveURL(/\/login(\?.*)?$/, { timeout: FIRST_NAV_TIMEOUT_MS });
 
   // Sign back in with the same credentials.
   await app.login.goto();
   await app.login.signIn(email, USER_PASSWORD);
-  await expect(page).toHaveURL(/\/dashboard$/, { timeout: FIRST_NAV_TIMEOUT_MS });
-  await app.dashboard.expectWelcome(localPart);
+  await expect(page).toHaveURL(/\/explore$/, { timeout: FIRST_NAV_TIMEOUT_MS });
+  await app.explore.expectWelcome(localPart);
 });
 
 test("login links to forgot password, which acknowledges any email", async ({ page }) => {

@@ -20,7 +20,7 @@ export function proxy(req: NextRequest) {
   const isPublic = PUBLIC_PATHS.has(pathname);
 
   if (hasSession && (isAuthPage || pathname === "/")) {
-    return NextResponse.redirect(new URL("/dashboard", req.url));
+    return NextResponse.redirect(new URL("/explore", req.url));
   }
 
   if (!hasSession && !isAuthPage && !isPublic) {

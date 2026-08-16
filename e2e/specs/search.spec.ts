@@ -26,7 +26,7 @@ test.afterAll(async () => {
 });
 
 test("Cmd+K opens the palette, Escape closes it", async ({ page, app }) => {
-  await page.goto("/dashboard");
+  await page.goto("/explore");
 
   await app.searchPalette.openWithShortcut();
   await expect(app.searchPalette.hint).toBeVisible();
@@ -37,7 +37,7 @@ test("typing finds a seeded item and clicking navigates with focus param", async
   page,
   app,
 }) => {
-  await page.goto("/dashboard");
+  await page.goto("/explore");
   await app.searchPalette.openWithClick();
   await app.searchPalette.type("probe");
   await expect(app.searchPalette.result(SEED_TITLE)).toBeVisible();

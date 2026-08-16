@@ -110,7 +110,7 @@ export async function registerAction(_prev: ActionState, formData: FormData): Pr
     throw err;
   }
 
-  redirect("/dashboard");
+  redirect("/explore");
 }
 
 export async function loginAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -140,11 +140,11 @@ export async function loginAction(_prev: ActionState, formData: FormData): Promi
     throw err;
   }
 
-  redirect("/dashboard");
+  redirect("/explore");
 }
 
 export async function googleSignInAction(): Promise<void> {
-  await signIn("google", { redirectTo: "/dashboard" });
+  await signIn("google", { redirectTo: "/explore" });
 }
 
 const forgotSchema = z.object({ email: emailSchema });

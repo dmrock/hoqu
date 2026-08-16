@@ -9,13 +9,13 @@ const userBFile = path.join(process.cwd(), STORAGE_STATE.userB);
 setup("authenticate user A", async ({ page, app }) => {
   await app.login.goto();
   await app.login.signIn(USER_A.email, USER_PASSWORD);
-  await expect(page).toHaveURL(/\/dashboard$/, { timeout: FIRST_NAV_TIMEOUT_MS });
+  await expect(page).toHaveURL(/\/explore$/, { timeout: FIRST_NAV_TIMEOUT_MS });
   await page.context().storageState({ path: userAFile });
 });
 
 setup("authenticate user B", async ({ page, app }) => {
   await app.login.goto();
   await app.login.signIn(USER_B.email, USER_PASSWORD);
-  await expect(page).toHaveURL(/\/dashboard$/, { timeout: FIRST_NAV_TIMEOUT_MS });
+  await expect(page).toHaveURL(/\/explore$/, { timeout: FIRST_NAV_TIMEOUT_MS });
   await page.context().storageState({ path: userBFile });
 });

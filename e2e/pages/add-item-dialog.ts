@@ -4,7 +4,7 @@ import { PageHolder } from "./base";
 /**
  * Component object for the shared add dialog (src/components/items/add-item-dialog.tsx),
  * reached either from a hobby page's "Add" button (search step first) or from a
- * dashboard new-releases poster (opens straight to the configure step).
+ * Explore new-releases poster (opens straight to the configure step).
  */
 export class AddItemDialog extends PageHolder {
   readonly root = this.page.getByRole("dialog");

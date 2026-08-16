@@ -14,11 +14,11 @@ test("friend request flow: badges the addressee's nav, both see each other after
   await expect(app.friends.friendRowLink(USER_B.name)).toBeVisible();
 
   // User B in a separate context: the pending request badges the Friends nav,
-  // visible on any authed page (here the dashboard).
+  // visible on any authed page (here Explore).
   const contextB = await browser.newContext({ storageState: STORAGE_STATE.userB });
   const pageB = await contextB.newPage();
   const appB = new App(pageB);
-  await appB.dashboard.goto();
+  await appB.explore.goto();
   await expect(appB.sidebar.friendRequestBadge).toHaveText("1");
 
   // Incoming request from user A → accept. The badge clears without a manual

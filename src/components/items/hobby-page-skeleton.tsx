@@ -21,6 +21,7 @@ export function HobbyPageSkeleton({ title }: { title: string }) {
               <div className="h-4 w-48 max-w-full rounded bg-muted" />
               <div className="h-3 w-24 rounded bg-muted" />
             </div>
+            <div className="h-4 w-10 shrink-0 rounded bg-muted" />
             <div className="h-5 w-24 shrink-0 rounded-full bg-muted" />
             <div className="h-8 w-16 shrink-0 rounded bg-muted" />
           </div>

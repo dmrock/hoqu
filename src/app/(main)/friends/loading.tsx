@@ -2,7 +2,7 @@ import { ActivityFeedSkeleton } from "@/components/activity/activity-feed-skelet
 
 export default function FriendsLoading() {
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
+    <div className="space-y-8">
       <div className="flex items-center justify-between gap-3">
         <h1 className="font-pixel text-2xl">Friends</h1>
         <div className="h-8 w-32 animate-pulse rounded-md bg-muted" />

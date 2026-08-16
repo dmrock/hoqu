@@ -50,7 +50,7 @@ export default async function GuildDetailPage({
   const canEdit = viewerRole === "master" || viewerRole === "officer";
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="space-y-6">
       {/* The three actions need ~335px side by side, so below sm they drop
           under the identity block and wrap among themselves. */}
       <section className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5 sm:flex-row sm:items-start">

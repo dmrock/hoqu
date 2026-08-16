@@ -14,9 +14,9 @@ test("adding a movie ticks the points counter and unlocks First Step", async ({ 
 
   // The e2e branch is shared across specs, so capture a baseline and assert a
   // delta rather than an absolute total.
-  await app.dashboard.goto();
-  const pointsBefore = await app.dashboard.statValue("Total points");
-  const completedBefore = await app.dashboard.statValue("Items completed");
+  await app.explore.goto();
+  const pointsBefore = await app.explore.statValue("Total points");
+  const completedBefore = await app.explore.statValue("Items completed");
 
   await app.movies.goto();
   await app.movies.openAddDialog();
@@ -31,7 +31,7 @@ test("adding a movie ticks the points counter and unlocks First Step", async ({ 
   await expect(page.getByText("First Step")).toBeVisible();
 
   // Movies are worth 1 point; completing one ticks both counters by exactly one.
-  await app.dashboard.goto();
-  expect(await app.dashboard.statValue("Total points")).toBe(pointsBefore + 1);
-  expect(await app.dashboard.statValue("Items completed")).toBe(completedBefore + 1);
+  await app.explore.goto();
+  expect(await app.explore.statValue("Total points")).toBe(pointsBefore + 1);
+  expect(await app.explore.statValue("Items completed")).toBe(completedBefore + 1);
 });
