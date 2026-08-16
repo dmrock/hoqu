@@ -48,12 +48,33 @@ const updateItemSchema = z.object({
   wouldRevisit: z.boolean(),
 });
 
+// Every field is optional and "absent means leave it alone" — a show whose
+// seasons hold different statuses must not have them flattened just because
+// the user wanted to set one rating across the board.
+const updateShowSeasonsSchema = z
+  .object({
+    itemId: z.uuid(),
+    status: statusSchema.optional(),
+    userRating: ratingSchema.optional(),
+    note: noteSchema.optional(),
+    wouldRevisit: z.boolean().optional(),
+  })
+  .refine(
+    (v) =>
+      v.status !== undefined ||
+      v.userRating !== undefined ||
+      v.note !== undefined ||
+      v.wouldRevisit !== undefined,
+    { message: "Nothing to apply" },
+  );
+
 const deleteItemSchema = z.object({ itemId: z.uuid() });
 const refreshShowSchema = z.object({ itemId: z.uuid() });
 const showSeasonCountSchema = z.object({ externalId: z.string().min(1) });
 
 export type AddItemInput = z.input<typeof addItemSchema>;
 export type UpdateItemInput = z.input<typeof updateItemSchema>;
+export type UpdateShowSeasonsInput = z.input<typeof updateShowSeasonsSchema>;
 export type ActionResult =
   | { ok: true; unlocks: AchievementUnlock[] }
   | { ok: false; error: string };
@@ -415,6 +436,96 @@ export async function updateItem(input: UpdateItemInput): Promise<ActionResult> 
 
   const unlocks = await checkAchievements(userId);
   revalidatePath(`/${parsedHobby.data}`);
+  return { ok: true, unlocks };
+}
+
+/**
+ * Write the same values across every season of a show in one statement. Only
+ * the fields present in `input` are touched, so "rate the whole show" doesn't
+ * have to also decide a status for seasons the user hasn't watched yet.
+ */
+export async function updateShowSeasons(input: UpdateShowSeasonsInput): Promise<ActionResult> {
+  const session = await requireUserId();
+  if (!session.ok) return session;
+
+  const parsed = updateShowSeasonsSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "Invalid input" };
+
+  const userId = session.userId;
+  const data = parsed.data;
+
+  const existing = await loadOwnedItem(userId, data.itemId);
+  if (!existing) return { ok: false, error: "Item not found" };
+  if (existing.parentItemId !== null) {
+    return { ok: false, error: "Edit all seasons from the show, not a season" };
+  }
+
+  const [hobby] = await db
+    .select({ slug: hobbies.slug, pointsPerItem: hobbies.pointsPerItem })
+    .from(hobbies)
+    .where(eq(hobbies.id, existing.hobbyId))
+    .limit(1);
+  if (!hobby || hobby.slug !== "tv") return { ok: false, error: "Not a TV show" };
+
+  const children = await db
+    .select({
+      status: items.status,
+      userRating: items.userRating,
+      pointsAwarded: items.pointsAwarded,
+    })
+    .from(items)
+    .where(and(eq(items.userId, userId), eq(items.parentItemId, data.itemId)));
+  if (children.length === 0) return { ok: false, error: "This show has no seasons yet" };
+
+  // Applying a status gives every season the same snapshot, so the write is a
+  // single UPDATE; the counter delta still has to be summed per season.
+  const newPointsAwarded =
+    data.status !== undefined
+      ? snapshotPoints({ status: data.status, pointsPerItem: hobby.pointsPerItem })
+      : null;
+
+  let delta = ZERO_DELTA;
+  for (const child of children) {
+    delta = addDelta(
+      delta,
+      computeCounterDelta({
+        oldStatus: child.status,
+        newStatus: data.status ?? child.status,
+        oldRating: child.userRating,
+        newRating: data.userRating !== undefined ? data.userRating : child.userRating,
+        oldPointsAwarded: child.pointsAwarded,
+        newPointsAwarded: newPointsAwarded ?? child.pointsAwarded,
+        hobbySlug: "tv",
+      }),
+    );
+  }
+
+  const set = {
+    updatedAt: new Date(),
+    ...(data.status !== undefined
+      ? {
+          status: data.status,
+          pointsAwarded: newPointsAwarded ?? 0,
+          // coalesce keeps each season's original completion date.
+          completedAt:
+            data.status === "completed" ? sql`coalesce(${items.completedAt}, now())` : null,
+        }
+      : {}),
+    ...(data.userRating !== undefined ? { userRating: data.userRating } : {}),
+    ...(data.note !== undefined ? { note: data.note } : {}),
+    ...(data.wouldRevisit !== undefined ? { wouldRevisit: data.wouldRevisit } : {}),
+  };
+
+  await db.batch([
+    db
+      .update(items)
+      .set(set)
+      .where(and(eq(items.userId, userId), eq(items.parentItemId, data.itemId))),
+    db.update(users).set(counterUpdateSet(delta)).where(eq(users.id, userId)),
+  ]);
+
+  const unlocks = await checkAchievements(userId);
+  revalidatePath("/tv");
   return { ok: true, unlocks };
 }
 

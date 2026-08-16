@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import type { HobbySlug, ItemStatus } from "@/lib/points";
 import { cn } from "@/lib/utils";
 import type { ItemRow } from "@/types/item";
+import { EditShowSeasons } from "./edit-show-seasons";
 import { ExpandToggle } from "./expand-toggle";
 import { ItemRowActions } from "./item-row-actions";
 import { RefreshShowButton } from "./refresh-show-button";
@@ -195,6 +196,7 @@ export function ItemsList({
                       <td className="px-3 py-2">
                         <div className="flex items-center justify-end gap-1">
                           <RefreshShowButton itemId={item.id} />
+                          <EditShowSeasons item={item} />
                           <ItemRowActions
                             item={item}
                             showEdit={false}
@@ -292,6 +294,7 @@ export function ItemsList({
                       </div>
                       <div className="flex items-center gap-1">
                         <RefreshShowButton itemId={item.id} />
+                        <EditShowSeasons item={item} />
                         <ItemRowActions
                           item={item}
                           showEdit={false}
