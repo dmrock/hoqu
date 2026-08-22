@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { DataAttribution } from "@/components/layout/data-attribution";
+import { GITHUB_REPO_URL } from "@/lib/site";
 
 export function PublicShell({ children }: { children: React.ReactNode }) {
   return (
@@ -22,6 +23,19 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
           <Link href="/features" className="transition-colors hover:text-foreground">
             Features
           </Link>
+          <span aria-hidden>·</span>
+          <Link href="/support" className="transition-colors hover:text-foreground">
+            Support
+          </Link>
+          <span aria-hidden>·</span>
+          <a
+            href={GITHUB_REPO_URL}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="transition-colors hover:text-foreground"
+          >
+            Source
+          </a>
           <span aria-hidden>·</span>
           <Link href="/privacy" className="transition-colors hover:text-foreground">
             Privacy

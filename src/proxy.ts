@@ -5,6 +5,7 @@ const SESSION_COOKIE_NAMES = ["authjs.session-token", "__Secure-authjs.session-t
 const PUBLIC_PATHS = new Set([
   "/",
   "/features",
+  "/support",
   "/privacy",
   "/terms",
   "/forgot-password",

@@ -3,6 +3,7 @@ import {
   Clapperboard,
   Compass,
   Gamepad2,
+  LifeBuoy,
   type LucideIcon,
   Shield,
   Tv,
@@ -31,4 +32,5 @@ export const navGroups: NavItem[][] = [
     { href: "/friends", label: "Friends", icon: Users },
     { href: "/guilds", label: "Guilds", icon: Shield },
   ],
+  [{ href: "/support", label: "Support", icon: LifeBuoy }],
 ];

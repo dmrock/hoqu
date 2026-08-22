@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
+import { GithubIcon } from "@/components/icons/github-icon";
 import { Button } from "@/components/ui/button";
+import { GITHUB_NEW_BUG_URL } from "@/lib/site";
 
 export type RouteErrorProps = {
   error: Error & { digest?: string };
@@ -25,7 +27,22 @@ export function RouteError({ error, reset }: RouteErrorProps) {
       {error.digest ? (
         <p className="font-mono text-xs text-muted-foreground">error code: {error.digest}</p>
       ) : null}
-      <Button onClick={reset}>Try again</Button>
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        <Button onClick={reset}>Try again</Button>
+        {/* The digest is the only handle on this failure, and it's gone the
+            moment the user navigates away — so hand it straight to the bug
+            form via the `digest` field id rather than asking them to copy it. */}
+        <Button variant="outline" asChild>
+          <a
+            href={`${GITHUB_NEW_BUG_URL}&digest=${encodeURIComponent(error.digest ?? "")}`}
+            target="_blank"
+            rel="noreferrer noopener"
+          >
+            <GithubIcon className="size-4" />
+            Report it
+          </a>
+        </Button>
+      </div>
     </div>
   );
 }

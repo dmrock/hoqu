@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { PublicShell } from "@/components/layout/public-shell";
+import { CONTACT_EMAIL } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
@@ -86,11 +88,11 @@ export default function TermsPage() {
           <section className="space-y-2">
             <h2 className="font-pixel text-sm text-accent">Termination</h2>
             <p>
-              You can request account deletion at any time by emailing{" "}
-              <a href="mailto:hello@hoqu.dev" className="text-primary hover:underline">
-                hello@hoqu.dev
-              </a>
-              . We may suspend or remove accounts that violate these terms.
+              You can delete your account at any time from Settings, or email{" "}
+              <a href={`mailto:${CONTACT_EMAIL}`} className="text-primary hover:underline">
+                {CONTACT_EMAIL}
+              </a>{" "}
+              if that fails. We may suspend or remove accounts that violate these terms.
             </p>
           </section>
 
@@ -115,9 +117,13 @@ export default function TermsPage() {
             <h2 className="font-pixel text-sm text-accent">Contact</h2>
             <p>
               Questions about these terms?{" "}
-              <a href="mailto:hello@hoqu.dev" className="text-primary hover:underline">
-                hello@hoqu.dev
+              <a href={`mailto:${CONTACT_EMAIL}`} className="text-primary hover:underline">
+                {CONTACT_EMAIL}
               </a>
+              . Everything else goes through{" "}
+              <Link href="/support" className="text-primary hover:underline">
+                support
+              </Link>
               .
             </p>
           </section>

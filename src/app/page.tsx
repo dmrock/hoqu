@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { DataAttribution } from "@/components/layout/data-attribution";
 import { Button } from "@/components/ui/button";
-import { SITE_URL } from "@/lib/site";
+import { GITHUB_REPO_URL, SITE_URL } from "@/lib/site";
 
 // Title and description come from the root layout defaults; the landing is the site root.
 export const metadata: Metadata = {
@@ -141,6 +141,19 @@ export default function LandingPage() {
           <Link href="/features" className="transition-colors hover:text-foreground">
             Features
           </Link>
+          <span aria-hidden>·</span>
+          <Link href="/support" className="transition-colors hover:text-foreground">
+            Support
+          </Link>
+          <span aria-hidden>·</span>
+          <a
+            href={GITHUB_REPO_URL}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="transition-colors hover:text-foreground"
+          >
+            Source
+          </a>
           <span aria-hidden>·</span>
           <Link href="/privacy" className="transition-colors hover:text-foreground">
             Privacy

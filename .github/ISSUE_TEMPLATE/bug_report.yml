@@ -1,0 +1,52 @@
+name: Bug report
+description: Something in HOQU is broken or behaves wrong.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please don't include your password, a reset link, or anything else private — this issue is public.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what happened instead.
+      placeholder: |
+        1. Added a 5-season show from the TV tab
+        2. Marked season 2 completed
+        3. Expected +5 XP; total didn't move
+    validations:
+      required: true
+  - type: input
+    id: digest
+    attributes:
+      label: Error code
+      description: >-
+        If the app showed an error screen, its error code. The "Report it" button on that
+        screen fills this in for you.
+      placeholder: e.g. 1234567890abcdef
+    validations:
+      required: false
+  - type: input
+    id: username
+    attributes:
+      label: Your HOQU username
+      description: Optional, but it lets the maintainer look at the actual rows behind the bug.
+    validations:
+      required: false
+  - type: input
+    id: environment
+    attributes:
+      label: Browser and device
+      placeholder: e.g. Safari 18 on iPhone 15, Chrome 140 on Windows
+    validations:
+      required: false
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before filing
+      options:
+        - label: I searched open and closed issues for this.
+          required: true
+        - label: There's nothing private (password, reset link, personal data) in this report.
+          required: true
