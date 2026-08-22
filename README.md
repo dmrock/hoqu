@@ -2,6 +2,15 @@
 
 A hobby tracker where you log movies, TV shows, games, and books, earn points, unlock achievements, and compare progress with friends or guildmates. Dark-only modern UI with pixel-art accents. English only.
 
+## Support
+
+Questions, bugs, and feature requests go through [GitHub Issues](https://github.com/dmrock/hoqu/issues) —
+pick a form and it lands in the right lane. See [hoqu.dev/support](https://hoqu.dev/support) for
+which is which.
+
+Anything private — account trouble, a privacy request, a security report — goes to
+**hello@hoqu.dev** instead. Security specifically: see [SECURITY.md](SECURITY.md).
+
 ## Tech stack
 
 - **Framework**: Next.js 16 (App Router, Turbopack) · TypeScript · Tailwind CSS v4 · shadcn/ui
@@ -87,6 +96,7 @@ src/
     guilds/                   guilds/[id]/  guilds/[id]/settings/
                               guilds/[id]/leaderboard/  guilds/join/[code]/
   app/api/                   Search proxies + auth handlers
+  app/support/               Public support page (no sidebar, no auth)
   app/privacy/  app/terms/   Public legal pages (no sidebar, no auth)
   components/                UI primitives + per-feature components
   lib/                       Db, auth, points, achievements, leaderboards,
@@ -106,7 +116,7 @@ Hosted on Vercel at [hoqu.dev](https://hoqu.dev) and auto-deployed on every push
 3. Vercel creates a per-PR preview deploy.
 4. When CI is green, merge the PR. Vercel deploys to production.
 
-Branch protection isn't enforceable on GitHub Free private repos, so the workflow is by convention: always go through a PR, never push directly to `main`.
+Always go through a PR, never push directly to `main`.
 
 **Build command:** Vercel runs `pnpm db:migrate && pnpm db:seed && pnpm build`, so schema migrations and the hobby/achievement seed catalog stay in sync with each prod deploy.
 

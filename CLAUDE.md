@@ -50,7 +50,7 @@ sprites, responsive sweep) is intentionally deferred — see `MEMORY.md`.
     secrets must start with `import "server-only"` if a client component might import from it.
     Pure types/constants live in a sibling file with no DB imports — see
     `src/lib/leaderboards.ts` (pure) vs `src/lib/leaderboard-queries.ts` (DB).
-12. **Public vs. authed routes** (`src/proxy.ts`): `/`, `/features`, `/privacy`, `/terms`,
+12. **Public vs. authed routes** (`src/proxy.ts`): `/`, `/features`, `/support`, `/privacy`, `/terms`,
     `/forgot-password`, `/reset-password`, `/confirm-email`, and `/verify-email` are public
     (the last four are token-authorized recovery pages reachable while signed out). Every other
     non-`/login`/`/register` path requires a session and bounces unauthed users to
@@ -276,6 +276,28 @@ Visibility tiers (`users.profileVisibility`), enforced on `/profile/[username]`:
 
 Non-permitted viewers get a 404 (not a 403, to avoid leaking existence).
 
+## Support
+
+GitHub Issues is the single channel for questions, bugs, and feature requests. Email
+(`CONTACT_EMAIL`) covers only what shouldn't be public — account trouble, security, privacy
+requests, and anyone without a GitHub account. **The repo has to stay public for any of this
+to work.**
+
+- Every URL lives in `src/lib/site.ts` (`GITHUB_REPO_URL`, `GITHUB_ISSUES_URL`, the three
+  `GITHUB_NEW_*_URL` form deep links, `CONTACT_EMAIL`). Never inline a second copy.
+- Surfaces: `/support` (public page — one lane per issue form, email fallback), `Support` +
+  `Source` footer links in the landing and `PublicShell`, a `Support` nav item in the
+  sidebar/drawer, and a "Report it" button on `RouteError`.
+- The error screen appends `&digest=<code>` to the bug-form URL — GitHub prefills any form
+  field whose `id` matches a query param. Renaming the `digest` field in
+  `.github/ISSUE_TEMPLATE/bug_report.yml` silently breaks that handoff;
+  [e2e/specs/support.spec.ts](e2e/specs/support.spec.ts) guards the template filenames.
+- Issue forms use only GitHub's default labels (`bug`, `enhancement`, `question`) — a form
+  that names a label the repo doesn't have fails at submit time.
+- `blank_issues_enabled: false` in `config.yml` forces everything through a form; the contact
+  links there route security/privacy to email instead.
+- `GithubIcon` (`components/icons/`) exists because lucide dropped its brand marks.
+
 ## Account & Auth Recovery
 
 Self-service auth lives in `src/app/(main)/settings/` (authed) and the recovery pages under
@@ -400,10 +422,13 @@ src/
 │   │                                   with the components that call them
 │   └── search/                         searchCollection server action for the Cmd+K palette
 ├── app/api/                            Search proxies + Auth.js handlers
+├── app/support/                        Public support page — issue-form lanes + email
+│                                       fallback (no auth, no sidebar)
 ├── app/privacy/                        Public privacy policy (no auth, no sidebar)
 ├── app/terms/                          Public terms of service (no auth, no sidebar)
 ├── components/
 │   ├── ui/                             shadcn primitives (button, dialog, dropdown, etc.)
+│   ├── icons/                          Brand marks lucide doesn't ship (GithubIcon)
 │   ├── layout/                         Sidebar, Header, MobileDrawer, SidebarUserMenu
 │   ├── items/                          Hobby table, toolbar, add dialog, row actions,
 │   │                                   all-seasons bulk editor, row-focus (scroll + pulse
