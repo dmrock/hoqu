@@ -28,4 +28,13 @@ test.describe("support page", () => {
       );
     });
   });
+
+  // The page lives outside the (main) route group, so it renders its own
+  // chrome — without this it strands a signed-in reader on a page with no way
+  // back into the app.
+  test("keeps the sidebar for a signed-in reader", async ({ page }) => {
+    await page.goto("/support");
+    await expect(page.getByRole("link", { name: "Explore" })).toBeVisible();
+    await expect(page.getByRole("link", { name: /open the issue tracker/i })).toBeVisible();
+  });
 });
