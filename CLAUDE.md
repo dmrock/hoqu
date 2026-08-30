@@ -285,9 +285,17 @@ to work.**
 
 - Every URL lives in `src/lib/site.ts` (`GITHUB_REPO_URL`, `GITHUB_ISSUES_URL`, the three
   `GITHUB_NEW_*_URL` form deep links, `CONTACT_EMAIL`). Never inline a second copy.
-- Surfaces: `/support` (public page — one lane per issue form, email fallback), `Support` +
-  `Source` footer links in the landing and `PublicShell`, a `Support` nav item in the
-  sidebar/drawer, and a "Report it" button on `RouteError`.
+- Surfaces: `/support` (one lane per issue form, email fallback), `Support` + `Source` footer
+  links in the landing and `PublicShell`, a `Support` nav item in the sidebar/drawer, and a
+  "Report it" button on `RouteError`.
+- `/support` sits outside `(main)` (signed-out visitors need it) but picks its chrome from the
+  session: `AppShell` when signed in, `PublicShell` otherwise. That's why the signed-in shell
+  lives in `components/layout/app-shell.tsx` rather than in `(main)/layout.tsx`, which is now
+  a one-line wrapper. Reading auth makes the route dynamic — it can't be statically
+  prerendered like `/features`.
+- Its `inApp` flag also switches the width: full-bleed inside the app shell like every other
+  signed-in page, `max-w-2xl` reading column in the public shell like `/features` and the
+  legal pages.
 - The error screen appends `&digest=<code>` to the bug-form URL — GitHub prefills any form
   field whose `id` matches a query param. Renaming the `digest` field in
   `.github/ISSUE_TEMPLATE/bug_report.yml` silently breaks that handoff;
