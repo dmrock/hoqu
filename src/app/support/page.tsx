@@ -1,10 +1,9 @@
 import { Bug, Lightbulb, MessageCircleQuestion, ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
 import { GithubIcon } from "@/components/icons/github-icon";
-import { AppShell } from "@/components/layout/app-shell";
+import { AppShell, loadShellData } from "@/components/layout/app-shell";
 import { PublicShell } from "@/components/layout/public-shell";
 import { Button } from "@/components/ui/button";
-import { auth } from "@/lib/auth";
 import {
   CONTACT_EMAIL,
   GITHUB_ISSUES_URL,
@@ -25,10 +24,9 @@ export const metadata: Metadata = {
 // sidebar, so it picks its chrome from the session: signed-in readers keep the
 // sidebar (and a way back into the app), signed-out ones get the public shell.
 export default async function SupportPage() {
-  const session = await auth();
-  const inApp = Boolean(session?.user?.id);
-  const body = <SupportBody inApp={inApp} />;
-  return inApp ? <AppShell>{body}</AppShell> : <PublicShell>{body}</PublicShell>;
+  const shell = await loadShellData();
+  const body = <SupportBody inApp={Boolean(shell)} />;
+  return shell ? <AppShell data={shell}>{body}</AppShell> : <PublicShell>{body}</PublicShell>;
 }
 
 /**
