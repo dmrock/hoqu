@@ -9,6 +9,7 @@ const FORGOT_PER_IP = 5;
 const FORGOT_PER_EMAIL = 3;
 const VERIFY_RESEND_PER_USER = 3;
 const FRIEND_REQUESTS_PER_USER = 20;
+const SEARCHES_PER_USER = 60;
 
 const addItemHourly = new Ratelimit({
   redis,
@@ -63,6 +64,13 @@ const friendRequestPerUser = new Ratelimit({
   redis,
   limiter: Ratelimit.slidingWindow(FRIEND_REQUESTS_PER_USER, "1 h"),
   prefix: "ratelimit:friends:request",
+  analytics: false,
+});
+
+const searchPerUser = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(SEARCHES_PER_USER, "1 m"),
+  prefix: "ratelimit:search",
   analytics: false,
 });
 
@@ -130,6 +138,16 @@ export async function checkVerifyResendLimit(userId: string): Promise<AuthLimitR
  */
 export async function checkFriendRequestLimit(userId: string): Promise<AuthLimitResult> {
   return checkWindow(friendRequestPerUser, userId);
+}
+
+/**
+ * Per-user window on the catalog search proxies (60 / minute). The proxies are
+ * session-gated but otherwise free to loop, and every cache miss spends a call
+ * against TMDB/IGDB/Open Library — this caps what one account can burn through.
+ * Well above what the 300ms-debounced search box produces by hand.
+ */
+export async function checkSearchLimit(userId: string): Promise<AuthLimitResult> {
+  return checkWindow(searchPerUser, userId);
 }
 
 export type AddItemLimitResult = {

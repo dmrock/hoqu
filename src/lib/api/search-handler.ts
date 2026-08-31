@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { filterOwnedExternalIds } from "@/lib/owned-items";
 import type { HobbySlug } from "@/lib/points";
+import { checkSearchLimit } from "@/lib/rate-limit";
 import { cachedSearch } from "./cache";
 import { type SearchResponse, type SearchResult, searchQuerySchema } from "./search";
 import { UpstreamUnavailableError } from "./upstream";
@@ -21,6 +22,16 @@ export function createSearchHandler(
     });
     if (!parsed.success) {
       return NextResponse.json({ data: null, error: "Invalid query" }, { status: 400 });
+    }
+
+    // Consumed on cache hits too: the point is to cap one account's total
+    // search volume, not just what reaches the upstream API.
+    const limit = await checkSearchLimit(session.user.id);
+    if (!limit.ok) {
+      return NextResponse.json(
+        { data: null, error: "Too many searches. Give it a minute." },
+        { status: 429 },
+      );
     }
 
     try {
