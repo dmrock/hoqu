@@ -1,0 +1,23 @@
+name: Question
+description: Ask how something in HOQU works.
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Answers live in the tracker so the next person with the same question finds them.
+        Anything involving your account or personal data belongs in email instead — hello@hoqu.dev.
+  - type: textarea
+    id: question
+    attributes:
+      label: What's the question?
+      placeholder: Why did my 5-season show split into separate rows?
+    validations:
+      required: true
+  - type: textarea
+    id: tried
+    attributes:
+      label: What have you already looked at?
+      description: The features page, the closed issues, a specific screen in the app.
+    validations:
+      required: false

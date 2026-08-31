@@ -1,0 +1,32 @@
+name: Feature request
+description: Suggest something HOQU should do.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        HOQU is a hobby project maintained by one person, so "not soon" is a common answer —
+        but requests do shape what gets built next.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the situation you're in, not the feature you have in mind.
+      placeholder: I re-read books constantly and can't tell a reread apart from a first read.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like instead?
+    validations:
+      required: false
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before filing
+      options:
+        - label: I searched open and closed issues for this idea.
+          required: true
+        - label: This is one idea, not several bundled together.
+          required: true

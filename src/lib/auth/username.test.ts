@@ -7,7 +7,7 @@ describe("slugifyEmail", () => {
   });
 
   it("replaces runs of non-alphanumerics with single dashes", () => {
-    expect(slugifyEmail("denis.rork+test@example.com")).toBe("denis-rork-test");
+    expect(slugifyEmail("ada.lovelace+test@example.com")).toBe("ada-lovelace-test");
   });
 
   it("trims leading and trailing dashes", () => {

@@ -50,7 +50,7 @@ sprites, responsive sweep) is intentionally deferred — see `MEMORY.md`.
     secrets must start with `import "server-only"` if a client component might import from it.
     Pure types/constants live in a sibling file with no DB imports — see
     `src/lib/leaderboards.ts` (pure) vs `src/lib/leaderboard-queries.ts` (DB).
-12. **Public vs. authed routes** (`src/proxy.ts`): `/`, `/features`, `/privacy`, `/terms`,
+12. **Public vs. authed routes** (`src/proxy.ts`): `/`, `/features`, `/support`, `/privacy`, `/terms`,
     `/forgot-password`, `/reset-password`, `/confirm-email`, and `/verify-email` are public
     (the last four are token-authorized recovery pages reachable while signed out). Every other
     non-`/login`/`/register` path requires a session and bounces unauthed users to
@@ -197,6 +197,11 @@ migrates a flat row to multi-season once TMDB catches up, handing S1 the flat ro
 - **Fails open** — Redis unreachable returns `{ ok: true }` with full quota; anti-spam, not
   security.
 
+Search proxies: **60 / minute** per user (`checkSearchLimit`), consumed on cache hits too.
+The proxies are session-gated but otherwise free to loop, and every miss spends an upstream
+call — the window caps what one account can burn. Well clear of what the 300ms-debounced
+search box produces by hand; the client surfaces the 429's `error` like any other.
+
 Friend requests: **20 / hour** per sender (`checkFriendRequestLimit`), checked before any DB
 work in `sendFriendRequest` — the slot is spent even when the target username doesn't exist,
 so bulk username probing costs quota too. Same fail-open + dev-skip posture as the auth
@@ -275,6 +280,41 @@ Visibility tiers (`users.profileVisibility`), enforced on `/profile/[username]`:
 - **private** — owner only
 
 Non-permitted viewers get a 404 (not a 403, to avoid leaking existence).
+
+## Support
+
+GitHub Issues is the single channel for questions, bugs, and feature requests. Email
+(`CONTACT_EMAIL`) covers only what shouldn't be public — account trouble, security, privacy
+requests, and anyone without a GitHub account. **The repo has to stay public for any of this
+to work.**
+
+- Every URL lives in `src/lib/site.ts` (`GITHUB_REPO_URL`, `GITHUB_ISSUES_URL`, the three
+  `GITHUB_NEW_*_URL` form deep links, `CONTACT_EMAIL`). Never inline a second copy.
+- Surfaces: `/support` (one lane per issue form, email fallback), `Support` + `Source` footer
+  links in the landing and `PublicShell`, a `Support` nav item in the sidebar/drawer, and a
+  "Report it" button on `RouteError`.
+- `/support` sits outside `(main)` (signed-out visitors need it) but picks its chrome from the
+  session: `AppShell` when signed in, `PublicShell` otherwise. That's why the signed-in shell
+  lives in `components/layout/app-shell.tsx` — both `(main)/layout.tsx` and `/support` render
+  it. Reading auth makes the route dynamic; it can't be statically prerendered like
+  `/features`.
+- **`loadShellData()` must be awaited by the layout/page, never inside `AppShell`.** A layout
+  that awaits nothing is a static segment, and Next then won't re-render it when a server
+  action calls `revalidatePath("/friends")` — the sidebar's pending-request badge goes stale
+  until a hard reload. `AppShell` is presentational for that reason and takes the data as a
+  prop.
+- Its `inApp` flag also switches the width: full-bleed inside the app shell like every other
+  signed-in page, `max-w-2xl` reading column in the public shell like `/features` and the
+  legal pages.
+- The error screen appends `&digest=<code>` to the bug-form URL — GitHub prefills any form
+  field whose `id` matches a query param. Renaming the `digest` field in
+  `.github/ISSUE_TEMPLATE/bug_report.yml` silently breaks that handoff;
+  [e2e/specs/support.spec.ts](e2e/specs/support.spec.ts) guards the template filenames.
+- Issue forms use only GitHub's default labels (`bug`, `enhancement`, `question`) — a form
+  that names a label the repo doesn't have fails at submit time.
+- `blank_issues_enabled: false` in `config.yml` forces everything through a form; the contact
+  links there route security/privacy to email instead.
+- `GithubIcon` (`components/icons/`) exists because lucide dropped its brand marks.
 
 ## Account & Auth Recovery
 
@@ -400,10 +440,13 @@ src/
 │   │                                   with the components that call them
 │   └── search/                         searchCollection server action for the Cmd+K palette
 ├── app/api/                            Search proxies + Auth.js handlers
+├── app/support/                        Public support page — issue-form lanes + email
+│                                       fallback (no auth, no sidebar)
 ├── app/privacy/                        Public privacy policy (no auth, no sidebar)
 ├── app/terms/                          Public terms of service (no auth, no sidebar)
 ├── components/
 │   ├── ui/                             shadcn primitives (button, dialog, dropdown, etc.)
+│   ├── icons/                          Brand marks lucide doesn't ship (GithubIcon)
 │   ├── layout/                         Sidebar, Header, MobileDrawer, SidebarUserMenu
 │   ├── items/                          Hobby table, toolbar, add dialog, row actions,
 │   │                                   all-seasons bulk editor, row-focus (scroll + pulse

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { PublicShell } from "@/components/layout/public-shell";
+import { CONTACT_EMAIL } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
@@ -57,9 +59,11 @@ export default function PrivacyPage() {
             <h2 className="font-pixel text-sm text-accent">Your choices</h2>
             <p>
               You control your profile visibility from your profile settings (public, friends only,
-              guild only, or private). To delete your account or request a copy of your data, email{" "}
-              <a href="mailto:hello@hoqu.dev" className="text-primary hover:underline">
-                hello@hoqu.dev
+              guild only, or private). Settings also lets you export a copy of your data and delete
+              your account outright — deletion is immediate and removes your items, friendships,
+              guild memberships, and achievements. If either one won't go through, email{" "}
+              <a href={`mailto:${CONTACT_EMAIL}`} className="text-primary hover:underline">
+                {CONTACT_EMAIL}
               </a>
               .
             </p>
@@ -76,11 +80,15 @@ export default function PrivacyPage() {
           <section className="space-y-2">
             <h2 className="font-pixel text-sm text-accent">Contact</h2>
             <p>
-              Questions? Reach the maintainer at{" "}
-              <a href="mailto:hello@hoqu.dev" className="text-primary hover:underline">
-                hello@hoqu.dev
+              Privacy questions and data requests go to{" "}
+              <a href={`mailto:${CONTACT_EMAIL}`} className="text-primary hover:underline">
+                {CONTACT_EMAIL}
               </a>
-              .
+              . For anything else — how a feature works, a bug, an idea —{" "}
+              <Link href="/support" className="text-primary hover:underline">
+                support
+              </Link>{" "}
+              is the faster route.
             </p>
           </section>
         </div>
