@@ -2,6 +2,8 @@
 
 A hobby tracker where you log movies, TV shows, games, and books, earn points, unlock achievements, and compare progress with friends or guildmates. Dark-only modern UI with pixel-art accents. English only.
 
+Free to use at [hoqu.dev](https://hoqu.dev), open source under the [MIT license](LICENSE), and staying that way — no paid tiers, no ads.
+
 ## Support
 
 Questions, bugs, and feature requests go through [GitHub Issues](https://github.com/dmrock/hoqu/issues) —
@@ -10,6 +12,9 @@ which is which.
 
 Anything private — account trouble, a privacy request, a security report — goes to
 **hello@hoqu.dev** instead. Security specifically: see [SECURITY.md](SECURITY.md).
+
+Thinking about a pull request? Read [CONTRIBUTING.md](CONTRIBUTING.md) first — open an issue
+before writing code.
 
 ## Tech stack
 
@@ -37,19 +42,14 @@ Anything private — account trouble, a privacy request, a security report — g
    pnpm install
    ```
 
-2. **Configure environment** — copy `.env.example` to `.env.local` and fill in:
+2. **Configure environment:**
 
+   ```bash
+   cp .env.example .env.local
    ```
-   DATABASE_URL=
-   AUTH_SECRET=                  # openssl rand -base64 32
-   AUTH_GOOGLE_ID=
-   AUTH_GOOGLE_SECRET=
-   TMDB_API_KEY=
-   IGDB_CLIENT_ID=
-   IGDB_CLIENT_SECRET=
-   UPSTASH_REDIS_REST_URL=
-   UPSTASH_REDIS_REST_TOKEN=
-   ```
+
+   `.env.example` documents every variable and where its value comes from. Everything above
+   the "Optional" divider is needed to boot the app.
 
 3. **Initialize the database:**
 
@@ -88,9 +88,10 @@ To scaffold a new shadcn/ui component, use `pnpm dlx shadcn@latest add <componen
 src/
   app/(auth)/                Login, register
   app/(main)/                Authenticated routes (sidebar layout)
-    dashboard/
+    explore/
     movies/  tv/  games/  books/
     achievements/
+    settings/
     profile/[username]/
     friends/                  friends/leaderboard/
     guilds/                   guilds/[id]/  guilds/[id]/settings/
@@ -125,3 +126,12 @@ Always go through a PR, never push directly to `main`.
 - **Local dev** — `.env.local` (gitignored) points at the dev Neon branch, dev Upstash, and the `hoqu-dev` Google OAuth client.
 - **Production** — env vars set in Vercel (Production scope) point at the prod Neon branch, prod Upstash, the `hoqu-prod` Google OAuth client, and a separate `AUTH_SECRET`.
 - **Preview** — per-PR env vars intentionally left unconfigured. Previews still build (a useful signal that code compiles) but don't run at runtime. Revisit if we ever need to demo PRs at a real URL or share previews with collaborators.
+
+## License
+
+[MIT](LICENSE) © dmrock.
+
+Catalog data and images come from [TMDB](https://www.themoviedb.org/),
+[IGDB](https://www.igdb.com/), and [Open Library](https://openlibrary.org/), each under their
+own terms — the MIT license covers this project's code, not their data. This product uses the
+TMDB API but is not endorsed or certified by TMDB.

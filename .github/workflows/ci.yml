@@ -61,6 +61,11 @@ jobs:
   integration:
     name: Integration tests
     runs-on: ubuntu-latest
+    # Fork PRs can't read repository secrets, so these two jobs would fail on
+    # the Neon branch step rather than on anything the contributor wrote.
+    if: >-
+      github.event_name == 'push' ||
+      github.event.pull_request.head.repo.full_name == github.repository
     env:
       AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
       TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
@@ -106,6 +111,9 @@ jobs:
   e2e:
     name: E2E tests
     runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'push' ||
+      github.event.pull_request.head.repo.full_name == github.repository
     env:
       AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
       TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
