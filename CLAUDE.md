@@ -197,6 +197,11 @@ migrates a flat row to multi-season once TMDB catches up, handing S1 the flat ro
 - **Fails open** — Redis unreachable returns `{ ok: true }` with full quota; anti-spam, not
   security.
 
+Search proxies: **60 / minute** per user (`checkSearchLimit`), consumed on cache hits too.
+The proxies are session-gated but otherwise free to loop, and every miss spends an upstream
+call — the window caps what one account can burn. Well clear of what the 300ms-debounced
+search box produces by hand; the client surfaces the 429's `error` like any other.
+
 Friend requests: **20 / hour** per sender (`checkFriendRequestLimit`), checked before any DB
 work in `sendFriendRequest` — the slot is spent even when the target username doesn't exist,
 so bulk username probing costs quota too. Same fail-open + dev-skip posture as the auth
@@ -290,9 +295,14 @@ to work.**
   "Report it" button on `RouteError`.
 - `/support` sits outside `(main)` (signed-out visitors need it) but picks its chrome from the
   session: `AppShell` when signed in, `PublicShell` otherwise. That's why the signed-in shell
-  lives in `components/layout/app-shell.tsx` rather than in `(main)/layout.tsx`, which is now
-  a one-line wrapper. Reading auth makes the route dynamic — it can't be statically
-  prerendered like `/features`.
+  lives in `components/layout/app-shell.tsx` — both `(main)/layout.tsx` and `/support` render
+  it. Reading auth makes the route dynamic; it can't be statically prerendered like
+  `/features`.
+- **`loadShellData()` must be awaited by the layout/page, never inside `AppShell`.** A layout
+  that awaits nothing is a static segment, and Next then won't re-render it when a server
+  action calls `revalidatePath("/friends")` — the sidebar's pending-request badge goes stale
+  until a hard reload. `AppShell` is presentational for that reason and takes the data as a
+  prop.
 - Its `inApp` flag also switches the width: full-bleed inside the app shell like every other
   signed-in page, `max-w-2xl` reading column in the public shell like `/features` and the
   legal pages.
