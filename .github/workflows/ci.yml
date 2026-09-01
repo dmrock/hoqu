@@ -103,8 +103,10 @@ jobs:
         env:
           E2E_DATABASE_URL: ${{ steps.neon.outputs.db_url_pooled }}
 
+      # branch_id is empty when the create step itself failed; without this the
+      # cleanup fails too and buries the real error under a neonctl usage error.
       - name: Delete ephemeral Neon branch
-        if: always()
+        if: always() && steps.neon.outputs.branch_id != ''
         uses: neondatabase/delete-branch-action@v3
         with:
           project_id: ${{ secrets.NEON_PROJECT_ID }}
@@ -166,8 +168,10 @@ jobs:
           path: playwright-report/
           retention-days: 7
 
+      # branch_id is empty when the create step itself failed; without this the
+      # cleanup fails too and buries the real error under a neonctl usage error.
       - name: Delete ephemeral Neon branch
-        if: always()
+        if: always() && steps.neon.outputs.branch_id != ''
         uses: neondatabase/delete-branch-action@v3
         with:
           project_id: ${{ secrets.NEON_PROJECT_ID }}
