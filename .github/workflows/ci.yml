@@ -61,11 +61,14 @@ jobs:
   integration:
     name: Integration tests
     runs-on: ubuntu-latest
-    # Fork PRs can't read repository secrets, so these two jobs would fail on
-    # the Neon branch step rather than on anything the contributor wrote.
+    # Fork PRs can't read repository secrets, and Dependabot PRs read a
+    # separate (empty) Dependabot secret store, so these two jobs would fail on
+    # the Neon branch step rather than on anything the change itself did. Both
+    # get their real run when the PR lands on main via the push trigger.
     if: >-
       github.event_name == 'push' ||
-      github.event.pull_request.head.repo.full_name == github.repository
+      (github.event.pull_request.head.repo.full_name == github.repository &&
+       github.actor != 'dependabot[bot]')
     env:
       AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
       TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
@@ -113,7 +116,8 @@ jobs:
     runs-on: ubuntu-latest
     if: >-
       github.event_name == 'push' ||
-      github.event.pull_request.head.repo.full_name == github.repository
+      (github.event.pull_request.head.repo.full_name == github.repository &&
+       github.actor != 'dependabot[bot]')
     env:
       AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
       TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
