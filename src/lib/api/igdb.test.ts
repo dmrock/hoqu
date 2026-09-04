@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { searchGames } from "./igdb";
+import { getRecentGames, searchGames } from "./igdb";
 
 const { getIgdbAccessToken, invalidateIgdbToken } = vi.hoisted(() => ({
   getIgdbAccessToken: vi.fn(),
@@ -143,5 +143,41 @@ describe("searchGames", () => {
     await expect(searchGames("doom")).rejects.toThrow("400");
     expect(invalidateIgdbToken).not.toHaveBeenCalled();
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("getRecentGames", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-04T10:37:22Z"));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("ranks the window by pre-release hype so day-one launches make the row", async () => {
+    const fetchMock = stubFetch(async () => gamesResponse([]));
+
+    await getRecentGames();
+
+    const body = String(fetchMock.mock.calls[0][1]?.body);
+    expect(body).toContain("& version_parent = null & hypes != null;");
+    expect(body).toContain("sort hypes desc;");
+    expect(body).not.toContain("total_rating_count");
+  });
+
+  it("floors the release window to the hour so the cached body stays stable", async () => {
+    const fetchMock = stubFetch(async () => gamesResponse([]));
+
+    await getRecentGames();
+
+    const now = Math.floor(new Date("2026-09-04T10:00:00Z").getTime() / 1000);
+    const since = now - 90 * 24 * 60 * 60;
+    const [, init] = fetchMock.mock.calls[0];
+    expect(init?.body).toContain(
+      `where first_release_date >= ${since} & first_release_date <= ${now}`,
+    );
+    expect(init).toMatchObject({ cache: "force-cache", next: { revalidate: 3600 } });
   });
 });

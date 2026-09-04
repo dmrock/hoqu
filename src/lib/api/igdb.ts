@@ -14,6 +14,7 @@ const MAX_RESULTS = 8;
 const FIELDS = "fields name,cover.image_id,first_release_date,total_rating;";
 
 const RECENT_WINDOW_SECONDS = 90 * 24 * 60 * 60;
+const RECENT_REVALIDATE_SECONDS = 60 * 60;
 
 type IgdbGame = {
   id: number;
@@ -90,21 +91,25 @@ export async function getRecentGames(): Promise<SearchResult[]> {
   const fixture = newReleasesFixture("games");
   if (fixture) return fixture;
 
-  const now = Math.floor(Date.now() / 1000);
+  // Floored to the revalidate window: the body is part of Next's fetch cache
+  // key, so a per-second timestamp would make every render a cache miss.
+  const now = Math.floor(Date.now() / 1000 / RECENT_REVALIDATE_SECONDS) * RECENT_REVALIDATE_SECONDS;
   const since = now - RECENT_WINDOW_SECONDS;
 
-  // Popularity proxy: how many people have rated it at all. Keeps unrated
-  // shovelware out of the row without narrowing the recency window.
+  // Popularity proxy: `hypes`, the follows a game collects before release. It
+  // is earned by launch day, so a game out since yesterday competes on equal
+  // footing — ranking by rating count instead let two-month-old titles hold
+  // every slot until a new release had caught up, i.e. never while it was
+  // actually new. Requiring a hype count still keeps shovelware out.
   const body =
     `${FIELDS} where first_release_date >= ${since} & first_release_date <= ${now} ` +
-    `& version_parent = null & total_rating_count != null; ` +
-    `sort total_rating_count desc; limit ${MAX_RESULTS};`;
+    `& version_parent = null & hypes != null; sort hypes desc; limit ${MAX_RESULTS};`;
 
   const games = await igdbQuery(body, {
     timeoutMs: BACKGROUND_TIMEOUT_MS,
     // Next only caches POSTs (and Authorization-bearing requests) when asked to.
     cache: "force-cache",
-    next: { revalidate: 3600 },
+    next: { revalidate: RECENT_REVALIDATE_SECONDS },
   });
   return games.map(toGameResult);
 }
