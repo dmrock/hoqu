@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { type ActionResult, requestEmailChangeAction } from "@/app/(main)/settings/actions";
 import { Button } from "@/components/ui/button";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -32,11 +33,13 @@ export function ChangeEmailCard({
   }
 
   return (
-    <section className="rounded-xl border border-border bg-card p-6">
-      <h2 className="font-pixel text-sm uppercase">Email</h2>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Signed in as <span className="font-mono text-foreground">{currentEmail}</span>
-      </p>
+    <Card padding="lg">
+      <CardHeader>
+        <CardTitle>Email</CardTitle>
+        <CardDescription>
+          Signed in as <span className="font-mono text-foreground">{currentEmail}</span>
+        </CardDescription>
+      </CardHeader>
 
       {hasPassword ? (
         <form onSubmit={handleSubmit} className="mt-4 max-w-sm space-y-4">
@@ -79,6 +82,6 @@ export function ChangeEmailCard({
           Your email is managed by your Google sign-in.
         </p>
       )}
-    </section>
+    </Card>
   );
 }

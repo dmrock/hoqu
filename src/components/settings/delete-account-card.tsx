@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { deleteAccountAction } from "@/app/(main)/settings/actions";
 import { Button } from "@/components/ui/button";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogClose,
@@ -32,12 +33,14 @@ export function DeleteAccountCard({ username }: { username: string }) {
   }
 
   return (
-    <section className="rounded-xl border border-destructive/40 bg-card p-6">
-      <h2 className="font-pixel text-sm uppercase text-destructive">Danger zone</h2>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Permanently delete your account and all of your logged items, achievements, friendships and
-        guild memberships. This can't be undone.
-      </p>
+    <Card padding="lg" variant="danger">
+      <CardHeader>
+        <CardTitle className="text-destructive">Danger zone</CardTitle>
+        <CardDescription>
+          Permanently delete your account and all of your logged items, achievements, friendships
+          and guild memberships. This can't be undone.
+        </CardDescription>
+      </CardHeader>
 
       <Dialog>
         <DialogTrigger asChild>
@@ -79,6 +82,6 @@ export function DeleteAccountCard({ username }: { username: string }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </section>
+    </Card>
   );
 }

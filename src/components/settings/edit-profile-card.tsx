@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { type UpdateProfileResult, updateProfile } from "@/app/(main)/settings/actions";
 import { Button } from "@/components/ui/button";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -61,11 +62,13 @@ export function EditProfileCard({
   const generalError = result && !result.ok && !result.field ? result.error : null;
 
   return (
-    <section className="rounded-xl border border-border bg-card p-6">
-      <h2 className="font-pixel text-sm uppercase">Profile</h2>
-      <p className="mt-2 text-sm text-muted-foreground">
-        How you appear to other adventurers, and who can see your profile.
-      </p>
+    <Card padding="lg">
+      <CardHeader>
+        <CardTitle>Profile</CardTitle>
+        <CardDescription>
+          How you appear to other adventurers, and who can see your profile.
+        </CardDescription>
+      </CardHeader>
       <form onSubmit={handleSubmit} className="mt-4 space-y-4">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-2">
@@ -146,6 +149,6 @@ export function EditProfileCard({
           </Button>
         </div>
       </form>
-    </section>
+    </Card>
   );
 }

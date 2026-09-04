@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { type ActionResult, changePasswordAction } from "@/app/(main)/settings/actions";
 import { Button } from "@/components/ui/button";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -29,15 +30,15 @@ export function ChangePasswordCard({ hasPassword }: { hasPassword: boolean }) {
   }
 
   return (
-    <section className="rounded-xl border border-border bg-card p-6">
-      <h2 className="font-pixel text-sm uppercase">
-        {hasPassword ? "Password" : "Set a password"}
-      </h2>
-      <p className="mt-1 text-sm text-muted-foreground">
-        {hasPassword
-          ? "Change the password you use to sign in."
-          : "Add a password so you can also sign in with email, not just Google."}
-      </p>
+    <Card padding="lg">
+      <CardHeader>
+        <CardTitle>{hasPassword ? "Password" : "Set a password"}</CardTitle>
+        <CardDescription>
+          {hasPassword
+            ? "Change the password you use to sign in."
+            : "Add a password so you can also sign in with email, not just Google."}
+        </CardDescription>
+      </CardHeader>
 
       <form onSubmit={handleSubmit} className="mt-4 max-w-sm space-y-4">
         {hasPassword ? (
@@ -74,6 +75,6 @@ export function ChangePasswordCard({ hasPassword }: { hasPassword: boolean }) {
           {submitting ? "Saving…" : hasPassword ? "Update password" : "Set password"}
         </Button>
       </form>
-    </section>
+    </Card>
   );
 }

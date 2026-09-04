@@ -13,9 +13,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { SegmentedControl } from "@/components/ui/segmented-control";
 import { type ItemsFilter, SORT_OPTIONS, type SortValue, STATUS_OPTIONS } from "@/lib/items-filter";
 import type { HobbySlug, ItemStatus } from "@/lib/points";
-import { cn } from "@/lib/utils";
 import { AddItemDialog } from "./add-item-dialog";
 
 export function ItemsToolbar({ filter, hobbySlug }: { filter: ItemsFilter; hobbySlug: HobbySlug }) {
@@ -75,32 +75,13 @@ export function ItemsToolbar({ filter, hobbySlug }: { filter: ItemsFilter; hobby
     >
       {/* The five tabs are wider than a 375px viewport, so the strip scrolls
           rather than clipping the tabs past the fold out of reach. */}
-      <div
-        role="tablist"
+      <SegmentedControl
+        items={tabs}
+        value={activeStatus}
+        onChange={selectStatus}
         aria-label="Filter by status"
-        className="flex h-7 max-w-full items-center overflow-x-auto rounded-md border border-border bg-muted/40 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      >
-        {tabs.map((t) => {
-          const active = activeStatus === t.value;
-          return (
-            <button
-              key={t.value}
-              type="button"
-              role="tab"
-              aria-selected={active}
-              onClick={() => selectStatus(t.value)}
-              className={cn(
-                "h-full shrink-0 whitespace-nowrap px-3 text-[0.8rem] transition-colors",
-                active
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
-              )}
-            >
-              {t.label}
-            </button>
-          );
-        })}
-      </div>
+        pending={pending}
+      />
 
       <div className="flex flex-wrap items-center gap-2">
         <Button

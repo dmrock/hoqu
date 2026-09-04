@@ -2,6 +2,10 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
+
+import { Card } from "@/components/ui/card";
+import { IconTile } from "@/components/ui/icon-tile";
+import { PixelBurst } from "@/components/ui/pixel-burst";
 import { achievementIcon } from "@/lib/achievement-icons";
 import type { AchievementUnlock } from "@/lib/achievements";
 import { UNLOCK_EVENT, type UnlockEventDetail } from "@/lib/notify-unlocks";
@@ -42,16 +46,21 @@ export function UnlockToaster() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 16, scale: 0.95 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="pointer-events-auto flex w-72 items-start gap-3 rounded-xl border border-border bg-card p-3 shadow-lg ring-1 ring-accent/30"
+              className="pointer-events-auto"
             >
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
-                <Icon className="size-5" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="font-pixel text-[0.7rem] text-accent">Achievement unlocked</p>
-                <p className="truncate font-medium">{t.name}</p>
-                <p className="truncate text-xs text-muted-foreground">{t.description}</p>
-              </div>
+              <Card variant="accent" padding="sm" className="flex w-72 items-start gap-3">
+                <div className="relative">
+                  <IconTile tone="solid-accent">
+                    <Icon />
+                  </IconTile>
+                  <PixelBurst />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-pixel text-[0.65rem] text-accent">Achievement unlocked</p>
+                  <p className="truncate font-medium">{t.name}</p>
+                  <p className="truncate text-xs text-muted-foreground">{t.description}</p>
+                </div>
+              </Card>
             </motion.div>
           );
         })}

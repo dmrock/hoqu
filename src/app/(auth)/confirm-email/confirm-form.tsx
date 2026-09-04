@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { type ActionResult, confirmEmailChangeAction } from "@/app/(main)/settings/actions";
+import { AuthHeading } from "@/components/auth/auth-heading";
 import { Button } from "@/components/ui/button";
 
 export function ConfirmEmailForm({ token }: { token: string }) {
@@ -19,10 +20,11 @@ export function ConfirmEmailForm({ token }: { token: string }) {
   if (result?.ok) {
     return (
       <div className="space-y-6 text-center">
-        <h1 className="font-pixel text-base tracking-tight">Email confirmed</h1>
-        <p className="text-sm text-muted-foreground">
-          Your account email has been updated. Use it next time you sign in.
-        </p>
+        <AuthHeading
+          eyebrow="Saved"
+          title="Email confirmed"
+          description="Your account email has been updated. Use it next time you sign in."
+        />
         <Button asChild className="w-full">
           <Link href="/explore">Go to HOQU</Link>
         </Button>
@@ -32,12 +34,11 @@ export function ConfirmEmailForm({ token }: { token: string }) {
 
   return (
     <div className="space-y-6 text-center">
-      <div className="space-y-2">
-        <h1 className="font-pixel text-base tracking-tight">Confirm your new email</h1>
-        <p className="text-sm text-muted-foreground">
-          Confirm the change to finish updating your HOQU account email.
-        </p>
-      </div>
+      <AuthHeading
+        eyebrow="Checkpoint"
+        title="Confirm your new email"
+        description="Confirm the change to finish updating your HOQU account email."
+      />
 
       {result && !result.ok ? <p className="text-sm text-destructive">{result.error}</p> : null}
 

@@ -1,25 +1,22 @@
 import { and, desc, eq } from "drizzle-orm";
-import {
-  BookOpen,
-  CircleCheck,
-  Clapperboard,
-  Gamepad2,
-  type LucideIcon,
-  Star,
-  Trophy,
-  Tv,
-  Zap,
-} from "lucide-react";
-import Image from "next/image";
+import { CircleCheck, Lock, Star, Trophy, Zap } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card } from "@/components/ui/card";
+import { IconTile } from "@/components/ui/icon-tile";
+import { PixelBand } from "@/components/ui/pixel-band";
+import { PosterTile } from "@/components/ui/poster-tile";
+import { SectionHeading } from "@/components/ui/section-heading";
+import { StatTile } from "@/components/ui/stat-tile";
 import { achievementIcon } from "@/lib/achievement-icons";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { achievements, hobbies, items, userAchievements, users } from "@/lib/db/schema";
 import { getFriendshipStatus } from "@/lib/friendships";
 import { shareGuild } from "@/lib/guilds";
+import { HOBBY_META, HOBBY_ORDER } from "@/lib/hobby-meta";
 import type { HobbySlug } from "@/lib/points";
 import { FriendStatusButton } from "./friend-status-button";
 
@@ -31,15 +28,6 @@ const VISIBILITY_LABEL: Record<ProfileVisibility, string> = {
   guild_only: "Guild only",
   private: "Private",
 };
-
-const HOBBY_META: Record<HobbySlug, { label: string; icon: LucideIcon }> = {
-  movies: { label: "Movies", icon: Clapperboard },
-  tv: { label: "TV Shows", icon: Tv },
-  games: { label: "Games", icon: Gamepad2 },
-  books: { label: "Books", icon: BookOpen },
-};
-
-const HOBBY_ORDER: HobbySlug[] = ["movies", "tv", "games", "books"];
 
 // Deliberately no sibling loading.tsx: a route-level loading state wraps the
 // whole page in a Suspense boundary, which flushes (and commits the HTTP
@@ -132,19 +120,12 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
     { label: "Achievements", value: totalUnlocked, icon: Trophy },
   ];
 
-  const hobbyCards = HOBBY_ORDER.map((slug) => ({
-    slug,
-    label: HOBBY_META[slug].label,
-    icon: HOBBY_META[slug].icon,
-    count:
-      slug === "movies"
-        ? profile.moviesCompleted
-        : slug === "tv"
-          ? profile.showsCompleted
-          : slug === "games"
-            ? profile.gamesCompleted
-            : profile.booksCompleted,
-  }));
+  const completedBySlug: Record<HobbySlug, number> = {
+    movies: profile.moviesCompleted,
+    tv: profile.showsCompleted,
+    games: profile.gamesCompleted,
+    books: profile.booksCompleted,
+  };
 
   const initials = (profile.name ?? profile.email).slice(0, 2).toUpperCase();
   const joined = new Date(profile.createdAt).toLocaleDateString(undefined, {
@@ -155,107 +136,105 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
 
   return (
     <div className="space-y-8">
-      <section className="flex items-center gap-4 rounded-xl border border-border bg-card p-5">
-        <Avatar className="size-16">
-          {profile.image ? (
-            <AvatarImage src={profile.image} alt={profile.name ?? profile.username ?? "Profile"} />
+      <Card padding="none" className="overflow-hidden">
+        <PixelBand />
+        <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
+          <Avatar className="size-16 ring-2 ring-primary/40 ring-offset-2 ring-offset-card">
+            {profile.image ? (
+              <AvatarImage
+                src={profile.image}
+                alt={profile.name ?? profile.username ?? "Profile"}
+              />
+            ) : null}
+            <AvatarFallback className="font-pixel text-sm">{initials}</AvatarFallback>
+          </Avatar>
+          <div className="min-w-0 flex-1">
+            <h1 className="break-words text-2xl font-semibold tracking-tight md:text-3xl">
+              {profile.name ?? profile.username}
+            </h1>
+            <p className="font-mono text-sm text-muted-foreground">
+              @{profile.username} · joined {joined}
+            </p>
+          </div>
+          {isOwner ? (
+            <span className="inline-flex items-center gap-1.5 self-start font-mono text-[11px] text-muted-foreground uppercase tracking-wider sm:self-center">
+              <Lock className="size-3" />
+              {VISIBILITY_LABEL[visibility]}
+            </span>
+          ) : profile.username ? (
+            <FriendStatusButton
+              status={friendship.status}
+              friendshipId={friendship.friendshipId}
+              username={profile.username}
+              friendName={friendName}
+            />
           ) : null}
-          <AvatarFallback>{initials}</AvatarFallback>
-        </Avatar>
-        <div className="min-w-0 flex-1">
-          <h1 className="break-words font-pixel text-2xl">{profile.name ?? profile.username}</h1>
-          <p className="font-mono text-sm text-muted-foreground">
-            @{profile.username} · joined {joined}
-          </p>
         </div>
-        {isOwner ? (
-          <span className="font-mono text-xs text-muted-foreground uppercase">
-            {VISIBILITY_LABEL[visibility]}
-          </span>
-        ) : profile.username ? (
-          <FriendStatusButton
-            status={friendship.status}
-            friendshipId={friendship.friendshipId}
-            username={profile.username}
-            friendName={friendName}
-          />
-        ) : null}
-      </section>
+      </Card>
 
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {stats.map((s) => (
-          <div key={s.label} className="rounded-xl border border-border bg-card p-4">
-            <div className="flex items-center justify-between text-muted-foreground">
-              <p className="text-xs uppercase">{s.label}</p>
-              <s.icon className="size-4" />
-            </div>
-            <p className="font-pixel text-2xl text-primary">{s.value}</p>
-          </div>
+          <StatTile key={s.label} label={s.label} value={s.value} icon={s.icon} />
         ))}
       </section>
 
       <section className="space-y-3">
-        <h2 className="font-pixel text-sm text-muted-foreground uppercase">Quest log</h2>
+        <SectionHeading>Quest log</SectionHeading>
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {hobbyCards.map((c) => (
-            <div
-              key={c.slug}
-              className="flex items-center gap-3 rounded-xl border border-border bg-card p-4"
-            >
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                <c.icon className="size-5" />
-              </div>
-              <div className="min-w-0">
-                <p className="font-medium">{c.label}</p>
-                <p className="font-mono text-xs text-muted-foreground">{c.count} completed</p>
-              </div>
-            </div>
-          ))}
+          {HOBBY_ORDER.map((slug) => {
+            const meta = HOBBY_META[slug];
+            return (
+              <Card key={slug} className="flex items-center gap-3">
+                <IconTile tone={meta.tone}>
+                  <meta.icon />
+                </IconTile>
+                <div className="min-w-0">
+                  <p className="font-medium">{meta.label}</p>
+                  <p className="font-mono text-xs text-muted-foreground">
+                    {completedBySlug[slug]} completed
+                  </p>
+                </div>
+              </Card>
+            );
+          })}
         </div>
       </section>
 
       <section className="space-y-3">
-        <h2 className="font-pixel text-sm text-muted-foreground uppercase">Recently completed</h2>
+        <SectionHeading>Recently completed</SectionHeading>
         {recentlyCompletedRows.length === 0 ? (
           <p className="text-sm text-muted-foreground">Nothing completed yet.</p>
         ) : (
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
             {recentlyCompletedRows.map((item, i) => (
-              <div key={item.id} className="min-w-0">
-                <div className="relative aspect-2/3 overflow-hidden rounded-lg bg-muted">
-                  {item.imageUrl ? (
-                    <Image
-                      src={item.imageUrl}
-                      alt={item.title}
-                      fill
-                      sizes="(min-width: 640px) 160px, 33vw"
-                      className="object-cover"
-                      // Highest row on the page carrying art — measures as LCP.
-                      loading={i < 4 ? "eager" : undefined}
-                    />
-                  ) : null}
-                </div>
-                <p className="mt-1 truncate text-xs font-medium" title={item.title}>
-                  {item.title}
-                </p>
-                <p className="font-mono text-[10px] text-muted-foreground uppercase">
-                  {HOBBY_META[item.hobbySlug as HobbySlug]?.label ?? item.hobbySlug}
-                </p>
-              </div>
+              <PosterTile
+                key={item.id}
+                title={item.title}
+                imageUrl={item.imageUrl}
+                subtitle={HOBBY_META[item.hobbySlug as HobbySlug]?.label ?? item.hobbySlug}
+                // Highest row on the page carrying art — measures as LCP.
+                eager={i < 4}
+              />
             ))}
           </div>
         )}
       </section>
 
       <section className="space-y-3">
-        <div className="flex items-baseline justify-between gap-3">
-          <h2 className="font-pixel text-sm text-muted-foreground uppercase">Latest unlocks</h2>
-          {isOwner ? (
-            <Link href="/achievements" className="text-xs text-primary hover:underline">
-              View all
-            </Link>
-          ) : null}
-        </div>
+        <SectionHeading
+          action={
+            isOwner ? (
+              <Link
+                href="/achievements"
+                className="text-xs text-primary transition-colors hover:text-primary-hover"
+              >
+                View all
+              </Link>
+            ) : null
+          }
+        >
+          Latest unlocks
+        </SectionHeading>
         {recentUnlocks.length === 0 ? (
           <p className="text-sm text-muted-foreground">No achievements yet.</p>
         ) : (
@@ -263,18 +242,19 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
             {recentUnlocks.map((u) => {
               const Icon = achievementIcon(u.icon);
               return (
-                <div
+                <Card
                   key={`${u.name}-${u.unlockedAt.toISOString()}`}
-                  className="flex items-start gap-3 rounded-xl border border-border bg-card p-3"
+                  padding="sm"
+                  className="flex items-start gap-3"
                 >
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
-                    <Icon className="size-5" />
-                  </div>
+                  <IconTile tone="solid-accent">
+                    <Icon />
+                  </IconTile>
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-medium">{u.name}</p>
                     <p className="truncate text-xs text-muted-foreground">{u.description}</p>
                   </div>
-                </div>
+                </Card>
               );
             })}
           </div>

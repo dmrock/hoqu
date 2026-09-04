@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { exportDataAction } from "@/app/(main)/settings/actions";
 import { Button } from "@/components/ui/button";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { itemsToCsv } from "@/lib/export";
 
 type ExportFormat = "json" | "csv";
@@ -49,12 +50,14 @@ export function ExportDataCard() {
   }
 
   return (
-    <section className="rounded-xl border border-border bg-card p-6">
-      <h2 className="font-pixel text-sm uppercase">Export your data</h2>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Download everything you've logged. JSON is the full export — items, stats and achievements;
-        CSV is a flat list of your items, one row per entry (seasons included).
-      </p>
+    <Card padding="lg">
+      <CardHeader>
+        <CardTitle>Export your data</CardTitle>
+        <CardDescription>
+          Download everything you've logged. JSON is the full export — items, stats and
+          achievements; CSV is a flat list of your items, one row per entry (seasons included).
+        </CardDescription>
+      </CardHeader>
 
       <div className="mt-4 flex flex-wrap gap-2">
         <Button onClick={() => handleExport("json")} disabled={downloading !== null}>
@@ -70,6 +73,6 @@ export function ExportDataCard() {
       </div>
 
       {error ? <p className="mt-3 text-sm text-destructive">{error}</p> : null}
-    </section>
+    </Card>
   );
 }

@@ -8,8 +8,9 @@ achievements, join guilds, friend each other, and compare progress on guild- and
 leaderboards. Dark-only UI with a "modern pixel" aesthetic — clean modern base with pixel-art
 accents (badges, XP bars, icons, micro-animations). English only.
 
-**Status:** Phase 1 (MVP) and Phase 2 (social) are shipped. Outstanding: polish (animations, pixel
-sprites, responsive sweep) is intentionally deferred — see `MEMORY.md`.
+**Status:** Phase 1 (MVP), Phase 2 (social) and the design refresh (component system, depth
+tokens, pixel micro-animations — September 2026) are shipped. Still open: pixel-art sprites for
+achievement icons and a proper responsive audit — see `MEMORY.md`.
 
 ## Tech Stack (do not change without explicit approval)
 
@@ -377,41 +378,110 @@ and the server action validates `hobbySlug` against the enum, so cross-adding is
 
 ## UI/UX Design Specification
 
+Dark only, "modern pixel": a clean, layered dark UI with pixel-art *accents* — never a pixel UI.
+Depth comes from tokens, pixel comes from a handful of small components and stepped animations.
+
 CSS variables (current state in `src/app/globals.css`):
 
 ```
---background           dark base
+--background           #0a0a0f  + a faint radial --primary glow at the top of <body>
 --card / --card-foreground
---primary  #7c5cff     button + accents
---accent   #00e5a0     "in progress" badge, "yes" feedback, achievement icon backgrounds
+--primary  #7c5cff     buttons, active nav, completed badges, glows
+--primary-shadow       darker step of --primary; the hard-offset shadow under primary buttons
+--accent   #00e5a0     "in progress", unlocked achievements, success copy, "yes" feedback
 --warning  #ffa726     notes, slot-warning banners
 --destructive          delete buttons + confirm dialogs
 --border  #2a2a3a
 --muted-foreground / --muted
 ```
 
-Fonts (`src/app/layout.tsx`, `next/font`):
-- **Press Start 2P** (`font-pixel`) — page titles, stat values, achievement section labels.
-- **Inter** — body text (default).
-- **JetBrains Mono** (`font-mono`) — usernames, point values, invite codes, IDs.
+Depth + motion tokens (`@theme` in `globals.css`, usable as Tailwind utilities):
 
-Components:
-- Cards: `rounded-xl border border-border bg-card`.
-- Status badges: default for completed, accent green for in_progress, outline for planned,
-  ghost for dropped.
-- "Again?" indicator: `RotateCw` icon (the lucide `Sparkles` icon is BANNED project-wide —
-  see memory).
-- Sidebar: 240px expanded, 56px collapsed (`w-14`). User avatar + dropdown lives at the
-  bottom of the sidebar, not the top header.
+- `shadow-card` — every `Card`: inset top highlight + soft drop. `shadow-glow` /
+  `shadow-glow-accent` — brand ring + bloom for hover/focus and "unlocked" states.
+  `shadow-pixel` / `shadow-pixel-pressed` — the primary button's hard offset and its pressed step.
+- `animate-pixel-blink` (one-shot icon blink on nav hover), `animate-pixel-bob` (2-frame bob for
+  the logo gem), `animate-cursor-blink`. All use `steps()` on purpose — they should read as sprite
+  frames, not tweens.
+- Utility classes: `.pixel-grid` (faint 24px grid, edge-faded — heroes, auth, 404/error),
+  `.pixel-band` (brand gradient chopped into pixels — top edge of identity cards), `.skeleton`,
+  `.row-focus-pulse`.
+
+Fonts (`src/app/layout.tsx`, `next/font`):
+- **Inter** — body *and* every title: `PageHeader` h1, `CardTitle`, landing h2/h3. Titles are
+  `font-semibold tracking-tight`.
+- **Press Start 2P** (`font-pixel`) — accents only: the wordmark, `SectionHeading` labels,
+  eyebrows, stat values (`CountUp`), the "Achievement unlocked" toast line, 404 numerals. Never
+  above ~`text-sm` except stat values and the 404 numeral.
+- **JetBrains Mono** (`font-mono`) — usernames, point values, invite codes, IDs, `RowLabel`,
+  table headers.
+
+### Component system (`src/components/ui/`)
+
+Never hand-roll `rounded-xl border border-border bg-card` — that string used to live in 38
+places. Reach for these instead:
+
+- **`Card`** (+ `CardHeader` / `CardTitle` / `CardDescription` / `CardContent` / `CardFooter`).
+  `variant`: `default` | `interactive` (whole-card links; brightens + brand border on hover) |
+  `accent` (mint ring — unlocked) | `danger` | `muted`. `padding`: `none` | `sm` | `md` | `lg`.
+  `asChild` to render as `<li>`, `<Link>`, `motion.li`. `CardTitle` is an `h2` — settings and
+  guild-settings e2e find cards by heading name.
+- **`PageHeader`** — the one h1 per page (Inter); `description`, `eyebrow` (pixel), `actions`
+  slot, `back` link. **`SectionHeading`** — pixel-font label for a *page section*, with
+  `action` slot and `tone="accent"`; renders `h2` by default (e2e reads "Friends (N)" from it).
+  **`RowLabel`** — mono sub-label with an accent tick for rows nested under a section.
+- **`StatTile`** (`variant="inline"` chip for header rows, `"card"` for grids) wraps
+  **`CountUp`**: a pure-CSS count-up — the real number sits in an sr-only span (tests and
+  screen readers read it via `innerText`), the visible digits are a CSS counter animated through
+  a registered `--count-n` property. No JS, no hydration flash.
+- **`IconTile`** — tinted square behind a lucide icon. `tone`: `muted` | `foreground` |
+  `primary` | `accent` | `warning` | `destructive` | `solid-accent` (unlocked/toast). `size`
+  `sm`..`xl`. `HOBBY_META` in `src/lib/hobby-meta.ts` gives each hobby a label, icon and tone —
+  use it instead of local label maps.
+- **`EntityRow`** — avatar + name + @handle for people lists; trailing content in `children`.
+  **`PosterTile`** — 2:3 poster with caption; `href` or `onClick` makes it interactive (lift,
+  glow ring, art zoom); `badge`, `overlay`, `meta`, `eager` for LCP rows. Explore, trending
+  feeds and the profile all use it. **`EmptyState`** — dashed box with icon/title/action.
+- **`SegmentedControl`** — tablist toggle whose active pill slides via Motion `layoutId` (scoped
+  by `useId`, so two on a page don't animate into each other). Backs the status filter and the
+  leaderboard scope tabs.
+- Pixel pieces: **`PixelProgress`** (segmented bar, `tone`), **`PixelBand`**, **`Typewriter`**
+  (CSS-only: every character is in the DOM from first paint, revealed by an index-based delay —
+  the accessible name is always the full string), **`PixelBurst`** (Motion particle burst; client,
+  toasts only), `components/icons/`: `PixelMark` (the gem in the logo), `PixelBits` (section
+  bullet), `PixelCursor` (the ▸ nav cursor). `components/layout/logo.tsx` composes the wordmark.
+- Domain badges: `components/items/status-badge.tsx` (tinted pill with a square dot),
+  `components/guilds/role-badge.tsx` (master gold / officer silver / member outline).
+
+Other conventions:
+- Sidebar: 240px expanded, 56px collapsed (`w-14`). `NavList` is shared by the sidebar and the
+  mobile drawer; the active item's ▸ cursor is a Motion `layoutId`, keyed per instance
+  (`cursorId`) because both lists are mounted at once. User avatar + dropdown lives at the
+  bottom of the sidebar, not the top header. The header is glass with a brand-tinted hairline.
 - Global search: a Cmd/Ctrl+K command palette, triggered by a compact right-aligned
   button in the header (icon-only below `sm`). The trigger is intentionally NOT a wide
   input-shaped bar — pages pick their own `max-w-*` (e.g. `max-w-7xl` on hobby pages,
   `max-w-3xl` on guilds/friends), so a wide trigger fails to line up with one or the
   other. Right-aligning decouples it. Don't move it to the sidebar or center it
   without re-considering this trade-off.
+- "Again?" indicator: `RotateCw` icon (the lucide `Sparkles` icon is BANNED project-wide —
+  see memory).
 
-Animations (Motion) — only `<UnlockToaster>` is wired up so far; the rest of the polish
-specced in earlier drafts is deferred.
+### Animation inventory
+
+Everything is one-shot, hover-only, or slow and tiny. `MotionProvider` sets
+`reducedMotion="user"` for Motion, and every CSS animation has a `prefers-reduced-motion`
+fallback in `globals.css`.
+
+- Sidebar ▸ cursor slides between nav items (spring); nav icons blink once on hover.
+- `CountUp` on Explore/Profile stats; `PixelProgress` fill; achievement grid stagger (capped at
+  12 steps).
+- Landing: `Typewriter` on the h1; the logo gem bobs. **No mock UI on the landing page** — the
+  hero's right column is four copy tiles, not a fake screen. Anything that looks like the app
+  must be the app (a genuine screenshot), never a composed illustration.
+- `UnlockToaster`: slide-in + `PixelBurst`. `PosterTile` hover lift/glow. Primary buttons press
+  down onto their hard shadow. `SegmentedControl` pill slides. Skeleton shimmer, `?focus=` row
+  pulse.
 
 ## File Structure
 
@@ -445,9 +515,15 @@ src/
 ├── app/privacy/                        Public privacy policy (no auth, no sidebar)
 ├── app/terms/                          Public terms of service (no auth, no sidebar)
 ├── components/
-│   ├── ui/                             shadcn primitives (button, dialog, dropdown, etc.)
-│   ├── icons/                          Brand marks lucide doesn't ship (GithubIcon)
-│   ├── layout/                         Sidebar, Header, MobileDrawer, SidebarUserMenu
+│   ├── ui/                             shadcn primitives + the HOQU component system (card,
+│   │                                   page-header, section-heading, stat-tile, count-up,
+│   │                                   icon-tile, entity-row, poster-tile, empty-state,
+│   │                                   segmented-control, pixel-*, typewriter)
+│   ├── icons/                          GithubIcon + pixel sprites (PixelMark, PixelBits, PixelCursor)
+│   ├── auth/                           AuthHeading (eyebrow + title for the auth card)
+│   ├── guilds/                         RoleBadge
+│   ├── layout/                         Sidebar, Header, MobileDrawer, NavList, Logo,
+│   │                                   SidebarUserMenu
 │   ├── items/                          Hobby table, toolbar, add dialog, row actions,
 │   │                                   all-seasons bulk editor, row-focus (scroll + pulse
 │   │                                   for ?focus= deep links)
@@ -466,6 +542,7 @@ src/
 │   ├── points.ts                       Counter delta + snapshotPoints
 │   ├── achievements.ts                 Evaluator registry + checker
 │   ├── achievement-icons.ts            Slug → lucide icon map
+│   ├── hobby-meta.ts                   Label / icon / tone per hobby (client-safe)
 │   ├── friendships.ts                  Friend status helpers
 │   ├── guilds.ts                       Guild helpers + invite-code generator
 │   ├── leaderboards.ts                 Pure types + sort helpers (client-safe)

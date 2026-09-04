@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AuthHeading } from "@/components/auth/auth-heading";
 import { ResetPasswordForm } from "./reset-form";
 
 export default async function ResetPasswordPage({
@@ -11,10 +12,11 @@ export default async function ResetPasswordPage({
   if (!token) {
     return (
       <div className="space-y-6 text-center">
-        <h1 className="font-pixel text-base tracking-tight">Reset password</h1>
-        <p className="text-sm text-muted-foreground">
-          This reset link is missing its token. Request a new one to continue.
-        </p>
+        <AuthHeading
+          eyebrow="Recovery"
+          title="Reset password"
+          description="This reset link is missing its token. Request a new one to continue."
+        />
         <Link
           href="/forgot-password"
           className="text-sm text-primary hover:text-primary-hover underline"

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
+import { AuthHeading } from "@/components/auth/auth-heading";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,10 +13,7 @@ export default function LoginPage() {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2 text-center">
-        <h1 className="font-pixel text-base tracking-tight">Sign in</h1>
-        <p className="text-sm text-muted-foreground">Continue your quest</p>
-      </div>
+      <AuthHeading eyebrow="Continue" title="Sign in" description="Continue your quest" />
 
       <form action={formAction} className="space-y-4">
         <div className="space-y-2">

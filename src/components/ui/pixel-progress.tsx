@@ -11,10 +11,12 @@ import { cn } from "@/lib/utils";
 export function PixelProgress({
   value,
   target,
+  tone = "primary",
   className,
 }: {
   value: number;
   target: number;
+  tone?: "primary" | "accent";
   className?: string;
 }) {
   const reduced = useReducedMotion();
@@ -29,7 +31,12 @@ export function PixelProgress({
       className={cn("relative h-2 w-full overflow-hidden bg-muted", className)}
     >
       <motion.div
-        className="h-full bg-primary"
+        className={cn(
+          "h-full",
+          tone === "accent"
+            ? "bg-linear-to-r from-accent/80 to-accent"
+            : "bg-linear-to-r from-primary to-primary-hover",
+        )}
         initial={reduced ? false : { width: 0 }}
         animate={{ width: `${pct}%` }}
         transition={{ duration: 0.5, ease: "easeOut" }}

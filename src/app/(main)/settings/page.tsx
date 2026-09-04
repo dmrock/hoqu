@@ -5,6 +5,7 @@ import { ChangePasswordCard } from "@/components/settings/change-password-card";
 import { DeleteAccountCard } from "@/components/settings/delete-account-card";
 import { EditProfileCard } from "@/components/settings/edit-profile-card";
 import { ExportDataCard } from "@/components/settings/export-data-card";
+import { PageHeader } from "@/components/ui/page-header";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
@@ -32,10 +33,7 @@ export default async function SettingsPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="font-pixel text-2xl">Settings</h1>
-        <p className="text-sm text-muted-foreground">Manage your account.</p>
-      </div>
+      <PageHeader title="Settings" description="Manage your account." />
 
       {/* Multi-column rather than a grid: the cards differ a lot in height, and
           columns pack them without a short card leaving a hole beside a tall

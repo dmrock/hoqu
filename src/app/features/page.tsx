@@ -16,6 +16,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PublicShell } from "@/components/layout/public-shell";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { IconTile } from "@/components/ui/icon-tile";
 
 export const metadata: Metadata = {
   title: "Features",
@@ -28,7 +30,7 @@ export default function FeaturesPage() {
   return (
     <PublicShell>
       <article className="mx-auto w-full max-w-2xl py-8 md:py-12">
-        <h1 className="font-pixel text-xl leading-relaxed text-foreground md:text-2xl">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
           Everything HOQU can do
         </h1>
         <p className="mt-4 text-base text-muted-foreground">
@@ -40,7 +42,7 @@ export default function FeaturesPage() {
 
         <div className="mt-10 space-y-10">
           <Section
-            sprite={<LayoutGrid className="size-5 text-primary" />}
+            sprite={<LayoutGrid className="text-primary" />}
             title="Track four hobbies in one place"
           >
             <p>
@@ -73,10 +75,7 @@ export default function FeaturesPage() {
             </ul>
           </Section>
 
-          <Section
-            sprite={<Star className="size-5 text-warning" />}
-            title="Your rating and the world's"
-          >
+          <Section sprite={<Star className="text-warning" />} title="Your rating and the world's">
             <p>
               Next to your own score, each title shows its external rating so you always have a
               second opinion: the TMDB score for movies and TV shows, and the IGDB score for games.
@@ -84,7 +83,7 @@ export default function FeaturesPage() {
             </p>
           </Section>
 
-          <Section sprite={<Tv className="size-5 text-accent" />} title="TV, season by season">
+          <Section sprite={<Tv className="text-accent" />} title="TV, season by season">
             <p>
               Multi-season shows aren&apos;t crammed into one row. A show expands into its
               individual seasons, each with its own status and rating, and HOQU rolls them up into a
@@ -93,16 +92,13 @@ export default function FeaturesPage() {
             </p>
           </Section>
 
-          <Section
-            sprite={<Zap className="size-5 text-warning" />}
-            title="Weighted XP for every quest"
-          >
+          <Section sprite={<Zap className="text-warning" />} title="Weighted XP for every quest">
             <p>
               Finishing something pays out experience points scaled by effort, so a 60-hour RPG is
               worth more than a movie night. Your points are banked the moment an item is completed
               and survive any future rebalancing of the rates.
             </p>
-            <div className="mt-2 overflow-hidden rounded-xl border border-border">
+            <Card padding="none" className="mt-2 overflow-hidden">
               <table className="w-full text-sm">
                 <tbody className="divide-y divide-border">
                   <PointsRow hobby="Movies" xp="+1 XP each" />
@@ -111,17 +107,14 @@ export default function FeaturesPage() {
                   <PointsRow hobby="Books" xp="+6 XP each" />
                 </tbody>
               </table>
-            </div>
+            </Card>
             <p className="text-sm">
               There&apos;s no tracking or verification — we trust our adventurers to log their
               quests honestly.
             </p>
           </Section>
 
-          <Section
-            sprite={<Trophy className="size-5 text-accent" />}
-            title="Achievements worth hunting"
-          >
+          <Section sprite={<Trophy className="text-accent" />} title="Achievements worth hunting">
             <p>
               Pixel badges unlock as your collection grows, spanning every hobby plus social
               milestones — completing your first title, rating ten items, logging something in all
@@ -130,7 +123,7 @@ export default function FeaturesPage() {
             </p>
           </Section>
 
-          <Section sprite={<Compass className="size-5 text-primary" />} title="Explore what's next">
+          <Section sprite={<Compass className="text-primary" />} title="Explore what's next">
             <p>
               Explore picks up what you left unfinished and puts a New Releases strip underneath —
               what&apos;s now in theaters, newly aired, and just launched — flagging anything
@@ -140,7 +133,7 @@ export default function FeaturesPage() {
           </Section>
 
           <Section
-            sprite={<TrendingUp className="size-5 text-accent" />}
+            sprite={<TrendingUp className="text-accent" />}
             title="See what your circle is into"
           >
             <p>
@@ -154,7 +147,7 @@ export default function FeaturesPage() {
             </p>
           </Section>
 
-          <Section sprite={<Users className="size-5 text-primary" />} title="Friends & guilds">
+          <Section sprite={<Users className="text-primary" />} title="Friends & guilds">
             <p>
               Send and accept friend requests to build your circle, then form a guild of up to 50
               members with a shareable invite code you can rotate at any time. Guilds carry roles —
@@ -164,7 +157,7 @@ export default function FeaturesPage() {
           </Section>
 
           <Section
-            sprite={<Medal className="size-5 text-warning" />}
+            sprite={<Medal className="text-warning" />}
             title="Leaderboards without strangers"
           >
             <p>
@@ -174,10 +167,7 @@ export default function FeaturesPage() {
             </p>
           </Section>
 
-          <Section
-            sprite={<Lock className="size-5 text-foreground" />}
-            title="Privacy on your terms"
-          >
+          <Section sprite={<Lock className="text-foreground" />} title="Privacy on your terms">
             <p>
               You decide who can see your profile with four visibility levels: public, friends only,
               guildmates only, or completely private. Your watchlist, game backlog, and reading log
@@ -185,10 +175,7 @@ export default function FeaturesPage() {
             </p>
           </Section>
 
-          <Section
-            sprite={<Download className="size-5 text-primary" />}
-            title="Your data stays yours"
-          >
+          <Section sprite={<Download className="text-primary" />} title="Your data stays yours">
             <p>
               Everything you log is yours to take. Download your full collection — every item, your
               stats, and your achievements — as JSON, or your items as a flat CSV, anytime from
@@ -196,10 +183,7 @@ export default function FeaturesPage() {
             </p>
           </Section>
 
-          <Section
-            sprite={<Command className="size-5 text-accent" />}
-            title="Quick to use, easy to join"
-          >
+          <Section sprite={<Command className="text-accent" />} title="Quick to use, easy to join">
             <p>
               A{" "}
               <kbd className="rounded border border-border bg-muted px-1 font-mono text-xs">
@@ -211,17 +195,20 @@ export default function FeaturesPage() {
           </Section>
         </div>
 
-        <div className="mt-12 rounded-xl border border-border bg-card px-6 py-10 text-center">
-          <h2 className="font-pixel text-base leading-relaxed md:text-lg">Start your collection</h2>
-          <p className="mx-auto mt-3 max-w-md text-sm text-muted-foreground md:text-base">
+        <Card padding="none" className="relative mt-12 overflow-hidden px-6 py-10 text-center">
+          <div aria-hidden className="pixel-grid pointer-events-none absolute inset-0" />
+          <h2 className="relative text-2xl font-semibold tracking-tight md:text-3xl">
+            Start your collection
+          </h2>
+          <p className="relative mx-auto mt-3 max-w-md text-sm text-muted-foreground md:text-base">
             Free to play. Log your first movie, show, game, or book in under a minute.
           </p>
-          <div className="mt-6 flex justify-center">
+          <div className="relative mt-6 flex justify-center">
             <Button asChild size="lg">
               <Link href="/register">Get started</Link>
             </Button>
           </div>
-        </div>
+        </Card>
       </article>
     </PublicShell>
   );
@@ -239,10 +226,10 @@ function Section({
   return (
     <section className="space-y-3">
       <div className="flex items-center gap-3">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-card">
+        <IconTile size="sm" tone="foreground">
           {sprite}
-        </span>
-        <h2 className="font-pixel text-sm leading-relaxed text-accent">{title}</h2>
+        </IconTile>
+        <h2 className="text-lg font-semibold tracking-tight text-foreground">{title}</h2>
       </div>
       <div className="space-y-3 text-base leading-relaxed text-muted-foreground">{children}</div>
     </section>

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
+import { AuthHeading } from "@/components/auth/auth-heading";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,12 +14,11 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2 text-center">
-        <h1 className="font-pixel text-base tracking-tight">Reset password</h1>
-        <p className="text-sm text-muted-foreground">
-          {sent ? "Check your inbox" : "We'll email you a reset link"}
-        </p>
-      </div>
+      <AuthHeading
+        eyebrow="Recovery"
+        title="Reset password"
+        description={sent ? "Check your inbox" : "We'll email you a reset link"}
+      />
 
       {sent ? (
         <p className="rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground">

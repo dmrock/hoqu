@@ -87,11 +87,11 @@ export function SearchPalette() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Search your collection"
-        className="flex h-9 items-center gap-2 rounded-lg border border-border bg-muted px-3 text-sm text-muted-foreground transition-colors hover:bg-muted/70 focus:outline-none focus:ring-2 focus:ring-ring"
+        className="flex h-9 items-center gap-2 rounded-lg border border-border bg-card/70 px-3 text-sm text-muted-foreground shadow-card transition-colors hover:border-primary/40 hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
       >
         <Search className="size-4" />
         <span className="hidden sm:inline">Search...</span>
-        <kbd className="hidden items-center gap-0.5 rounded border border-border bg-background/60 px-1.5 py-0.5 font-mono text-[10px] sm:inline-flex">
+        <kbd className="hidden items-center gap-0.5 rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px] sm:inline-flex">
           <span>⌘</span>K
         </kbd>
       </button>

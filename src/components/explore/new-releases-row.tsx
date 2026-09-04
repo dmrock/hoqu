@@ -1,17 +1,37 @@
 "use client";
 
 import { Plus } from "lucide-react";
-import Image from "next/image";
 import { useMemo, useState } from "react";
+
 import { AddItemDialog } from "@/components/items/add-item-dialog";
 import { Badge } from "@/components/ui/badge";
+import { PosterTile } from "@/components/ui/poster-tile";
+import { RowLabel } from "@/components/ui/row-label";
 import type { SearchResult } from "@/lib/api/search";
 import type { HobbySlug } from "@/lib/points";
-import { cn } from "@/lib/utils";
 
 /** Posters eagerly loaded when `eager` is set — enough to cover the narrowest
  *  grid (3 across) plus the leading edge of a wide one. */
 const EAGER_COUNT = 4;
+
+export function AddOverlay() {
+  return (
+    <div className="flex size-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg ring-2 ring-background/40">
+      <Plus className="size-5" strokeWidth={2.5} />
+    </div>
+  );
+}
+
+export function OwnedBadge() {
+  return (
+    <Badge
+      variant="secondary"
+      className="absolute right-1 bottom-1 text-[10px] uppercase tracking-wider"
+    >
+      Owned
+    </Badge>
+  );
+}
 
 export function NewReleasesRow({
   title,
@@ -35,9 +55,7 @@ export function NewReleasesRow({
 
   return (
     <section className="space-y-2">
-      <h3 className="border-l-2 border-accent pl-2 font-mono text-xs text-foreground uppercase tracking-wider">
-        {title}
-      </h3>
+      <RowLabel>{title}</RowLabel>
       {items.length === 0 ? (
         <p className="text-sm text-muted-foreground">{emptyHint}</p>
       ) : (
@@ -47,53 +65,23 @@ export function NewReleasesRow({
           {items.map((item, i) => {
             const isOwned = owned.has(item.externalId);
             return (
-              <button
+              <PosterTile
                 key={item.externalId}
-                type="button"
-                disabled={isOwned}
+                title={item.title}
+                imageUrl={item.imageUrl}
                 onClick={() => {
                   setSelected(item);
                   setOpen(true);
                 }}
+                disabled={isOwned}
                 aria-label={`Add ${item.title} to collection`}
-                className="group min-w-0 cursor-pointer text-left transition-opacity disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <div
-                  className={cn(
-                    "relative aspect-2/3 overflow-hidden rounded-lg bg-muted ring-1 ring-transparent transition-all",
-                    !isOwned && "group-hover:ring-primary group-focus-visible:ring-primary",
-                  )}
-                >
-                  {item.imageUrl ? (
-                    <Image
-                      src={item.imageUrl}
-                      alt={item.title}
-                      fill
-                      sizes="(min-width: 640px) 160px, 33vw"
-                      loading={eager && i < EAGER_COUNT ? "eager" : undefined}
-                      className="object-cover transition-transform duration-200 group-enabled:group-hover:scale-105"
-                    />
-                  ) : null}
-                  {isOwned ? (
-                    <Badge
-                      variant="secondary"
-                      className="absolute right-1 bottom-1 text-[10px] uppercase tracking-wider"
-                    >
-                      Owned
-                    </Badge>
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center bg-background/0 opacity-0 transition-all duration-200 group-hover:bg-background/55 group-hover:opacity-100 group-focus-visible:bg-background/55 group-focus-visible:opacity-100">
-                      <div className="flex size-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg ring-2 ring-background/40">
-                        <Plus className="size-5" strokeWidth={2.5} />
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <p className="mt-1 truncate text-xs font-medium" title={item.title}>
-                  {item.title}
-                </p>
-                {item.year ? <p className="text-xs text-muted-foreground">{item.year}</p> : null}
-              </button>
+                eager={eager && i < EAGER_COUNT}
+                badge={isOwned ? <OwnedBadge /> : null}
+                overlay={<AddOverlay />}
+                meta={
+                  item.year ? <p className="text-xs text-muted-foreground">{item.year}</p> : null
+                }
+              />
             );
           })}
         </div>
@@ -115,15 +103,13 @@ export function NewReleasesRow({
 export function NewReleasesSkeleton({ title }: { title: string }) {
   return (
     <section className="space-y-2">
-      <h3 className="border-l-2 border-accent pl-2 font-mono text-xs text-foreground uppercase tracking-wider">
-        {title}
-      </h3>
+      <RowLabel>{title}</RowLabel>
       <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
         {Array.from({ length: 8 }, (_, i) => (
           // biome-ignore lint/suspicious/noArrayIndexKey: skeleton placeholders
           <div key={i}>
             <div className="skeleton aspect-2/3 rounded-lg" />
-            <div className="skeleton mt-1 h-3 w-20 max-w-full rounded" />
+            <div className="skeleton mt-1.5 h-3 w-20 max-w-full rounded" />
           </div>
         ))}
       </div>

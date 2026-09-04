@@ -2,7 +2,11 @@ import { and, eq } from "drizzle-orm";
 import { Shield } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { IconTile } from "@/components/ui/icon-tile";
+import { PixelBand } from "@/components/ui/pixel-band";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { guildMembers, guilds } from "@/lib/db/schema";
@@ -28,15 +32,15 @@ export default async function JoinGuildPage({ params }: { params: Promise<{ code
 
   if (!guild) {
     return (
-      <div className="mx-auto max-w-md space-y-4 rounded-xl border border-border bg-card p-6">
-        <h1 className="font-pixel text-xl">Invite not found</h1>
+      <Card padding="lg" className="mx-auto max-w-md space-y-4">
+        <h1 className="text-xl font-semibold tracking-tight">Invite not found</h1>
         <p className="text-sm text-muted-foreground">
           The code <span className="font-mono">{code}</span> doesn't match any guild.
         </p>
         <Button asChild variant="outline" size="sm">
           <Link href="/guilds">Back to guilds</Link>
         </Button>
-      </div>
+      </Card>
     );
   }
 
@@ -48,20 +52,23 @@ export default async function JoinGuildPage({ params }: { params: Promise<{ code
   if (existing) redirect(`/guilds/${guild.id}`);
 
   return (
-    <div className="mx-auto max-w-md space-y-4 rounded-xl border border-border bg-card p-6">
-      <div className="flex items-center gap-3">
-        <div className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-          <Shield className="size-6" />
+    <Card padding="none" className="mx-auto max-w-md overflow-hidden">
+      <PixelBand />
+      <div className="space-y-4 p-6">
+        <div className="flex items-center gap-3">
+          <IconTile size="lg" tone="primary">
+            <Shield />
+          </IconTile>
+          <div className="min-w-0">
+            <p className="font-pixel text-[10px] text-primary uppercase">You're invited to</p>
+            <h1 className="truncate text-xl font-semibold tracking-tight">{guild.name}</h1>
+          </div>
         </div>
-        <div className="min-w-0">
-          <p className="text-xs uppercase text-muted-foreground">You're invited to</p>
-          <h1 className="truncate font-pixel text-xl">{guild.name}</h1>
-        </div>
+        {guild.description ? (
+          <p className="text-sm text-muted-foreground">{guild.description}</p>
+        ) : null}
+        <JoinByCodeButton code={code} />
       </div>
-      {guild.description ? (
-        <p className="text-sm text-muted-foreground">{guild.description}</p>
-      ) : null}
-      <JoinByCodeButton code={code} />
-    </div>
+    </Card>
   );
 }
