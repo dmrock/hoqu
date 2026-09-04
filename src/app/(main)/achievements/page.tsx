@@ -1,6 +1,9 @@
 import { asc, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { AchievementCard } from "@/components/achievements/achievement-card";
+import { PageHeader } from "@/components/ui/page-header";
+import { PixelProgress } from "@/components/ui/pixel-progress";
+import { SectionHeading } from "@/components/ui/section-heading";
 import {
   checkAchievements,
   type EvaluationResult,
@@ -93,12 +96,23 @@ export default async function AchievementsPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h1 className="font-pixel text-2xl">Achievements</h1>
-        <p className="font-mono text-sm text-muted-foreground">
-          {totalUnlocked} / {rows.length} unlocked
-        </p>
-      </div>
+      <PageHeader
+        title="Achievements"
+        description="Badges unlock on their own as your log grows."
+        actions={
+          <div className="flex items-center gap-3">
+            <p className="font-mono text-sm text-muted-foreground">
+              {totalUnlocked} / {rows.length} unlocked
+            </p>
+            <PixelProgress
+              value={totalUnlocked}
+              target={rows.length}
+              tone="accent"
+              className="w-28"
+            />
+          </div>
+        }
+      />
 
       {categoryOrder
         .filter((c) => grouped.has(c))
@@ -106,9 +120,7 @@ export default async function AchievementsPage() {
           const items = grouped.get(category) ?? [];
           return (
             <section key={category} className="space-y-3">
-              <h2 className="font-pixel text-sm text-muted-foreground uppercase">
-                {CATEGORY_LABEL[category] ?? category}
-              </h2>
+              <SectionHeading>{CATEGORY_LABEL[category] ?? category}</SectionHeading>
               <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {items.map((item, i) => (
                   <AchievementCard

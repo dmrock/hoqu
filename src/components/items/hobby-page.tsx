@@ -1,9 +1,12 @@
 import { and, asc, desc, eq, gte, inArray, isNull, or, type SQL, sql } from "drizzle-orm";
 import { redirect } from "next/navigation";
+import { EmptyState } from "@/components/ui/empty-state";
 import { FadeIn } from "@/components/ui/fade-in";
+import { PageHeader } from "@/components/ui/page-header";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { hobbies, items } from "@/lib/db/schema";
+import { HOBBY_META } from "@/lib/hobby-meta";
 import {
   ITEMS_PAGE_SIZE,
   type ItemsFilter,
@@ -131,7 +134,7 @@ export async function HobbyPage({
   if (!hobby) {
     return (
       <div className="space-y-2">
-        <h1 className="font-pixel text-2xl">{title}</h1>
+        <PageHeader title={title} />
         <p className="text-destructive">
           Hobby not configured. Seed the database with `pnpm db:seed`.
         </p>
@@ -262,14 +265,20 @@ export async function HobbyPage({
 
   return (
     <div className="space-y-6">
-      <h1 className="font-pixel text-2xl">{title}</h1>
+      <PageHeader title={title} />
       <ItemsToolbar filter={filter} hobbySlug={hobbySlug} />
       {totalCount === 0 ? (
-        <p className="text-muted-foreground">
-          No {title.toLowerCase()} yet. Click Add to search and log your first.
-        </p>
+        <EmptyState
+          icon={HOBBY_META[hobbySlug].icon}
+          title={`No ${title.toLowerCase()} yet`}
+          description="Click Add to search and log your first."
+        />
       ) : filteredCount === 0 ? (
-        <p className="text-muted-foreground">No {title.toLowerCase()} match the current filters.</p>
+        <EmptyState
+          icon={HOBBY_META[hobbySlug].icon}
+          title={`No ${title.toLowerCase()} match the current filters`}
+          description="Try another status, or clear the Again? filter."
+        />
       ) : (
         <>
           <FadeIn>

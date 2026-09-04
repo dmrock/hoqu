@@ -1,7 +1,7 @@
-import { ChevronLeft } from "lucide-react";
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { Button } from "@/components/ui/button";
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/ui/page-header";
 import { auth } from "@/lib/auth";
 import { getGuildWithMembership } from "@/lib/guilds";
 import { EditGuildForm } from "./edit-guild-form";
@@ -20,45 +20,55 @@ export default async function GuildSettingsPage({ params }: { params: Promise<{ 
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" asChild>
-          <Link href={`/guilds/${ctx.guild.id}`}>
-            <ChevronLeft />
-            Back
-          </Link>
-        </Button>
-        <h1 className="break-words font-pixel text-2xl">Settings · {ctx.guild.name}</h1>
-      </div>
+      <PageHeader
+        back={{ href: `/guilds/${ctx.guild.id}`, label: ctx.guild.name }}
+        title={`Settings · ${ctx.guild.name}`}
+      />
 
-      <section className="space-y-3 rounded-xl border border-border bg-card p-5">
-        <h2 className="font-pixel text-sm text-muted-foreground uppercase">Guild details</h2>
-        <EditGuildForm
-          guildId={ctx.guild.id}
-          initialDescription={ctx.guild.description ?? ""}
-          initialDiscordInviteUrl={ctx.guild.discordInviteUrl ?? ""}
-        />
-      </section>
+      <Card padding="lg">
+        <CardHeader>
+          <CardTitle>Guild details</CardTitle>
+          <CardDescription>What members see on the guild page.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <EditGuildForm
+            guildId={ctx.guild.id}
+            initialDescription={ctx.guild.description ?? ""}
+            initialDiscordInviteUrl={ctx.guild.discordInviteUrl ?? ""}
+          />
+        </CardContent>
+      </Card>
 
-      <section className="space-y-3 rounded-xl border border-border bg-card p-5">
-        <h2 className="font-pixel text-sm text-muted-foreground uppercase">Invite code</h2>
-        {isMaster ? (
-          <RotateInviteCodeButton guildId={ctx.guild.id} currentCode={ctx.guild.inviteCode} />
-        ) : (
-          <>
-            <p className="font-mono text-lg tracking-wider">{ctx.guild.inviteCode}</p>
-            <p className="text-xs text-muted-foreground">Only the master can rotate the code.</p>
-          </>
-        )}
-      </section>
+      <Card padding="lg">
+        <CardHeader>
+          <CardTitle>Invite code</CardTitle>
+          <CardDescription>
+            {isMaster
+              ? "Rotating it stops the old code working immediately."
+              : "Only the master can rotate the code."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isMaster ? (
+            <RotateInviteCodeButton guildId={ctx.guild.id} currentCode={ctx.guild.inviteCode} />
+          ) : (
+            <p className="font-mono text-xl tracking-[0.2em]">{ctx.guild.inviteCode}</p>
+          )}
+        </CardContent>
+      </Card>
 
       {isMaster ? (
-        <section className="space-y-3 rounded-xl border border-destructive/40 bg-destructive/5 p-5">
-          <h2 className="font-pixel text-sm text-destructive uppercase">Danger zone</h2>
-          <p className="text-sm text-muted-foreground">
-            Deleting the guild removes it for every member. There's no undo.
-          </p>
-          <DeleteGuildButton guildId={ctx.guild.id} guildName={ctx.guild.name} />
-        </section>
+        <Card padding="lg" variant="danger">
+          <CardHeader>
+            <CardTitle className="text-destructive">Danger zone</CardTitle>
+            <CardDescription>
+              Deleting the guild removes it for every member. There's no undo.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DeleteGuildButton guildId={ctx.guild.id} guildName={ctx.guild.name} />
+          </CardContent>
+        </Card>
       ) : null}
     </div>
   );

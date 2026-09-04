@@ -2,30 +2,23 @@ import { ExternalLink, Settings, Shield, Trophy } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
+
 import { ActivityFeedSkeleton } from "@/components/activity/activity-feed-skeleton";
 import { ActivityMineToggle } from "@/components/activity/activity-mine-toggle";
 import { GuildActivity } from "@/components/activity/guild-activity";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import { RoleBadge } from "@/components/guilds/role-badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { EntityRow } from "@/components/ui/entity-row";
+import { IconTile } from "@/components/ui/icon-tile";
+import { PixelBand } from "@/components/ui/pixel-band";
+import { SectionHeading } from "@/components/ui/section-heading";
 import { auth } from "@/lib/auth";
-import { type GuildRole, getGuildMembers, getGuildWithMembership } from "@/lib/guilds";
+import { getGuildMembers, getGuildWithMembership } from "@/lib/guilds";
 import { LeaveGuildButton } from "./leave-guild-button";
 import { MemberActionsMenu } from "./member-actions-menu";
 
 type SearchParamsInput = { [key: string]: string | string[] | undefined };
-
-const ROLE_LABEL: Record<GuildRole, string> = {
-  master: "Master",
-  officer: "Officer",
-  member: "Member",
-};
-
-const ROLE_BADGE: Record<GuildRole, "default" | "secondary" | "outline"> = {
-  master: "default",
-  officer: "secondary",
-  member: "outline",
-};
 
 export default async function GuildDetailPage({
   params,
@@ -51,58 +44,63 @@ export default async function GuildDetailPage({
 
   return (
     <div className="space-y-6">
-      {/* The three actions need ~335px side by side, so below sm they drop
-          under the identity block and wrap among themselves. */}
-      <section className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5 sm:flex-row sm:items-start">
-        <div className="flex min-w-0 flex-1 items-start gap-4">
-          <div className="flex size-14 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-            <Shield className="size-7" />
+      <Card padding="none" className="overflow-hidden">
+        <PixelBand />
+        {/* The three actions need ~335px side by side, so below sm they drop
+            under the identity block and wrap among themselves. */}
+        <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-start">
+          <div className="flex min-w-0 flex-1 items-start gap-4">
+            <IconTile size="xl" tone="primary">
+              <Shield />
+            </IconTile>
+            <div className="min-w-0 flex-1">
+              <h1 className="break-words text-2xl font-semibold tracking-tight md:text-3xl">
+                {guild.name}
+              </h1>
+              <p className="font-mono text-xs text-muted-foreground">
+                {members.length} / {guild.maxMembers} members
+              </p>
+              {guild.description ? (
+                <p className="mt-2 text-sm text-muted-foreground">{guild.description}</p>
+              ) : null}
+            </div>
           </div>
-          <div className="min-w-0 flex-1">
-            <h1 className="break-words font-pixel text-2xl">{guild.name}</h1>
-            <p className="text-xs text-muted-foreground">
-              {members.length} / {guild.maxMembers} members
-            </p>
-            {guild.description ? (
-              <p className="mt-2 text-sm text-muted-foreground">{guild.description}</p>
-            ) : null}
-          </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`/guilds/${guild.id}/leaderboard`}>
-              <Trophy />
-              Leaderboard
-            </Link>
-          </Button>
-          {canEdit ? (
+          <div className="flex flex-wrap items-center gap-2">
             <Button variant="outline" size="sm" asChild>
-              <Link href={`/guilds/${guild.id}/settings`}>
-                <Settings />
-                Settings
+              <Link href={`/guilds/${guild.id}/leaderboard`}>
+                <Trophy />
+                Leaderboard
               </Link>
             </Button>
-          ) : null}
-          <LeaveGuildButton
-            guildId={guild.id}
-            guildName={guild.name}
-            isMaster={viewerRole === "master" && members.length === 1}
-          />
+            {canEdit ? (
+              <Button variant="outline" size="sm" asChild>
+                <Link href={`/guilds/${guild.id}/settings`}>
+                  <Settings />
+                  Settings
+                </Link>
+              </Button>
+            ) : null}
+            <LeaveGuildButton
+              guildId={guild.id}
+              guildName={guild.name}
+              isMaster={viewerRole === "master" && members.length === 1}
+            />
+          </div>
         </div>
-      </section>
+      </Card>
 
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div className="rounded-xl border border-border bg-card p-4">
-          <p className="text-xs uppercase text-muted-foreground">Invite code</p>
-          <p className="mt-1 font-mono text-lg tracking-wider" data-testid="invite-code">
+        <Card>
+          <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Invite code</p>
+          <p className="mt-1 font-mono text-xl tracking-[0.2em]" data-testid="invite-code">
             {guild.inviteCode}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
             Share this with anyone you want to invite.
           </p>
-        </div>
-        <div className="rounded-xl border border-border bg-card p-4">
-          <p className="text-xs uppercase text-muted-foreground">Discord</p>
+        </Card>
+        <Card>
+          <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Discord</p>
           {guild.discordInviteUrl ? (
             <Button variant="outline" size="sm" className="mt-2" asChild>
               <a href={guild.discordInviteUrl} target="_blank" rel="noopener noreferrer">
@@ -115,62 +113,38 @@ export default async function GuildDetailPage({
               {canEdit ? "Add a Discord URL in settings." : "No Discord invite set."}
             </p>
           )}
-        </div>
+        </Card>
       </section>
 
       <section className="space-y-3">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="font-pixel text-sm text-muted-foreground uppercase">Trending</h2>
-          <ActivityMineToggle includeSelf={includeSelf} />
-        </div>
+        <SectionHeading action={<ActivityMineToggle includeSelf={includeSelf} />}>
+          Trending
+        </SectionHeading>
         <Suspense key={includeSelf ? "mine" : "others"} fallback={<ActivityFeedSkeleton />}>
           <GuildActivity guildId={guild.id} viewerId={session.user.id} includeSelf={includeSelf} />
         </Suspense>
       </section>
 
       <section className="space-y-3">
-        <h2 className="font-pixel text-sm text-muted-foreground uppercase">Members</h2>
+        <SectionHeading>Members</SectionHeading>
         <ul className="space-y-2">
           {members.map((m) => {
             const display = m.user.name ?? m.user.username ?? "Unknown";
-            const initials = display.slice(0, 2).toUpperCase();
             const isSelf = m.userId === session.user?.id;
             return (
-              <li
-                key={m.userId}
-                className="flex items-center gap-3 rounded-xl border border-border bg-card p-3"
-              >
-                <Avatar className="size-10">
-                  {m.user.image ? <AvatarImage src={m.user.image} alt={display} /> : null}
-                  <AvatarFallback>{initials}</AvatarFallback>
-                </Avatar>
-                <div className="min-w-0 flex-1">
-                  {m.user.username ? (
-                    <Link
-                      href={`/profile/${m.user.username}`}
-                      className="block truncate font-medium hover:underline"
-                    >
-                      {display}
-                    </Link>
-                  ) : (
-                    <p className="truncate font-medium">{display}</p>
-                  )}
-                  {m.user.username ? (
-                    <p className="truncate font-mono text-xs text-muted-foreground">
-                      @{m.user.username}
-                    </p>
+              <li key={m.userId}>
+                <EntityRow name={display} username={m.user.username} image={m.user.image}>
+                  <RoleBadge role={m.role} />
+                  {!isSelf ? (
+                    <MemberActionsMenu
+                      guildId={guild.id}
+                      memberUserId={m.userId}
+                      memberName={display}
+                      memberRole={m.role}
+                      viewerRole={viewerRole}
+                    />
                   ) : null}
-                </div>
-                <Badge variant={ROLE_BADGE[m.role]}>{ROLE_LABEL[m.role]}</Badge>
-                {!isSelf ? (
-                  <MemberActionsMenu
-                    guildId={guild.id}
-                    memberUserId={m.userId}
-                    memberName={display}
-                    memberRole={m.role}
-                    viewerRole={viewerRole}
-                  />
-                ) : null}
+                </EntityRow>
               </li>
             );
           })}

@@ -1,5 +1,7 @@
 import Link from "next/link";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card } from "@/components/ui/card";
 import {
   type LeaderboardRow,
   type LeaderboardScope,
@@ -7,6 +9,13 @@ import {
   SCOPE_OPTIONS,
 } from "@/lib/leaderboards";
 import { cn } from "@/lib/utils";
+
+// Podium colors for the top three ranks; everyone else is plain mono.
+const RANK_CLASS = [
+  "font-pixel text-xs text-guild-gold",
+  "font-pixel text-xs text-officer-silver",
+  "font-pixel text-xs text-[#cd7f32]",
+];
 
 export function LeaderboardTable({
   rows,
@@ -26,13 +35,13 @@ export function LeaderboardTable({
   const metricLabel = SCOPE_OPTIONS.find((o) => o.value === scope)?.metric ?? "Total points";
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border">
+    <Card padding="none" className="overflow-hidden">
       <table className="w-full text-sm">
-        <thead className="bg-muted/40 text-left text-xs text-muted-foreground uppercase">
+        <thead className="bg-white/[0.03] text-left font-mono text-[11px] text-muted-foreground uppercase tracking-wider">
           <tr>
-            <th className="w-12 px-3 py-2 text-center">#</th>
-            <th className="px-3 py-2">Adventurer</th>
-            <th className="w-32 px-3 py-2 text-right">{metricLabel}</th>
+            <th className="w-12 px-3 py-2.5 text-center">#</th>
+            <th className="px-3 py-2.5">Adventurer</th>
+            <th className="w-32 px-3 py-2.5 text-right">{metricLabel}</th>
           </tr>
         </thead>
         <tbody>
@@ -45,14 +54,19 @@ export function LeaderboardTable({
               <tr
                 key={row.user.id}
                 className={cn(
-                  "border-t border-border",
-                  isViewer ? "bg-accent/10" : "hover:bg-muted/30",
+                  "border-t border-border transition-colors",
+                  isViewer ? "bg-primary/[0.07]" : "hover:bg-white/[0.025]",
                 )}
               >
-                <td className="px-3 py-2 text-center font-mono text-muted-foreground">
+                <td
+                  className={cn(
+                    "px-3 py-2.5 text-center",
+                    RANK_CLASS[index] ?? "font-mono text-muted-foreground",
+                  )}
+                >
                   {index + 1}
                 </td>
-                <td className="px-3 py-2">
+                <td className="px-3 py-2.5">
                   <div className="flex items-center gap-3">
                     <Avatar className="size-8">
                       {row.user.image ? <AvatarImage src={row.user.image} alt={display} /> : null}
@@ -62,7 +76,7 @@ export function LeaderboardTable({
                       {row.user.username ? (
                         <Link
                           href={`/profile/${row.user.username}`}
-                          className="block truncate font-medium hover:underline"
+                          className="block truncate font-medium transition-colors hover:text-primary"
                         >
                           {display}
                         </Link>
@@ -78,12 +92,12 @@ export function LeaderboardTable({
                     </div>
                   </div>
                 </td>
-                <td className="px-3 py-2 text-right font-pixel text-base text-primary">{value}</td>
+                <td className="px-3 py-2.5 text-right font-pixel text-sm text-primary">{value}</td>
               </tr>
             );
           })}
         </tbody>
       </table>
-    </div>
+    </Card>
   );
 }

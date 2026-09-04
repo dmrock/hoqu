@@ -1,12 +1,17 @@
-import { Trophy } from "lucide-react";
+import { Trophy, Users } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+
 import { ActivityFeedSkeleton } from "@/components/activity/activity-feed-skeleton";
 import { ActivityMineToggle } from "@/components/activity/activity-mine-toggle";
 import { FriendsActivity } from "@/components/activity/friends-activity";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { EntityRow } from "@/components/ui/entity-row";
+import { PageHeader } from "@/components/ui/page-header";
+import { SectionHeading } from "@/components/ui/section-heading";
 import { auth } from "@/lib/auth";
 import { type FriendListEntry, loadFriendships } from "@/lib/friendships";
 import { AddFriendForm } from "./add-friend-form";
@@ -22,33 +27,15 @@ function FriendRow({
   mode: "incoming" | "outgoing" | "friends";
 }) {
   const display = entry.user.name ?? entry.user.username ?? "Unknown";
-  const initials = display.slice(0, 2).toUpperCase();
   return (
-    <li className="flex items-center gap-3 rounded-xl border border-border bg-card p-3">
-      <Avatar className="size-10">
-        {entry.user.image ? <AvatarImage src={entry.user.image} alt={display} /> : null}
-        <AvatarFallback>{initials}</AvatarFallback>
-      </Avatar>
-      <div className="min-w-0 flex-1">
-        {entry.user.username ? (
-          <Link
-            href={`/profile/${entry.user.username}`}
-            className="block truncate font-medium hover:underline"
-          >
-            {display}
-          </Link>
-        ) : (
-          <p className="truncate font-medium">{display}</p>
-        )}
-        {entry.user.username ? (
-          <p className="truncate font-mono text-xs text-muted-foreground">@{entry.user.username}</p>
-        ) : null}
-      </div>
-      <FriendRowActions
-        friendshipId={entry.friendshipId}
-        mode={mode}
-        friendName={mode === "friends" ? display : undefined}
-      />
+    <li>
+      <EntityRow name={display} username={entry.user.username} image={entry.user.image}>
+        <FriendRowActions
+          friendshipId={entry.friendshipId}
+          mode={mode}
+          friendName={mode === "friends" ? display : undefined}
+        />
+      </EntityRow>
     </li>
   );
 }
@@ -71,24 +58,32 @@ export default async function FriendsPage({
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between gap-3">
-        <h1 className="font-pixel text-2xl">Friends</h1>
-        <Button variant="outline" size="sm" asChild>
-          <Link href="/friends/leaderboard">
-            <Trophy />
-            Leaderboard
-          </Link>
-        </Button>
-      </div>
+      <PageHeader
+        title="Friends"
+        description="Your party. Compare progress and borrow recommendations."
+        actions={
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/friends/leaderboard">
+              <Trophy />
+              Leaderboard
+            </Link>
+          </Button>
+        }
+      />
 
-      <section className="space-y-3 rounded-xl border border-border bg-card p-5">
-        <h2 className="font-pixel text-sm text-muted-foreground uppercase">Add friend</h2>
-        <AddFriendForm />
-      </section>
+      <Card padding="lg">
+        <CardHeader>
+          <CardTitle>Add friend</CardTitle>
+          <CardDescription>Send a request by username.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <AddFriendForm />
+        </CardContent>
+      </Card>
 
       {incoming.length > 0 ? (
         <section className="space-y-3">
-          <h2 className="font-pixel text-sm text-muted-foreground uppercase">Incoming requests</h2>
+          <SectionHeading tone="accent">Incoming requests</SectionHeading>
           <ul className="space-y-2">
             {incoming.map((entry) => (
               <FriendRow key={entry.friendshipId} entry={entry} mode="incoming" />
@@ -99,7 +94,7 @@ export default async function FriendsPage({
 
       {outgoing.length > 0 ? (
         <section className="space-y-3">
-          <h2 className="font-pixel text-sm text-muted-foreground uppercase">Pending requests</h2>
+          <SectionHeading>Pending requests</SectionHeading>
           <ul className="space-y-2">
             {outgoing.map((entry) => (
               <FriendRow key={entry.friendshipId} entry={entry} mode="outgoing" />
@@ -109,25 +104,22 @@ export default async function FriendsPage({
       ) : null}
 
       <section className="space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-          <h2 className="font-pixel text-sm text-muted-foreground uppercase">
-            Trending with friends
-          </h2>
-          <ActivityMineToggle includeSelf={includeSelf} />
-        </div>
+        <SectionHeading action={<ActivityMineToggle includeSelf={includeSelf} />}>
+          Trending with friends
+        </SectionHeading>
         <Suspense key={includeSelf ? "mine" : "others"} fallback={<ActivityFeedSkeleton />}>
           <FriendsActivity viewerId={session.user.id} includeSelf={includeSelf} />
         </Suspense>
       </section>
 
       <section className="space-y-3">
-        <h2 className="font-pixel text-sm text-muted-foreground uppercase">
-          Friends ({friends.length})
-        </h2>
+        <SectionHeading>Friends ({friends.length})</SectionHeading>
         {friends.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            No friends yet. Send a request to start your party.
-          </p>
+          <EmptyState
+            icon={Users}
+            title="No friends yet"
+            description="Send a request to start your party."
+          />
         ) : (
           <ul className="space-y-2">
             {friends.map((entry) => (

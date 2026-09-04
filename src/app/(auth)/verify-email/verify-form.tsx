@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { type VerifyEmailState, verifyEmailAction } from "@/app/(auth)/actions";
+import { AuthHeading } from "@/components/auth/auth-heading";
 import { Button } from "@/components/ui/button";
 
 export function VerifyEmailForm({ token }: { token: string }) {
@@ -19,10 +20,11 @@ export function VerifyEmailForm({ token }: { token: string }) {
   if (result?.ok) {
     return (
       <div className="space-y-6 text-center">
-        <h1 className="font-pixel text-base tracking-tight">Email verified</h1>
-        <p className="text-sm text-muted-foreground">
-          Thanks — your email is confirmed. Enjoy your quests!
-        </p>
+        <AuthHeading
+          eyebrow="Saved"
+          title="Email verified"
+          description="Thanks — your email is confirmed. Enjoy your quests!"
+        />
         <Button asChild className="w-full">
           <Link href="/explore">Go to HOQU</Link>
         </Button>
@@ -32,12 +34,11 @@ export function VerifyEmailForm({ token }: { token: string }) {
 
   return (
     <div className="space-y-6 text-center">
-      <div className="space-y-2">
-        <h1 className="font-pixel text-base tracking-tight">Verify your email</h1>
-        <p className="text-sm text-muted-foreground">
-          Confirm that this address belongs to you to finish setting up your HOQU account.
-        </p>
-      </div>
+      <AuthHeading
+        eyebrow="Checkpoint"
+        title="Verify your email"
+        description="Confirm that this address belongs to you to finish setting up your HOQU account."
+      />
 
       {result && !result.ok ? <p className="text-sm text-destructive">{result.error}</p> : null}
 

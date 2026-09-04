@@ -13,12 +13,14 @@ export default function TermsPage() {
   return (
     <PublicShell>
       <article className="mx-auto w-full max-w-2xl py-8 md:py-12">
-        <h1 className="font-pixel text-xl text-foreground">Terms of Service</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
+          Terms of Service
+        </h1>
         <p className="mt-2 text-sm text-muted-foreground">Last updated: May 17, 2026</p>
 
         <div className="mt-8 space-y-6 text-foreground">
           <section className="space-y-2">
-            <h2 className="font-pixel text-sm text-accent">What HOQU is</h2>
+            <h2 className="text-base font-semibold tracking-tight text-foreground">What HOQU is</h2>
             <p>
               HOQU is a personal hobby tracker that lets you log movies, TV shows, games, and books,
               earn achievements, and compare progress with friends and guildmates. It is a hobby
@@ -27,7 +29,7 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="font-pixel text-sm text-accent">Accounts</h2>
+            <h2 className="text-base font-semibold tracking-tight text-foreground">Accounts</h2>
             <p>
               You can create an account with an email and password or by signing in with Google.
               You're responsible for keeping your credentials safe and for the content you post
@@ -36,7 +38,9 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="font-pixel text-sm text-accent">Acceptable use</h2>
+            <h2 className="text-base font-semibold tracking-tight text-foreground">
+              Acceptable use
+            </h2>
             <p>
               Don't use HOQU to harass other users, post illegal content, attempt to access other
               people's accounts, or abuse the service (including by automating logging to inflate
@@ -46,7 +50,7 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="font-pixel text-sm text-accent">Content</h2>
+            <h2 className="text-base font-semibold tracking-tight text-foreground">Content</h2>
             <p>
               Your items, notes, achievements, and profile are yours. Catalog metadata (titles,
               cover images, ratings) is provided by{" "}
@@ -86,7 +90,7 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="font-pixel text-sm text-accent">Termination</h2>
+            <h2 className="text-base font-semibold tracking-tight text-foreground">Termination</h2>
             <p>
               You can delete your account at any time from Settings, or email{" "}
               <a href={`mailto:${CONTACT_EMAIL}`} className="text-primary hover:underline">
@@ -97,7 +101,7 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="font-pixel text-sm text-accent">No warranty</h2>
+            <h2 className="text-base font-semibold tracking-tight text-foreground">No warranty</h2>
             <p>
               HOQU is provided "as is" without warranty of any kind. To the maximum extent permitted
               by law, the maintainer is not liable for any loss arising from your use of the
@@ -106,7 +110,7 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="font-pixel text-sm text-accent">Changes</h2>
+            <h2 className="text-base font-semibold tracking-tight text-foreground">Changes</h2>
             <p>
               These terms may change as HOQU evolves. Continued use after a change constitutes
               acceptance. The "Last updated" date reflects the most recent revision.
@@ -114,7 +118,7 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="font-pixel text-sm text-accent">Contact</h2>
+            <h2 className="text-base font-semibold tracking-tight text-foreground">Contact</h2>
             <p>
               Questions about these terms?{" "}
               <a href={`mailto:${CONTACT_EMAIL}`} className="text-primary hover:underline">

@@ -1,5 +1,6 @@
-import Image from "next/image";
-import Link from "next/link";
+import { PosterTile } from "@/components/ui/poster-tile";
+import { SectionHeading } from "@/components/ui/section-heading";
+import { HOBBY_META } from "@/lib/hobby-meta";
 import type { HobbySlug } from "@/lib/points";
 
 export type ContinueItem = {
@@ -7,13 +8,6 @@ export type ContinueItem = {
   title: string;
   imageUrl: string | null;
   hobbySlug: HobbySlug;
-};
-
-const HOBBY_LABEL: Record<HobbySlug, string> = {
-  movies: "Movies",
-  tv: "TV Shows",
-  games: "Games",
-  books: "Books",
 };
 
 /**
@@ -26,34 +20,18 @@ export function ContinueRow({ items }: { items: ContinueItem[] }) {
 
   return (
     <section className="space-y-3">
-      <h2 className="font-pixel text-sm text-muted-foreground uppercase">Continue</h2>
+      <SectionHeading>Continue</SectionHeading>
       <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
         {items.map((item, i) => (
-          <Link
+          <PosterTile
             key={item.id}
             href={`/${item.hobbySlug}?focus=${item.id}`}
-            className="group min-w-0 text-left"
-          >
-            <div className="relative aspect-2/3 overflow-hidden rounded-lg bg-muted ring-1 ring-transparent transition-all group-hover:ring-primary group-focus-visible:ring-primary">
-              {item.imageUrl ? (
-                <Image
-                  src={item.imageUrl}
-                  alt={item.title}
-                  fill
-                  sizes="(min-width: 640px) 160px, 33vw"
-                  className="object-cover transition-transform duration-200 group-hover:scale-105"
-                  // Topmost art on Explore, so these are the LCP candidates.
-                  loading={i < 4 ? "eager" : undefined}
-                />
-              ) : null}
-            </div>
-            <p className="mt-1 truncate text-xs font-medium" title={item.title}>
-              {item.title}
-            </p>
-            <p className="font-mono text-[10px] text-muted-foreground uppercase">
-              {HOBBY_LABEL[item.hobbySlug]}
-            </p>
-          </Link>
+            title={item.title}
+            imageUrl={item.imageUrl}
+            subtitle={HOBBY_META[item.hobbySlug].label}
+            // Topmost art on Explore, so these are the LCP candidates.
+            eager={i < 4}
+          />
         ))}
       </div>
     </section>

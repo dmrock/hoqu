@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AuthHeading } from "@/components/auth/auth-heading";
 import { ConfirmEmailForm } from "./confirm-form";
 
 export default async function ConfirmEmailPage({
@@ -11,10 +12,11 @@ export default async function ConfirmEmailPage({
   if (!token) {
     return (
       <div className="space-y-6 text-center">
-        <h1 className="font-pixel text-base tracking-tight">Confirm email</h1>
-        <p className="text-sm text-muted-foreground">
-          This confirmation link is missing its token.
-        </p>
+        <AuthHeading
+          eyebrow="Checkpoint"
+          title="Confirm email"
+          description="This confirmation link is missing its token."
+        />
         <Link href="/settings" className="text-sm text-primary hover:text-primary-hover underline">
           Back to settings
         </Link>

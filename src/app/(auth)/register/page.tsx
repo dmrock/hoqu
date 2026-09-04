@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
+import { AuthHeading } from "@/components/auth/auth-heading";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,10 +13,7 @@ export default function RegisterPage() {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2 text-center">
-        <h1 className="font-pixel text-base tracking-tight">Create account</h1>
-        <p className="text-sm text-muted-foreground">Start questing</p>
-      </div>
+      <AuthHeading eyebrow="New game" title="Create account" description="Start questing" />
 
       <form action={formAction} className="space-y-4">
         <div className="space-y-2">

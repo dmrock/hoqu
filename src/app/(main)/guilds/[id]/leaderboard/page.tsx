@@ -1,9 +1,7 @@
-import { ChevronLeft } from "lucide-react";
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { LeaderboardScopeTabs } from "@/components/leaderboard/leaderboard-scope-tabs";
 import { LeaderboardTable } from "@/components/leaderboard/leaderboard-table";
-import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page-header";
 import { auth } from "@/lib/auth";
 import { getGuildWithMembership } from "@/lib/guilds";
 import { loadGuildLeaderboard } from "@/lib/leaderboard-queries";
@@ -33,15 +31,10 @@ export default async function GuildLeaderboardPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" asChild>
-          <Link href={`/guilds/${ctx.guild.id}`}>
-            <ChevronLeft />
-            Back
-          </Link>
-        </Button>
-        <h1 className="break-words font-pixel text-2xl">Leaderboard · {ctx.guild.name}</h1>
-      </div>
+      <PageHeader
+        back={{ href: `/guilds/${ctx.guild.id}`, label: ctx.guild.name }}
+        title={`Leaderboard · ${ctx.guild.name}`}
+      />
 
       <LeaderboardScopeTabs active={scope} />
 

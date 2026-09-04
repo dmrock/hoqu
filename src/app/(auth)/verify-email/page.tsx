@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AuthHeading } from "@/components/auth/auth-heading";
 import { VerifyEmailForm } from "./verify-form";
 
 export default async function VerifyEmailPage({
@@ -11,10 +12,11 @@ export default async function VerifyEmailPage({
   if (!token) {
     return (
       <div className="space-y-6 text-center">
-        <h1 className="font-pixel text-base tracking-tight">Verify email</h1>
-        <p className="text-sm text-muted-foreground">
-          This verification link is missing its token.
-        </p>
+        <AuthHeading
+          eyebrow="Checkpoint"
+          title="Verify email"
+          description="This verification link is missing its token."
+        />
         <Link href="/explore" className="text-sm text-primary hover:text-primary-hover underline">
           Back to HOQU
         </Link>

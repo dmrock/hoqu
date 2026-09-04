@@ -9,6 +9,9 @@ import {
   MoviesNewReleases,
   TvNewReleases,
 } from "@/components/explore/new-releases-section";
+import { PageHeader } from "@/components/ui/page-header";
+import { SectionHeading } from "@/components/ui/section-heading";
+import { StatTile } from "@/components/ui/stat-tile";
 import { checkAchievements } from "@/lib/achievements";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -77,33 +80,25 @@ export default async function ExplorePage() {
       {/* Stats ride along the header rather than owning a section: as cards
           they held ~50px of content in ~270px-wide boxes, and the header's
           right half was empty at the same time. */}
-      <div className="space-y-1">
-        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
-          <h1 className="break-words font-pixel text-2xl">Welcome, {user.name ?? "adventurer"}</h1>
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-            {stats.map((s) => (
-              <div key={s.testId} className="flex items-center gap-2">
-                <s.icon className="size-4 shrink-0 text-muted-foreground" />
-                <span
-                  className="font-pixel text-base text-primary"
-                  data-testid={`stat-${s.testId}`}
-                >
-                  {s.value}
-                </span>
-                <span className="text-xs text-muted-foreground uppercase">{s.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          We trust our adventurers to log their quests honestly.
-        </p>
-      </div>
+      <PageHeader
+        title={<>Welcome, {user.name ?? "adventurer"}</>}
+        description="We trust our adventurers to log their quests honestly."
+        actions={stats.map((s) => (
+          <StatTile
+            key={s.testId}
+            variant="inline"
+            label={s.label}
+            value={s.value}
+            icon={s.icon}
+            testId={`stat-${s.testId}`}
+          />
+        ))}
+      />
 
       <ContinueRow items={continueItems} />
 
       <section className="space-y-4">
-        <h2 className="font-pixel text-sm text-muted-foreground uppercase">New releases</h2>
+        <SectionHeading>New releases</SectionHeading>
         {/* Only eager when nothing sits above it — otherwise Continue owns the
             LCP and preloading these too would just compete for bandwidth. */}
         <Suspense fallback={<NewReleasesSkeleton title="Now in theaters" />}>

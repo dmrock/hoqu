@@ -13,12 +13,16 @@ export default function PrivacyPage() {
   return (
     <PublicShell>
       <article className="mx-auto w-full max-w-2xl py-8 md:py-12">
-        <h1 className="font-pixel text-xl text-foreground">Privacy Policy</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
+          Privacy Policy
+        </h1>
         <p className="mt-2 text-sm text-muted-foreground">Last updated: May 17, 2026</p>
 
         <div className="mt-8 space-y-6 text-foreground">
           <section className="space-y-2">
-            <h2 className="font-pixel text-sm text-accent">What we collect</h2>
+            <h2 className="text-base font-semibold tracking-tight text-foreground">
+              What we collect
+            </h2>
             <p>
               When you sign up, we store your email address, display name, optional username, and
               (if you sign in with Google) the profile image URL Google provides. As you use HOQU,
@@ -28,7 +32,9 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="font-pixel text-sm text-accent">How we use it</h2>
+            <h2 className="text-base font-semibold tracking-tight text-foreground">
+              How we use it
+            </h2>
             <p>
               We use this data solely to operate HOQU: to sign you in, render your profile and
               stats, award achievements, and show leaderboards to your friends and guildmates. We do
@@ -37,7 +43,9 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="font-pixel text-sm text-accent">Third parties</h2>
+            <h2 className="text-base font-semibold tracking-tight text-foreground">
+              Third parties
+            </h2>
             <p>
               HOQU stores data on Neon (PostgreSQL hosting) and Upstash (Redis for rate limiting and
               caching), and is deployed on Vercel. When you search for an item, HOQU queries TMDB,
@@ -48,7 +56,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="font-pixel text-sm text-accent">Cookies</h2>
+            <h2 className="text-base font-semibold tracking-tight text-foreground">Cookies</h2>
             <p>
               HOQU sets a single session cookie used by Auth.js to keep you signed in. No tracking
               or analytics cookies.
@@ -56,7 +64,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="font-pixel text-sm text-accent">Your choices</h2>
+            <h2 className="text-base font-semibold tracking-tight text-foreground">Your choices</h2>
             <p>
               You control your profile visibility from your profile settings (public, friends only,
               guild only, or private). Settings also lets you export a copy of your data and delete
@@ -70,7 +78,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="font-pixel text-sm text-accent">Changes</h2>
+            <h2 className="text-base font-semibold tracking-tight text-foreground">Changes</h2>
             <p>
               We may update this policy as HOQU evolves. Material changes will be reflected by the
               "Last updated" date above.
@@ -78,7 +86,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="font-pixel text-sm text-accent">Contact</h2>
+            <h2 className="text-base font-semibold tracking-tight text-foreground">Contact</h2>
             <p>
               Privacy questions and data requests go to{" "}
               <a href={`mailto:${CONTACT_EMAIL}`} className="text-primary hover:underline">

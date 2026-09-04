@@ -78,6 +78,8 @@
   --chart-3: #ffa726;
   --chart-4: #ff5252;
   --chart-5: #ffd700;
+  /* Hard-offset "pixel" shadow under primary buttons: a darker step of --primary. */
+  --primary-shadow: #4a36c2;
 }
 
 @theme inline {
@@ -137,6 +139,28 @@
   --color-error: var(--destructive);
   --color-guild-gold: #ffd700;
   --color-officer-silver: #c0c0c0;
+  --color-primary-shadow: var(--primary-shadow);
+
+  /* Depth. Cards are lit from the top (inset highlight) and cast a soft
+     shadow downward; glows ring a surface in the brand color for hover/focus
+     and "unlocked" states. */
+  --shadow-card:
+    inset 0 1px 0 0 rgb(255 255 255 / 0.04), 0 1px 2px 0 rgb(0 0 0 / 0.35),
+    0 16px 40px -24px rgb(0 0 0 / 0.7);
+  --shadow-glow:
+    0 0 0 1px color-mix(in oklab, var(--primary) 50%, transparent),
+    0 0 32px -8px color-mix(in oklab, var(--primary) 70%, transparent);
+  --shadow-glow-accent:
+    0 0 0 1px color-mix(in oklab, var(--accent) 45%, transparent),
+    0 0 32px -10px color-mix(in oklab, var(--accent) 60%, transparent);
+  --shadow-pixel: 0 3px 0 0 var(--primary-shadow);
+  --shadow-pixel-pressed: 0 1px 0 0 var(--primary-shadow);
+
+  /* Pixel-style micro-animations. Stepped timing on purpose — no easing, so
+     they read as sprite frames rather than tweens. */
+  --animate-pixel-blink: pixel-blink 0.28s steps(1, end) 1;
+  --animate-pixel-bob: pixel-bob 1.4s steps(2, jump-none) infinite;
+  --animate-cursor-blink: cursor-blink 1s step-end infinite;
 }
 
 @layer base {
@@ -146,6 +170,14 @@
   body {
     @apply bg-background text-foreground font-sans;
     min-height: 100vh;
+    /* A faint brand glow bleeding in from above the fold. Scrolls with the
+       page (no `fixed` attachment — that repaints on every scroll on mobile). */
+    background-image: radial-gradient(
+      60% 40% at 50% -10%,
+      color-mix(in oklab, var(--primary) 12%, transparent),
+      transparent 70%
+    );
+    background-repeat: no-repeat;
   }
 }
 
@@ -215,4 +247,121 @@ input:autofill {
   -webkit-text-fill-color: var(--foreground);
   caret-color: var(--foreground);
   transition: background-color 9999s ease-in-out 0s;
+}
+
+/* ---------------------------------------------------------------------------
+   Pixel accents
+   --------------------------------------------------------------------------- */
+
+@keyframes pixel-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  30%,
+  60% {
+    opacity: 0.25;
+  }
+}
+
+@keyframes pixel-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes cursor-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Faint 24px grid behind heroes and empty screens, fading out toward the
+   edges so it never competes with content. */
+.pixel-grid {
+  background-image:
+    linear-gradient(to right, rgb(255 255 255 / 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.045) 1px, transparent 1px);
+  background-size: 24px 24px;
+  mask-image: radial-gradient(ellipse 70% 65% at 50% 35%, black 10%, transparent 75%);
+}
+
+/* Brand gradient chopped into 6px pixels — the same notch trick PixelProgress
+   uses — for card header bands. */
+.pixel-band {
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  mask-image: repeating-linear-gradient(90deg, #000 0 6px, transparent 6px 8px);
+}
+
+/* Typewriter: every character is in the DOM from the first paint (SEO,
+   accessible name, no hydration flash) and is revealed by a delay computed
+   from its index. No JS involved. */
+.type-char {
+  opacity: 0;
+  animation: type-in 0s linear forwards;
+  animation-delay: calc(var(--type-start, 0ms) + var(--i) * var(--type-speed, 45ms));
+}
+
+@keyframes type-in {
+  to {
+    opacity: 1;
+  }
+}
+
+.type-cursor {
+  display: inline-block;
+  width: 0.5em;
+  height: 0.95em;
+  margin-left: 0.1em;
+  vertical-align: -0.08em;
+  background: currentColor;
+  animation: cursor-blink 1s step-end infinite;
+}
+
+/* Count-up: the real number stays in the DOM (sr-only) so tests and screen
+   readers see the final value; the visible digits are a CSS counter driven by
+   an animatable registered property. Pure CSS — nothing to hydrate, and it
+   never shows a stale value while JS loads. */
+@property --count-n {
+  syntax: "<integer>";
+  initial-value: 0;
+  inherits: false;
+}
+
+.count-up-visual {
+  --count-n: var(--count-target);
+  counter-reset: count-n var(--count-n);
+  animation: count-up 1s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.count-up-visual::after {
+  content: counter(count-n);
+}
+
+@keyframes count-up {
+  from {
+    --count-n: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .type-char {
+    animation: none;
+    opacity: 1;
+  }
+  .type-cursor {
+    animation: none;
+  }
+  .count-up-visual {
+    animation: none;
+  }
 }
