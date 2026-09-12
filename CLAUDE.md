@@ -386,9 +386,9 @@ CSS variables (current state in `src/app/globals.css`):
 ```
 --background           #0a0a0f  + a faint radial --primary glow at the top of <body>
 --card / --card-foreground
---primary  #7c5cff     buttons, active nav, completed badges, glows
+--primary  #7c5cff     buttons, active nav, "in progress" badges, glows
 --primary-shadow       darker step of --primary; the hard-offset shadow under primary buttons
---accent   #00e5a0     "in progress", unlocked achievements, success copy, "yes" feedback
+--accent   #00e5a0     "completed" badges, unlocked achievements, success copy, "yes" feedback
 --warning  #ffa726     notes, slot-warning banners
 --destructive          delete buttons + confirm dialogs
 --border  #2a2a3a
@@ -450,7 +450,8 @@ places. Reach for these instead:
   the accessible name is always the full string), **`PixelBurst`** (Motion particle burst; client,
   toasts only), `components/icons/`: `PixelMark` (the gem in the logo), `PixelBits` (section
   bullet), `PixelCursor` (the ▸ nav cursor). `components/layout/logo.tsx` composes the wordmark.
-- Domain badges: `components/items/status-badge.tsx` (tinted pill with a square dot),
+- Domain badges: `components/items/status-badge.tsx` (tinted pill with a 5×5 pixel glyph per
+  status: ✓ completed, ▸ in progress, hollow square planned, ✕ dropped),
   `components/guilds/role-badge.tsx` (master gold / officer silver / member outline).
 
 Other conventions:
