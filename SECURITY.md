@@ -1,22 +1,17 @@
 # Security Policy
 
-## Reporting a vulnerability
+## This project is archived
 
-Email **hello@hoqu.dev**. Please don't open a public issue for anything exploitable.
+HOQU was retired in September 2026. There is no hosted instance, no database, and no API
+credentials left in service, so there is nothing running to report a vulnerability against. No
+further fixes or releases will ship, and the `hello@hoqu.dev` address that used to receive
+reports is no longer monitored.
 
-Include what you found, the steps to reproduce it, and what an attacker could do with it. If you
-need to demonstrate it against the live site, use your own account and don't touch anyone else's
-data.
+If you are reading the code and spot something worth knowing about, the honest answer is that it
+will stay as it is — treat the repository as a snapshot rather than as supported software.
 
-HOQU is a hobby project maintained by one person, so there's no bounty and no guaranteed
-response window — but reports are read and taken seriously. Please allow a reasonable window to
-ship a fix before disclosing publicly.
+## If you forked it
 
-## Scope
-
-Only [hoqu.dev](https://hoqu.dev) and this repository. The upstream services HOQU depends on —
-Neon, Upstash, Vercel, TMDB, IGDB, Open Library, Resend — have their own disclosure programs.
-
-Out of scope: reports that boil down to the honor system (HOQU trusts people to log their own
-items truthfully), missing rate limits on unauthenticated reads, and findings from automated
-scanners with no demonstrated impact.
+The MIT license carries no warranty, and a fork inherits this snapshot as-is: review it before
+you run it, and rotate every credential to your own. The dependency versions pinned here were
+current in September 2026 and will drift out of date with no updates from this repository.
