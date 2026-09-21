@@ -2,19 +2,61 @@
 
 A hobby tracker where you log movies, TV shows, games, and books, earn points, unlock achievements, and compare progress with friends or guildmates. Dark-only modern UI with pixel-art accents. English only.
 
-Free to use at [hoqu.dev](https://hoqu.dev), open source under the [MIT license](LICENSE), and staying that way — no paid tiers, no ads.
+Open source under the [MIT license](LICENSE).
 
-## Support
+> ### Archived — September 2026
+>
+> HOQU is finished and no longer developed. The hosted instance is shut down and every
+> third-party service behind it (database, cache, OAuth client, catalog API keys, mail) has
+> been closed, so `hoqu.dev` no longer resolves and the old `@hoqu.dev` addresses are not
+> monitored. The screenshots below and a local run are the two ways to see it now.
+>
+> The code is complete and the three test suites pass. It is kept public as a portfolio
+> project, not as maintained software. Issues and pull requests are closed; forking is
+> welcome under the MIT license.
 
-Questions, bugs, and feature requests go through [GitHub Issues](https://github.com/dmrock/hoqu/issues) —
-pick a form and it lands in the right lane. See [hoqu.dev/support](https://hoqu.dev/support) for
-which is which.
+## Screenshots
 
-Anything private — account trouble, a privacy request, a security report — goes to
-**hello@hoqu.dev** instead. Security specifically: see [SECURITY.md](SECURITY.md).
+Captured from a local production build against a seeded database.
 
-Thinking about a pull request? Read [CONTRIBUTING.md](CONTRIBUTING.md) first — open an issue
-before writing code.
+**Explore** — the post-login home: weighted point total, what's in progress, and new releases
+pulled live from TMDB and IGDB.
+
+![HOQU Explore page](docs/screenshots/explore.png)
+
+**A hobby page** — one table per hobby, with status, personal rating, notes, and a "watch it
+again?" flag. Filter and sort live in the toolbar; rows paginate at 50.
+
+![HOQU movies page](docs/screenshots/movies.png)
+
+**TV, split by season** — a multi-season show becomes a non-counting parent row plus one row per
+season, so each season carries its own status, rating, and points.
+
+![HOQU TV page with a show expanded into seasons](docs/screenshots/tv-seasons.png)
+
+**Achievements** — evaluated server-side after every counter-changing action, with progress
+toward the ones still locked.
+
+![HOQU achievements grid](docs/screenshots/achievements.png)
+
+**Profile** — identity card, lifetime stats, per-hobby breakdown, recent completions, latest
+unlocks. Visibility is per-user: public, friends-only, guild-only, or private.
+
+![HOQU profile page](docs/screenshots/profile.png)
+
+<details>
+<summary>Two more: the landing page and a friends leaderboard</summary>
+
+<br>
+
+![HOQU landing page](docs/screenshots/landing.png)
+
+There is no global leaderboard by design — ranking requires an actual relationship, either a
+friendship or a shared guild.
+
+![HOQU friends leaderboard](docs/screenshots/leaderboard.png)
+
+</details>
 
 ## Tech stack
 
@@ -23,9 +65,13 @@ before writing code.
 - **Auth**: Auth.js v5 (email/password + Google OAuth)
 - **Cache + rate limiting**: Upstash Redis
 - **External catalogs**: TMDB (movies + TV) · IGDB (games) · Open Library (books)
-- **Animations**: Motion · **Lint/format**: Biome · **Hosting**: Vercel
+- **Animations**: Motion · **Lint/format**: Biome · **Hosting**: Vercel (while it was live)
 
-## Getting started
+## Running it locally
+
+The hosted instance is gone, so a local run needs your own credentials for the services below.
+Everything still works: `pnpm db:migrate && pnpm db:seed` builds the catalog, and the app runs
+against any Neon database.
 
 ### Prerequisites
 
@@ -106,32 +152,31 @@ drizzle/                     Generated SQL migrations
 .github/workflows/           CI workflow (typecheck, lint, unit, integration, e2e)
 ```
 
-## Deployment
+## How it was deployed
 
-Hosted on Vercel at [hoqu.dev](https://hoqu.dev) and auto-deployed on every push to `main`.
+Kept as a record of the setup — the Vercel project, the Neon databases, and the API keys have
+all been deleted.
 
-**PR workflow:**
+HOQU ran on Vercel at `hoqu.dev`, auto-deployed on every push to `main`.
 
-1. Create a feature branch and open a PR.
-2. GitHub Actions runs typecheck, lint, unit tests, and integration + E2E against an ephemeral Neon branch — see [.github/workflows/ci.yml](.github/workflows/ci.yml).
-3. Vercel creates a per-PR preview deploy.
-4. When CI is green, merge the PR. Vercel deploys to production.
+**PR workflow:** every change went through a feature branch and a PR. GitHub Actions ran
+typecheck, lint, unit tests, and integration + E2E against an ephemeral Neon branch — see
+[.github/workflows/ci.yml](.github/workflows/ci.yml). Vercel built a per-PR preview, and
+merging to `main` deployed to production.
 
-Always go through a PR, never push directly to `main`.
-
-**Build command:** Vercel runs `pnpm db:migrate && pnpm db:seed && pnpm build`, so schema migrations and the hobby/achievement seed catalog stay in sync with each prod deploy.
+**Build command:** Vercel ran `pnpm db:migrate && pnpm db:seed && pnpm build`, so schema migrations and the hobby/achievement seed catalog stayed in sync with each prod deploy.
 
 **Environment split:**
 
-- **Local dev** — `.env.local` (gitignored) points at the dev Neon branch, dev Upstash, and the `hoqu-dev` Google OAuth client.
-- **Production** — env vars set in Vercel (Production scope) point at the prod Neon branch, prod Upstash, the `hoqu-prod` Google OAuth client, and a separate `AUTH_SECRET`.
-- **Preview** — per-PR env vars intentionally left unconfigured. Previews still build (a useful signal that code compiles) but don't run at runtime. Revisit if we ever need to demo PRs at a real URL or share previews with collaborators.
+- **Local dev** — `.env.local` (gitignored) pointed at the dev Neon branch, dev Upstash, and the `hoqu-dev` Google OAuth client.
+- **Production** — env vars set in Vercel (Production scope) pointed at the prod Neon branch, prod Upstash, the `hoqu-prod` Google OAuth client, and a separate `AUTH_SECRET`.
+- **Preview** — per-PR env vars were intentionally left unconfigured. Previews still built (a useful signal that the code compiles) but didn't run at runtime.
 
 ## License
 
 [MIT](LICENSE) © dmrock.
 
-Catalog data and images come from [TMDB](https://www.themoviedb.org/),
+Catalog data and images in the screenshots come from [TMDB](https://www.themoviedb.org/),
 [IGDB](https://www.igdb.com/), and [Open Library](https://openlibrary.org/), each under their
 own terms — the MIT license covers this project's code, not their data. This product uses the
 TMDB API but is not endorsed or certified by TMDB.

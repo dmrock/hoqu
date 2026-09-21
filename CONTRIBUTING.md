@@ -1,9 +1,13 @@
 # Contributing
 
-HOQU is a personal project I build for fun and to have something real to point at. It's MIT
-licensed and free, and it will stay that way — but it isn't looking for co-maintainers, and
-the roadmap is whatever I feel like building next. Setting that expectation up front so
-nobody sinks a weekend into a PR that gets a polite no.
+> **This project is archived (September 2026) and no longer accepts contributions.** Issues
+> and pull requests are closed, and the hosted instance is shut down. Forking to build your
+> own thing is still explicitly fine — see the last section. The rest of this document is
+> kept as a record of how the project ran while it was active.
+
+HOQU is a personal project I built for fun and to have something real to point at. It's MIT
+licensed and free, and it will stay that way — but it wasn't looking for co-maintainers, and
+the roadmap was whatever I felt like building next.
 
 ## The most useful things you can do
 
@@ -16,8 +20,8 @@ the answer stays searchable for whoever hits the same thing.
 **Suggest a feature.** [Open a request](https://github.com/dmrock/hoqu/issues/new?template=feature_request.yml).
 One idea per issue, with the problem it solves.
 
-Anything private — account trouble, a privacy request, a security report — goes to
-hello@hoqu.dev instead. Security specifically: see [SECURITY.md](SECURITY.md).
+Anything private — account trouble, a privacy request, a security report — went to
+hello@hoqu.dev instead. That address is no longer monitored; see [SECURITY.md](SECURITY.md).
 
 ## Pull requests
 
